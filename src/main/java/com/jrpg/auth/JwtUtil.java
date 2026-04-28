@@ -1,5 +1,6 @@
-package com.jrpg.security;
+package com.jrpg.auth;
 
+import com.jrpg.entity.Player;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -26,18 +28,16 @@ public class JwtUtil {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(String subject) {
+    public String generateToken(Player player) {
         Date now = new Date();
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(player.getUuid().toString())
+                .claim("nickname", player.getNickname())
+                .claim("avatarId", player.getAvatarId())
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + expirationMs))
                 .signWith(key)
                 .compact();
-    }
-
-    public String extractSubject(String token) {
-        return parseClaims(token).getSubject();
     }
 
     public boolean validateToken(String token) {
@@ -47,9 +47,13 @@ public class JwtUtil {
         } catch (JwtException e) {
             log.warn("Invalid JWT token: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.warn("JWT claims string is empty: {}", e.getMessage());
+            log.warn("JWT claims are empty: {}", e.getMessage());
         }
         return false;
+    }
+
+    public UUID extractPlayerUuid(String token) {
+        return UUID.fromString(parseClaims(token).getSubject());
     }
 
     private Claims parseClaims(String token) {

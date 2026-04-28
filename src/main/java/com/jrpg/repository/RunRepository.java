@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface RunRepository extends JpaRepository<Run, Long> {
     Optional<Run> findByUuid(UUID uuid);
     List<Run> findByPlayerUuid(UUID playerUuid);
+    Optional<Run> findByPlayerUuidAndEndedAtIsNull(UUID playerUuid);
 }
