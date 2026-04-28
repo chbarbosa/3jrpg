@@ -1,0 +1,25 @@
+export const theme = {
+  colors: {
+    bgPage: '#F5EDD6', bgPanel: '#EDE0C4', bgPanelDark: '#D6C9A8',
+    borderGold: '#B8860B', borderBrown: '#5C3D1E',
+    textPrimary: '#2C1A0E', textHeader: '#B8860B', textMuted: '#7A5C3A',
+    barHP: '#C0392B', barEN: '#2980B9', barEmpty: '#A89070',
+    statusPoison: '#6B8E23', statusBurn: '#D2691E', statusBleed: '#8B0000',
+    statusFrozen: '#87CEEB', statusStun: '#FFD700', statusPositive: '#228B22',
+    actionHover: '#D4A017', actionActive: '#8B6914',
+    highlight: '#FFE066', overlayBg: 'rgba(44, 26, 14, 0.6)',
+  },
+  fonts: {
+    header: "'Philosopher', 'Cinzel', serif",
+    body: "'Noto Sans', 'Segoe UI', sans-serif",
+    mono: "'Courier New', monospace",
+  },
+  fontSizes: { xs: '0.75rem', sm: '0.875rem', md: '1rem', lg: '1.25rem', xl: '1.5rem', xxl: '2rem' },
+  fontWeights: { normal: 400, bold: 700, black: 900 },
+  spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', xxl: '48px' },
+  radius: { sm: '4px', md: '8px', lg: '12px', pill: '999px' },
+  shadows: { panel: '2px 2px 6px rgba(44,26,14,0.25)', highlight: '0 0 10px rgba(255,224,102,0.7)' },
+  transitions: { fast: '100ms ease', normal: '200ms ease', slow: '350ms ease' },
+  classColors: { warrior: '#C0392B', ranger: '#27AE60', mage: '#2980B9', priest: '#F39C12' },
+  enemyColors: { humanoid: '#8E44AD', beast: '#E67E22', mechanical: '#7F8C8D', undead: '#2C3E50', elemental: '#1ABC9C' },
+}

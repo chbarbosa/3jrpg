@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Noto+Sans:wght@400;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #F5EDD6;
+  font-family: 'Noto Sans', 'Segoe UI', sans-serif;
+  color: #2C1A0E;
+}
+
+h1, h2, h3 {
+  font-family: 'Philosopher', 'Cinzel', serif;
+  color: #B8860B;
+}

@@ -15,8 +15,8 @@ Read this before every prompt. Do not skip sections.
 
 | Layer | Technology |
 |---|---|
-| Frontend | React (Vite) |
-| Backend | Java 17 / Spring Boot |
+| Frontend | React (Vite), under `frontend/` |
+| Backend | Java 17 / Spring Boot, at project root |
 | Database | H2 in-memory (dev) |
 | Auth | JWT via Spring Security |
 | API | REST / JSON |
@@ -26,29 +26,34 @@ Read this before every prompt. Do not skip sections.
 
 ## Project Structure
 
-After the first 4 prompts (B1, B2, F1, F2) the project structure is:
-
 ```
-3jrpg/
-├── backend/                        # Spring Boot
-│   ├── src/main/java/com/jrpg/
-│   │   ├── config/                 # SecurityConfig, CorsConfig, JwtConfig
-│   │   ├── auth/                   # AuthController, AuthService, JwtUtil
-│   │   ├── model/                  # JPA entities (Player, Run, RunEvent, Season, SeasonResult)
-│   │   └── repository/             # JPA repositories
-│   └── src/main/resources/
-│       └── application.properties  # H2, JWT secret, CORS origin
+3jrpg/                                  # repo root = Spring Boot project
+├── pom.xml
+├── src/main/java/com/jrpg/
+│   ├── Jrpg3Application.java
+│   ├── config/                         # SecurityConfig, CorsConfig
+│   ├── auth/                           # AuthController, AuthService, JwtUtil,
+│   │                                   # JwtAuthFilter, RateLimiter
+│   ├── dto/                            # RegisterRequest, LoginRequest, AuthResponse
+│   ├── entity/                         # Player, Run, RunEvent, Season, SeasonResult, EndReason
+│   ├── repository/                     # JPA repositories (all 5 entities)
+│   └── security/                       # JwtAuthenticationEntryPoint, PlayerDetailsService
+├── src/main/resources/
+│   └── application.properties          # H2, JWT secret, CORS origin
 │
-└── frontend/                       # React (Vite)
+└── frontend/                           # React (Vite)
     ├── src/
     │   ├── styles/
-    │   │   └── theme.js            # ALL design tokens — colors, fonts, spacing, animations
-    │   ├── components/
-    │   │   └── AlertModal.jsx      # Reusable confirmation/alert modal
-    │   ├── pages/                  # Screen-level components
-    │   ├── hooks/                  # Custom React hooks
-    │   ├── services/               # API call functions (axios or fetch)
-    │   └── main.jsx                # Entry point + router
+    │   │   └── theme.js                # ALL design tokens — colors, fonts, spacing, animations
+    │   ├── components/                 # Shared components (empty — AlertModal not yet built)
+    │   ├── pages/                      # MenuPage, SelectionPage, BattlePage, PrepPage, GameOverPage
+    │   ├── hooks/
+    │   │   └── useAuth.jsx             # AuthProvider + useAuth hook (JWT in memory only)
+    │   ├── services/
+    │   │   ├── api.js                  # Axios instance + interceptors + auth endpoints
+    │   │   └── sound.js               # Howler.js registry (no audio files yet)
+    │   ├── App.jsx                     # BrowserRouter + Routes + ProtectedRoute
+    │   └── main.jsx                    # Entry point
     └── index.html
 ```
 
@@ -67,7 +72,7 @@ These rules apply to every single prompt — never violate them:
 - Rate limiting on `/auth/login` and `/auth/register`.
 
 ### Code Style — Backend
-- All entities have both an internal `id` (Long, auto-increment) and a `uuid` (UUID, generated, exposed publicly).
+- All entities have both an internal `id` (Long, auto-increment) and a `uuid` (UUID, generated in `@PrePersist`, exposed publicly).
 - DTOs separate from entities — never return entity objects directly from controllers.
 - Services handle business logic — controllers are thin.
 - Every endpoint returns a consistent response wrapper if needed.
@@ -75,14 +80,14 @@ These rules apply to every single prompt — never violate them:
 ### Code Style — Frontend
 - **All colors, fonts, spacing, border-radius, shadows, and animation timings come from `src/styles/theme.js`** — never hardcode visual values in components.
 - Use the `AlertModal` component for every confirmation or destructive action — never implement inline confirms.
-- No `localStorage` or `sessionStorage` for sensitive data — JWT stored in memory or httpOnly cookie.
+- No `localStorage` or `sessionStorage` for sensitive data — JWT stored in memory only (`useAuth.jsx`).
 - Components are functional with hooks — no class components.
 
 ---
 
 ## Design Tokens (theme.js summary)
 
-Full file at `src/styles/theme.js`. Key values:
+Full file at `frontend/src/styles/theme.js`. Key values:
 
 - **Background:** `#F5EDD6` (parchment)
 - **Panel:** `#EDE0C4`
@@ -91,14 +96,14 @@ Full file at `src/styles/theme.js`. Key values:
 - **Text header:** `#B8860B` (amber)
 - **HP bar:** `#C0392B` (red)
 - **EN bar:** `#2980B9` (blue)
-- **Header font:** Philosopher / Cinzel (serif, P4 Golden inspired)
+- **Header font:** Philosopher / Cinzel (serif)
 - **Body font:** Noto Sans
 
 ---
 
 ## AlertModal Component
 
-Location: `src/components/AlertModal.jsx`
+**Not yet built.** Location when created: `frontend/src/components/AlertModal.jsx`
 
 ```jsx
 <AlertModal
@@ -119,11 +124,15 @@ Use for: Give Up, Restart, session timeout, any destructive action.
 
 ## Auth Flow
 
-- `POST /auth/register` — email + nickname + password → returns JWT
-- `POST /auth/login` — email + password → returns JWT
+- `POST /auth/register` — email + nickname + password → returns `{ token, nickname, avatarId, playerUuid }`
+- `POST /auth/login` — email + password → returns `{ token, nickname, avatarId, playerUuid }`
+- JWT subject = `playerUuid` (UUID string); claims include `nickname` and `avatarId`
 - JWT sent as `Authorization: Bearer <token>` header on all protected requests
-- **Session timeout:** on every page load and login, backend checks `run.last_action_at`. If `now - last_action_at > 1 hour` and a run is active → run is closed as defeat, frontend shows AlertModal (info variant) before redirecting to Game Over.
+- `GET /auth/session-check` — protected; returns `{ timeout: bool, fightsSurvived?: int }`
+- **Session timeout:** backend closes active run as TIMEOUT if `lastActionAt` is more than 1 hour ago. Frontend shows AlertModal (info variant) before redirecting to Game Over.
 - Username = email (used for login). Display name = nickname (shown in UI).
+- On 401 response: `api.js` interceptor clears the token and redirects to `/`.
+- Rate limit: 10 requests/min per IP on `/auth/register` and `/auth/login` (in-memory, no external library).
 
 ---
 
@@ -132,9 +141,9 @@ Use for: Give Up, Restart, session timeout, any destructive action.
 ```
 Player       — id (Long), uuid (UUID), nickname, email, password_hash, avatar_id, created_at
 Run          — id (Long), uuid (UUID), player_uuid, season_uuid, started_at, ended_at,
-               fights_survived, team_snapshot (JSON), last_action_at,
+               fights_survived, team_snapshot (TEXT/JSON), last_action_at,
                end_reason ENUM(DEFEATED, GAVE_UP, TIMEOUT, RESTARTED)
-RunEvent     — id (Long), uuid (UUID), run_uuid, event_type, payload (JSON), occurred_at
+RunEvent     — id (Long), uuid (UUID), run_uuid, event_type, payload (TEXT/JSON), occurred_at
 Season       — id (Long), uuid (UUID), name, start_date, end_date
 SeasonResult — id (Long), uuid (UUID), season_uuid, player_uuid, best_run_uuid, fights_survived
 ```
@@ -143,13 +152,15 @@ SeasonResult — id (Long), uuid (UUID), season_uuid, player_uuid, best_run_uuid
 
 ## Game States (React Router)
 
-| Route | State | Description |
+| Route | Page | Description |
 |---|---|---|
-| `/` | `menu` | Start / title screen |
-| `/select` | `selection` | Team selection + loadout builder |
-| `/battle` | `battle` | Active fight |
-| `/prep` | `preparation` | Between-fight preparation phase |
-| `/gameover` | `gameover` | Run ended — defeat / give up / timeout |
+| `/` | `MenuPage` | Start / title screen (public) |
+| `/select` | `SelectionPage` | Team selection + loadout builder (protected) |
+| `/battle` | `BattlePage` | Active fight (protected) |
+| `/prep` | `PrepPage` | Between-fight preparation phase (protected) |
+| `/gameover` | `GameOverPage` | Run ended — defeat / give up / timeout (protected) |
+
+Unknown routes redirect to `/`. Unauthenticated access to protected routes redirects to `/`.
 
 ---
 
@@ -223,12 +234,16 @@ SeasonResult — id (Long), uuid (UUID), season_uuid, player_uuid, best_run_uuid
 
 ---
 
-## What Has Been Built (after prompts B1, B2, F1, F2)
+## What Has Been Built
 
-- ✅ Spring Boot project with H2, JPA entities, CORS, security skeleton
-- ✅ JWT auth endpoints (`/auth/register`, `/auth/login`)
-- ✅ React project with Vite, routing, `src/styles/theme.js`
-- ✅ `AlertModal` component (reusable, all variants)
+- ✅ Spring Boot project — H2, JPA entities, CORS, Spring Security
+- ✅ JWT auth endpoints (`/auth/register`, `/auth/login`, `/auth/session-check`)
+- ✅ In-memory rate limiter (10 req/min per IP on auth endpoints)
+- ✅ React + Vite project — routing, `ProtectedRoute`, `theme.js`
+- ✅ `useAuth.jsx` — in-memory JWT, `AuthProvider`, `login()`, `logout()`
+- ✅ `services/api.js` — Axios + Bearer interceptor + 401 redirect
+- ✅ `services/sound.js` — Howler.js registry (no audio files yet)
+- ✅ Placeholder pages for all 5 routes
 
 ## What Comes Next
 
