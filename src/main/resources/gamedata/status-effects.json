@@ -1,0 +1,14 @@
+[
+  {"id": "poison",  "name": "Poison",  "type": "NEGATIVE", "description": "Takes INT/4 damage at the start of each turn; lasts 3 turns"},
+  {"id": "burn",    "name": "Burn",    "type": "NEGATIVE", "description": "Takes 2 fire damage at the start of each turn; lasts 3 turns"},
+  {"id": "bleed",   "name": "Bleed",   "type": "NEGATIVE", "description": "Takes 1 physical damage at the start of each turn; lasts 4 turns"},
+  {"id": "frozen",  "name": "Frozen",  "type": "NEGATIVE", "description": "Cannot act for 1 turn; physical attacks remove the effect"},
+  {"id": "stun",    "name": "Stun",    "type": "NEGATIVE", "description": "Cannot act for 1 turn"},
+  {"id": "slow",    "name": "Slow",    "type": "NEGATIVE", "description": "SPD halved for 2 turns"},
+  {"id": "silence", "name": "Silence", "type": "NEGATIVE", "description": "Cannot cast spells for 2 turns"},
+  {"id": "blind",   "name": "Blind",   "type": "NEGATIVE", "description": "50% chance to miss physical attacks for 2 turns"},
+  {"id": "curse",   "name": "Curse",   "type": "NEGATIVE", "description": "A random negative status effect is applied at the start of each turn; lasts 2 turns"},
+  {"id": "regen",   "name": "Regen",   "type": "POSITIVE", "description": "Restores 2 HP at the start of each turn; lasts 3 turns"},
+  {"id": "haste",   "name": "Haste",   "type": "POSITIVE", "description": "SPD doubled for 2 turns"},
+  {"id": "shell",   "name": "Shell",   "type": "POSITIVE", "description": "Reduces all incoming damage by 2 for 2 turns"}
+]

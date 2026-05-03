@@ -1,0 +1,7 @@
+[
+  {"id": "clothes",      "name": "Clothes",      "minStr": 0, "reductionMin": 0, "reductionMax": 0},
+  {"id": "magicClothes", "name": "Magic Clothes","minStr": 0, "reductionMin": 0, "reductionMax": 0},
+  {"id": "light",        "name": "Light Armor",  "minStr": 0, "reductionMin": 1, "reductionMax": 1},
+  {"id": "medium",       "name": "Medium Armor", "minStr": 5, "reductionMin": 1, "reductionMax": 2},
+  {"id": "heavy",        "name": "Heavy Armor",  "minStr": 8, "reductionMin": 2, "reductionMax": 2}
+]

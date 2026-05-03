@@ -1,0 +1,9 @@
+[
+  {"id": "healingPotion",      "name": "Healing Potion",       "effect": "Restores 8 HP to one ally",                         "usableIn": ["battle", "prep"], "classRestriction": null},
+  {"id": "energyPotion",       "name": "Energy Potion",        "effect": "Restores 6 EN to one ally",                         "usableIn": ["battle", "prep"], "classRestriction": null},
+  {"id": "reviveScroll",       "name": "Revive Scroll",        "effect": "Revives one fallen ally at 1/4 max HP",             "usableIn": ["battle", "prep"], "classRestriction": null},
+  {"id": "magicSicknessPotion","name": "Magic Sickness Potion","effect": "Inflicts poison on one enemy",                      "usableIn": ["battle"],         "classRestriction": null},
+  {"id": "speedPotion",        "name": "Speed Potion",         "effect": "Increases one ally SPD by 4 until end of battle",   "usableIn": ["battle", "prep"], "classRestriction": null},
+  {"id": "regenLifePotion",    "name": "Regen Life Potion",    "effect": "One ally regenerates 2 HP per turn for 3 turns",    "usableIn": ["battle", "prep"], "classRestriction": null},
+  {"id": "regenEnergyPotion",  "name": "Regen Energy Potion",  "effect": "Restores 6 EN and 2 EN/turn for 2 turns to one ally","usableIn": ["battle", "prep"],"classRestriction": null}
+]

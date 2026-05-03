@@ -1,0 +1,30 @@
+[
+  {
+    "id": "warrior", "name": "Warrior", "type": "PHYSICAL",
+    "str": 10, "dex": 7, "intel": 5, "hp": 20, "spd": 14, "en": 14,
+    "equippableWeapons": ["sword", "axe", "mace", "greatsword"],
+    "equippableArmor": "heavy",
+    "damageBonus": {"bonusAmount": 1, "targetType": "humanoid"}
+  },
+  {
+    "id": "ranger", "name": "Ranger", "type": "PHYSICAL",
+    "str": 8, "dex": 9, "intel": 5, "hp": 16, "spd": 18, "en": 18,
+    "equippableWeapons": ["sword", "bow"],
+    "equippableArmor": "medium",
+    "damageBonus": {"bonusAmount": 1, "targetType": "beast"}
+  },
+  {
+    "id": "mage", "name": "Mage", "type": "MAGIC",
+    "str": 6, "dex": 6, "intel": 10, "hp": 12, "spd": 12, "en": 20,
+    "equippableWeapons": ["staff", "wand"],
+    "equippableArmor": "light",
+    "damageBonus": null
+  },
+  {
+    "id": "priest", "name": "Priest", "type": "MAGIC",
+    "str": 7, "dex": 7, "intel": 8, "hp": 14, "spd": 14, "en": 16,
+    "equippableWeapons": ["mace", "staff", "wand"],
+    "equippableArmor": "medium",
+    "damageBonus": null
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "sword", "name": "Sword",
+    "equippableBy": ["warrior", "ranger"],
+    "skills": [
+      {"id": "stab",        "name": "Stab",          "effect": "Thrusting attack dealing STR−DEF damage",              "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack dealing STR−DEF damage",               "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "axe", "name": "Axe",
+    "equippableBy": ["warrior"],
+    "skills": [
+      {"id": "speedBreak",  "name": "Speed Break",   "effect": "Attack that reduces target SPD by 2 tiers",            "enCost": 2, "statusEffect": "slow",  "statusChance": 0.8},
+      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids",       "enCost": 2, "statusEffect": "bleed", "statusChance": 0.9}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "mace", "name": "Mace",
+    "equippableBy": ["warrior", "priest"],
+    "skills": [
+      {"id": "headBash",    "name": "Head Bash",     "effect": "Crushing blow that may stun the target",               "enCost": 2, "statusEffect": "stun",  "statusChance": 0.6},
+      {"id": "limbStrike",  "name": "Limb Strike",   "effect": "Targets limbs, applying pain (slow)",                  "enCost": 2, "statusEffect": "slow",  "statusChance": 0.7}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "bow", "name": "Bow",
+    "equippableBy": ["ranger"],
+    "skills": [
+      {"id": "normalAttack","name": "Normal Attack", "effect": "Ranged strike dealing STR−DEF damage",                 "enCost": 0, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "doubleShot",  "name": "Double Shot",   "effect": "Two ranged strikes at half damage each, no status",   "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "staff", "name": "Staff",
+    "equippableBy": ["mage", "priest"],
+    "skills": [
+      {"id": "arcaneBolt",  "name": "Arcane Bolt",   "effect": "Magic bolt dealing INT−MDEF; auto-triggers on attack", "enCost": 0, "statusEffect": null,    "statusChance": 0.0}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "wand", "name": "Wand",
+    "equippableBy": ["mage", "priest"],
+    "skills": [
+      {"id": "elementalShot","name": "Elemental Shot","effect": "Elemental projectile dealing INT−MDEF; auto-triggers","enCost": 0, "statusEffect": null,    "statusChance": 0.0}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
+  },
+  {
+    "id": "greatsword", "name": "Greatsword",
+    "equippableBy": ["warrior"],
+    "skills": [
+      {"id": "stab",        "name": "Stab",          "effect": "Thrusting attack dealing STR−DEF damage",              "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack dealing STR−DEF damage",               "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "cleave",      "name": "Cleave",        "effect": "Wide swing hitting all enemies for STR−DEF",           "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "heavyStrike", "name": "Heavy Strike",  "effect": "Powerful blow; +4 bonus damage",                       "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+    ],
+    "passiveEffect": "Passive: −1 DEX to wielder", "bonusVsLarge": true
+  }
+]

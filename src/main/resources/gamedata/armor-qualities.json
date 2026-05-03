@@ -1,0 +1,5 @@
+[
+  {"id": "plain", "name": "Plain", "modifierCount": 0},
+  {"id": "magic", "name": "Magic", "modifierCount": 1},
+  {"id": "rare",  "name": "Rare",  "modifierCount": 2}
+]

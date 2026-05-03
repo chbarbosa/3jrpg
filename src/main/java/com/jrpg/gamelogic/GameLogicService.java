@@ -6,6 +6,7 @@ import com.jrpg.entity.EndReason;
 import com.jrpg.entity.Run;
 import com.jrpg.entity.RunEvent;
 import com.jrpg.gamedata.GameData;
+import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.*;
 import com.jrpg.gamelogic.dto.*;
 import com.jrpg.gamelogic.state.*;
@@ -32,6 +33,7 @@ public class GameLogicService {
     private final RunEventRepository runEventRepository;
     private final PlayerRepository playerRepository;
     private final ObjectMapper objectMapper;
+    private final GameDataService gameDataService;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Run lifecycle
@@ -221,8 +223,8 @@ public class GameLogicService {
         LootItemDTO loot = req.lootItem();
         if ("consumable".equals(loot.itemType())) {
             // Find matching item ID by name match (best effort)
-            String itemId = GameData.allItemIds().stream()
-                    .filter(id -> GameData.findItem(id)
+            String itemId = gameDataService.allItemIds().stream()
+                    .filter(id -> gameDataService.findItem(id)
                             .map(i -> i.name().equalsIgnoreCase(loot.name()) ||
                                       loot.name().toLowerCase().contains(i.name().toLowerCase()))
                             .orElse(false))
@@ -415,15 +417,15 @@ public class GameLogicService {
         if (team.size() != 3) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team must have exactly 3 heroes");
         }
-        Set<String> validClasses = GameData.allClassIds();
+        Set<String> validClasses = gameDataService.allClassIds();
         for (HeroConfig cfg : team) {
             if (!validClasses.contains(cfg.classId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown class: " + cfg.classId());
             }
-            ClassData cls = GameData.findClass(cfg.classId()).orElseThrow();
+            ClassData cls = gameDataService.findClass(cfg.classId()).orElseThrow();
             // Validate weapon equippable by class
             if (cfg.loadout() != null && cfg.loadout().weaponId() != null) {
-                WeaponType weapon = GameData.findWeapon(cfg.loadout().weaponId())
+                WeaponType weapon = gameDataService.findWeapon(cfg.loadout().weaponId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 "Unknown weapon: " + cfg.loadout().weaponId()));
                 if (!weapon.equippableBy().contains(cfg.classId())) {
@@ -448,7 +450,7 @@ public class GameLogicService {
     }
 
     private HeroState buildHeroState(String id, HeroConfig cfg) {
-        ClassData cls = GameData.findClass(cfg.classId())
+        ClassData cls = gameDataService.findClass(cfg.classId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown class: " + cfg.classId()));
 
         HeroState heroState = new HeroState();
@@ -532,9 +534,9 @@ public class GameLogicService {
         int size  = GameData.groupSize(fightNumber);
         String cycle = GameData.cycleModifier(fightNumber);
 
-        List<EnemyData> pool = GameData.enemyPool(cap);
+        List<EnemyData> pool = gameDataService.enemyPool(cap);
         if (pool.isEmpty()) {
-            pool = List.of(GameData.findEnemy("goblin").orElseThrow());
+            pool = List.of(gameDataService.findEnemy("goblin").orElseThrow());
         }
 
         List<EnemyState> group = new ArrayList<>();
@@ -637,7 +639,7 @@ public class GameLogicService {
         if (!actorId.startsWith("hero_")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only heroes can ATTACK");
         HeroState hero = findHero(state, actorId);
 
-        WeaponType weapon = GameData.findWeapon(hero.getEquippedWeaponId())
+        WeaponType weapon = gameDataService.findWeapon(hero.getEquippedWeaponId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid weapon"));
 
         // Staff/wand auto-trigger as magic bolt on basic attack
@@ -670,7 +672,7 @@ public class GameLogicService {
 
     private String resolveSkill(BattleState state, String actorId, String targetId, String skillId) {
         HeroState hero = findHero(state, actorId);
-        SkillData skill = GameData.findSkill(hero.getEquippedWeaponId(), skillId)
+        SkillData skill = gameDataService.findSkill(hero.getEquippedWeaponId(), skillId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown skill: " + skillId));
 
         if (hero.getEn() < skill.enCost()) {
@@ -755,7 +757,7 @@ public class GameLogicService {
 
     private String resolveMagic(BattleState state, String actorId, String targetId, String spellId) {
         HeroState hero = findHero(state, actorId);
-        SpellData spell = GameData.findSpell(spellId)
+        SpellData spell = gameDataService.findSpell(spellId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown spell: " + spellId));
 
         // Silence check
@@ -925,8 +927,8 @@ public class GameLogicService {
 
     private String changeWeapon(BattleState state, String actorId, String weaponId) {
         HeroState hero = findHero(state, actorId);
-        ClassData cls = GameData.findClass(hero.getClassId()).orElseThrow();
-        WeaponType newWeapon = GameData.findWeapon(weaponId)
+        ClassData cls = gameDataService.findClass(hero.getClassId()).orElseThrow();
+        WeaponType newWeapon = gameDataService.findWeapon(weaponId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown weapon: " + weaponId));
         if (!newWeapon.equippableBy().contains(hero.getClassId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -951,8 +953,8 @@ public class GameLogicService {
     }
 
     private void swapWeaponDirect(HeroState hero, String weaponId) {
-        ClassData cls = GameData.findClass(hero.getClassId()).orElseThrow();
-        WeaponType w = GameData.findWeapon(weaponId)
+        ClassData cls = gameDataService.findClass(hero.getClassId()).orElseThrow();
+        WeaponType w = gameDataService.findWeapon(weaponId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown weapon: " + weaponId));
         if (!w.equippableBy().contains(hero.getClassId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -1173,9 +1175,9 @@ public class GameLogicService {
         List<String> qualityPool = GameData.lootQualityPool(monsterCap);
         String quality = qualityPool.get(ThreadLocalRandom.current().nextInt(qualityPool.size()));
 
-        List<String> allItems = GameData.allItemIds();
+        List<String> allItems = gameDataService.allItemIds();
         String itemId = allItems.get(ThreadLocalRandom.current().nextInt(allItems.size()));
-        ItemData item = GameData.findItem(itemId).orElseThrow();
+        ItemData item = gameDataService.findItem(itemId).orElseThrow();
 
         List<String> modifiers = new ArrayList<>();
         if ("MAGIC".equals(quality)) modifiers.add(randomModifier());
@@ -1247,7 +1249,7 @@ public class GameLogicService {
 
     private HeroStateDTO toDto(HeroState h) {
         List<String> statuses = h.getStatuses().stream().map(ActiveStatus::getType).collect(Collectors.toList());
-        String name = GameData.findClass(h.getClassId()).map(ClassData::name).orElse(h.getClassId());
+        String name = gameDataService.findClass(h.getClassId()).map(ClassData::name).orElse(h.getClassId());
         return new HeroStateDTO(h.getId(), name, h.getClassId(),
                 h.getHp(), h.getMaxHp(), h.getEn(), h.getMaxEn(), statuses, h.isKnockedOut());
     }

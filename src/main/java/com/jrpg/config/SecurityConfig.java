@@ -40,7 +40,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/auth/session-check").authenticated()
                 .requestMatchers(
                     "/auth/**",
-                    "/api/gamedata/**",
                     "/actuator/health",
                     "/actuator/info",
                     "/h2-console/**"

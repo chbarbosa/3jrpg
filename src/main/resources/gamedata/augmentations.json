@@ -1,0 +1,38 @@
+[
+  {
+    "id": "powerCore", "name": "Power Core",
+    "availableTo": ["warrior", "ranger"],
+    "advantages": [
+      {"id": "powerCoreDmg", "name": "Enhanced Strength",  "description": "Increases STR by 2"},
+      {"id": "powerCoreHp",  "name": "Reinforced Frame",   "description": "Increases HP by 4"}
+    ],
+    "tradeoff": "Reduced DEX by 1"
+  },
+  {
+    "id": "swiftMechanism", "name": "Swift Mechanism",
+    "availableTo": ["ranger", "mage"],
+    "advantages": [
+      {"id": "swiftSpd", "name": "Accelerated Movement", "description": "Increases SPD by 4"},
+      {"id": "swiftDex", "name": "Precision Calibration", "description": "Increases DEX by 2"}
+    ],
+    "tradeoff": "Reduced HP by 2"
+  },
+  {
+    "id": "magicCrystal", "name": "Magic Crystal",
+    "availableTo": ["mage", "priest"],
+    "advantages": [
+      {"id": "crystalInt", "name": "Arcane Amplification", "description": "Increases INT by 2"},
+      {"id": "crystalEn",  "name": "Mana Reservoir",       "description": "Increases EN by 4"}
+    ],
+    "tradeoff": "Reduced STR by 1"
+  },
+  {
+    "id": "ironFrame", "name": "Iron Frame",
+    "availableTo": ["warrior", "priest"],
+    "advantages": [
+      {"id": "ironHp",  "name": "Fortified Hull",    "description": "Increases HP by 6"},
+      {"id": "ironDef", "name": "Damage Absorption", "description": "Increases armor reduction by 1"}
+    ],
+    "tradeoff": "Reduced SPD by 2"
+  }
+]

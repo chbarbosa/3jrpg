@@ -1,0 +1,10 @@
+[
+  {"id": "strong",   "prefix": "Strong",   "bonus": "STR", "bonusValue": 2, "availableOn": ["weapon", "armor"]},
+  {"id": "swift",    "prefix": "Swift",    "bonus": "DEX", "bonusValue": 2, "availableOn": ["weapon", "armor"]},
+  {"id": "wise",     "prefix": "Wise",     "bonus": "INT", "bonusValue": 2, "availableOn": ["weapon", "armor"]},
+  {"id": "tough",    "prefix": "Tough",    "bonus": "HP",  "bonusValue": 4, "availableOn": ["armor"]},
+  {"id": "quick",    "prefix": "Quick",    "bonus": "SPD", "bonusValue": 2, "availableOn": ["weapon", "armor"]},
+  {"id": "enduring", "prefix": "Enduring", "bonus": "EN",  "bonusValue": 2, "availableOn": ["armor"]},
+  {"id": "sharp",    "prefix": "Sharp",    "bonus": "DMG", "bonusValue": 1, "availableOn": ["weapon"]},
+  {"id": "warded",   "prefix": "Warded",   "bonus": "DEF", "bonusValue": 1, "availableOn": ["armor"]}
+]
