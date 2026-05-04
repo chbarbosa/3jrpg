@@ -1,6 +1,6 @@
-package com.jrpg.gamelogic.state;
+package com.jrpg.battle.state;
 
-import com.jrpg.gamelogic.dto.LootItemDTO;
+import com.jrpg.battle.dto.LootItemDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,13 +17,14 @@ public class BattleState {
     private List<String> turnOrder = new ArrayList<>();
     private int currentTurnIndex;
     private int fightNumber;
-    private String cycleModifier;   // "A", "B", "C"
+    private String cyclePosition;  // "A", "B", "C"
     private boolean fightOver;
     private boolean victory;
     private List<String> combatLog = new ArrayList<>();
     private int enemyGroupSize;
-    // Prep phase tracking
+
+    // Prep phase
     private boolean prepPhase;
-    private Map<String, Boolean> heroPrepTaken = new HashMap<>(); // heroId → used prep action
+    private Map<String, Boolean> heroPrepTaken = new HashMap<>();  // heroId → used prep action
     private LootItemDTO pendingLoot;
 }

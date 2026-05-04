@@ -1,4 +1,4 @@
-package com.jrpg.gamelogic.state;
+package com.jrpg.battle.state;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

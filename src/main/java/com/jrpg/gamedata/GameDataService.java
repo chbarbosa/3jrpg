@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -97,6 +98,7 @@ public class GameDataService {
 
     public Optional<ItemData>   findItem(String id)    { return Optional.ofNullable(items.get(id)); }
     public List<String>         allItemIds()            { return List.copyOf(items.keySet()); }
+    public Collection<SpellData> allSpells()            { return spells.values(); }
 
     public Optional<SkillData> findSkill(String weaponId, String skillId) {
         return findWeapon(weaponId)

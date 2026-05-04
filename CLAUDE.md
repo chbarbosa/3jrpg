@@ -103,7 +103,7 @@ Full file at `frontend/src/styles/theme.js`. Key values:
 
 ## AlertModal Component
 
-**Not yet built.** Location when created: `frontend/src/components/AlertModal.jsx`
+**Built.** Location: `frontend/src/components/AlertModal.jsx`
 
 ```jsx
 <AlertModal
@@ -244,13 +244,14 @@ Unknown routes redirect to `/`. Unauthenticated access to protected routes redir
 - ✅ `services/api.js` — Axios + Bearer interceptor + 401 redirect
 - ✅ `services/sound.js` — Howler.js registry (no audio files yet)
 - ✅ Placeholder pages for all 5 routes
+- ✅ `AlertModal` component (`frontend/src/components/AlertModal.jsx`)
+- ✅ Game Data API (`src/main/java/com/jrpg/gamedata/`) — B3: classes, enemies, items, spells, weapons, armor, augmentations, status effects loaded from JSON
+- ✅ Run & Battle API (`src/main/java/com/jrpg/battle/`) — `BattleController`, `BattleService`, `GameLogicService`, `MonsterCapService`, `LootService`; full battle state, give up, restart, prep phase, loot assign, player profile
 
 ## What Comes Next
 
 | Prompt | Feature |
 |---|---|
-| B3 | Game Data API |
-| B4 | Run Management |
 | B5 | Season System (frontend placeholder only) |
 | B6 | Player Profile |
 | F3 | Auth Screens |

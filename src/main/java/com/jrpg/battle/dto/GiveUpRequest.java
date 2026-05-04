@@ -1,4 +1,4 @@
-package com.jrpg.gamelogic.dto;
+package com.jrpg.battle.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;

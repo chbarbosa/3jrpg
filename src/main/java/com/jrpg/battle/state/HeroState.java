@@ -1,4 +1,4 @@
-package com.jrpg.gamelogic.state;
+package com.jrpg.battle.state;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,21 +9,23 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class HeroState {
-    private String id;             // "hero_0", "hero_1", "hero_2"
+    private String id;               // "hero_0", "hero_1", "hero_2"
     private String classId;
     private String augmentationId;
     private String advantageId;
     private String equippedWeaponId;
     private String equippedArmorId;
     private String elementalWeakness; // set for Enhanced augmentation
-    // Base stats (class + augmentation bonus, before status effects)
+
+    // Base stats (class + augmentation bonus applied once at run start)
     private int baseStr;
     private int baseDex;
     private int baseIntel;
     private int baseSpd;
     private int baseMaxHp;
     private int baseMaxEn;
-    // Current stats (may differ from base due to status effects / weapon passives)
+
+    // Current stats (modified by status effects / weapon passives)
     private int str;
     private int dex;
     private int intel;
@@ -36,6 +38,12 @@ public class HeroState {
     private boolean isKnockedOut;
     private List<ActiveStatus> statuses = new ArrayList<>();
     private List<InventoryItem> inventory = new ArrayList<>();
-    // Extra armor DEF bonus from augmentation advantage (ironFrame ironDef)
+
+    // Armor DEF bonus from ironFrame ironDef augmentation
     private int armorDefBonus;
+
+    // Per-battle buff tracking (reset on nextFight)
+    private int spdPotionBonus;
+    private int regenHpPerTurn;
+    private int regenEnPerTurn;
 }
