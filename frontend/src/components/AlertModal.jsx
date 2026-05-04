@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { theme } from '../styles/theme';
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 const titleColorMap = {
   warning: theme.colors.textHeader,
   danger:  theme.colors.statusBleed,
@@ -19,8 +21,10 @@ export default function AlertModal({
   variant = 'info',
 }) {
   const [visible, setVisible] = useState(false);
+  const panelRef = useRef(null);
   const confirmRef = useRef(null);
 
+  // Fade/scale transition
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => setVisible(true));
@@ -29,12 +33,12 @@ export default function AlertModal({
     }
   }, [isOpen]);
 
+  // Initial focus on confirm button
   useEffect(() => {
-    if (isOpen && confirmRef.current) {
-      confirmRef.current.focus();
-    }
+    if (isOpen) confirmRef.current?.focus();
   }, [isOpen]);
 
+  // Escape / Enter global keys
   useEffect(() => {
     if (!isOpen) return;
     const handle = (e) => {
@@ -44,6 +48,29 @@ export default function AlertModal({
     window.addEventListener('keydown', handle);
     return () => window.removeEventListener('keydown', handle);
   }, [isOpen, onConfirm, onCancel]);
+
+  // Focus trap — Tab / Shift+Tab cycles within modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const trap = (e) => {
+      if (e.key !== 'Tab') return;
+      const nodes = [...panel.querySelectorAll(FOCUSABLE)];
+      if (nodes.length === 0) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+
+    panel.addEventListener('keydown', trap);
+    return () => panel.removeEventListener('keydown', trap);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -126,7 +153,7 @@ export default function AlertModal({
       aria-labelledby="alert-modal-title"
       onClick={handleOverlayClick}
     >
-      <div style={panelStyle} onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} style={panelStyle} onClick={(e) => e.stopPropagation()}>
         <div id="alert-modal-title" style={titleStyle}>{title}</div>
         <div style={messageStyle}>{message}</div>
         <div style={buttonRowStyle}>
