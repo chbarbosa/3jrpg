@@ -11,4 +11,5 @@ public interface SeasonResultRepository extends JpaRepository<SeasonResult, Long
     Optional<SeasonResult> findByUuid(UUID uuid);
     List<SeasonResult> findBySeasonUuid(UUID seasonUuid);
     List<SeasonResult> findByPlayerUuid(UUID playerUuid);
+    Optional<SeasonResult> findBySeasonUuidAndPlayerUuid(UUID seasonUuid, UUID playerUuid);
 }

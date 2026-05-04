@@ -6,6 +6,7 @@ import com.jrpg.entity.EndReason;
 import com.jrpg.entity.Run;
 import com.jrpg.repository.RunRepository;
 import com.jrpg.run.dto.RunSummaryDTO;
+import com.jrpg.season.SeasonResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ public class RunService {
 
     private final RunRepository runRepository;
     private final ObjectMapper objectMapper;
+    private final SeasonResultService seasonResultService;
 
     /** Returns the open run for a player, or empty if none exists. */
     public Optional<Run> findActiveRun(UUID playerUuid) {
@@ -46,12 +48,13 @@ public class RunService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Run not found"));
     }
 
-    /** Closes a run with the given end reason and persists it. */
+    /** Closes a run with the given end reason, persists it, and updates the season leaderboard. */
     public void closeRun(Run run, EndReason reason) {
         run.setEndReason(reason);
         run.setEndedAt(LocalDateTime.now());
         runRepository.save(run);
         log.info("Run {} closed — reason={}, fightsSurvived={}", run.getUuid(), reason, run.getFightsSurvived());
+        seasonResultService.updateResult(run.getPlayerUuid(), run.getUuid(), run.getFightsSurvived());
     }
 
     /** Returns true if the run's lastActionAt is more than 1 hour ago. */
