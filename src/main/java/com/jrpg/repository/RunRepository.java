@@ -1,6 +1,8 @@
 package com.jrpg.repository;
 
 import com.jrpg.entity.Run;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,4 +13,6 @@ public interface RunRepository extends JpaRepository<Run, Long> {
     Optional<Run> findByUuid(UUID uuid);
     List<Run> findByPlayerUuid(UUID playerUuid);
     Optional<Run> findByPlayerUuidAndEndedAtIsNull(UUID playerUuid);
+    Optional<Run> findTopByPlayerUuidOrderByFightsSurvivedDesc(UUID playerUuid);
+    Page<Run> findByPlayerUuidAndEndedAtIsNotNullOrderByStartedAtDesc(UUID playerUuid, Pageable pageable);
 }
