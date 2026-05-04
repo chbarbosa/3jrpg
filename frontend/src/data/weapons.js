@@ -1,0 +1,66 @@
+export const WEAPON_LIST = [
+  {
+    id: 'sword',
+    label: 'Sword',
+    equippableBy: ['warrior', 'ranger'],
+    skills: ['stab', 'cut'],
+    passiveEffect: null,
+  },
+  {
+    id: 'axe',
+    label: 'Axe',
+    equippableBy: ['warrior'],
+    skills: ['speedBreak', 'dismember'],
+    passiveEffect: null,
+  },
+  {
+    id: 'mace',
+    label: 'Mace',
+    equippableBy: ['warrior', 'priest'],
+    skills: ['headBash', 'limbStrike'],
+    passiveEffect: null,
+  },
+  {
+    id: 'bow',
+    label: 'Bow',
+    equippableBy: ['ranger'],
+    skills: ['normalAttack', 'doubleShot'],
+    passiveEffect: null,
+  },
+  {
+    id: 'staff',
+    label: 'Staff',
+    equippableBy: ['mage', 'priest'],
+    skills: ['arcaneBolt'],
+    passiveEffect: 'Auto-triggers Arcane Bolt on attack',
+  },
+  {
+    id: 'wand',
+    label: 'Wand',
+    equippableBy: ['mage', 'priest'],
+    skills: ['elementalShot'],
+    passiveEffect: 'Auto-triggers Elemental Shot on attack',
+  },
+  {
+    id: 'greatsword',
+    label: 'Greatsword',
+    equippableBy: ['warrior'],
+    skills: ['stab', 'cut'],
+    passiveEffect: '-1 DEX while equipped. Bonus damage vs large enemies.',
+  },
+];
+
+export const SKILL_LABELS = {
+  stab:         'Stab',
+  cut:          'Cut',
+  speedBreak:   'Speed Break',
+  dismember:    'Dismember',
+  headBash:     'Head Bash',
+  limbStrike:   'Limb Strike',
+  normalAttack: 'Normal Attack',
+  doubleShot:   'Double Shot',
+  arcaneBolt:   'Arcane Bolt',
+  elementalShot: 'Elemental Shot',
+  cleave:       'Cleave',
+  heavyStrike:  'Heavy Strike',
+};
