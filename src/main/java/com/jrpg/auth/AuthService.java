@@ -29,6 +29,7 @@ public class AuthService {
         player.setEmail(req.getEmail());
         player.setNickname(req.getNickname());
         player.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        player.setAvatarId("warrior");
         Player saved = playerRepository.save(player);
         log.info("New player registered: {}", saved.getNickname());
         return toResponse(saved);

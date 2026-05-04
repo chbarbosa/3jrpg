@@ -38,6 +38,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // session-check is protected even though it lives under /auth/
                 .requestMatchers(HttpMethod.GET, "/auth/session-check").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/player/avatars").permitAll()
                 .requestMatchers(
                     "/auth/**",
                     "/actuator/health",

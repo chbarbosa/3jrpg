@@ -8,7 +8,6 @@ import com.jrpg.entity.EndReason;
 import com.jrpg.entity.Run;
 import com.jrpg.gamedata.GameData;
 import com.jrpg.gamedata.GameDataService;
-import com.jrpg.repository.PlayerRepository;
 import com.jrpg.repository.RunRepository;
 import com.jrpg.run.RunEventService;
 import com.jrpg.run.RunService;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 public class BattleService {
 
     private final RunRepository runRepository;
-    private final PlayerRepository playerRepository;
     private final ObjectMapper objectMapper;
     private final GameDataService gameDataService;
     private final GameLogicService gameLogicService;
@@ -410,18 +408,6 @@ public class BattleService {
                 "cycleModifier", newState.getCyclePosition()));
         log.info("Player {} restarted — new run {}", playerUuid, newRun.getUuid());
         return gameLogicService.toBattleStateResponse(newRun.getUuid(), newState);
-    }
-
-    public Map<String, Object> getProfile(UUID playerUuid) {
-        var player = playerRepository.findByUuid(playerUuid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"));
-        int best = runService.getBestRun(playerUuid).map(Run::getFightsSurvived).orElse(0);
-        return Map.of(
-                "nickname",               player.getNickname(),
-                "avatarId",               player.getAvatarId() != null ? player.getAvatarId() : "",
-                "playerUuid",             player.getUuid(),
-                "bestRunFightsSurvived",  best,
-                "currentSeasonRank",      0);
     }
 
     /**

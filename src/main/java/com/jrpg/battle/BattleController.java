@@ -77,13 +77,6 @@ public class BattleController {
         return ResponseEntity.ok(battleService.restart(playerUuid(auth), request));
     }
 
-    // ── Player endpoint ───────────────────────────────────────────────────
-
-    @GetMapping("/api/player/profile")
-    public ResponseEntity<Map<String, Object>> profile(Authentication auth) {
-        return ResponseEntity.ok(battleService.getProfile(playerUuid(auth)));
-    }
-
     // ── Exception handlers ────────────────────────────────────────────────
 
     @ExceptionHandler(TimeoutException.class)
