@@ -8,7 +8,7 @@ import ActionMenu from '../components/battle/ActionMenu';
 import TurnOrderBar from '../components/battle/TurnOrderBar';
 import CombatLog from '../components/battle/CombatLog';
 import { CYCLE_POSITIONS } from '../data/gameConstants';
-import { performAction, nextFight, giveUp, restart, getActiveRun } from '../services/api';
+import { performAction, startPrep, giveUp, restart, getActiveRun } from '../services/api';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
@@ -174,8 +174,8 @@ export default function BattlePage() {
   async function handleProceedToPrep() {
     setProceedingToPrep(true);
     try {
-      const prepResult = await nextFight(battleState.runUuid);
-      navigate('/prep', { state: { prepResult } });
+      const prepResult = await startPrep(battleState.runUuid);
+      navigate('/prep', { state: { prepResult, runUuid: battleState.runUuid } });
     } catch (err) {
       showError('Failed to proceed. Try again.');
       setProceedingToPrep(false);
