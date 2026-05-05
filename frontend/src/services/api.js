@@ -88,4 +88,18 @@ export const updateProfile = (data) =>
 export const getAvatars = () =>
   api.get('/api/player/avatars').then((r) => r.data);
 
+// ── Season & leaderboard ──────────────────────────────────────────────────────
+
+export const getCurrentSeason = () =>
+  api.get('/api/season/current').then((r) => r.data);
+
+export const getLeaderboard = (page = 0, size = 20) =>
+  api.get('/api/season/leaderboard', { params: { page, size } }).then((r) => r.data);
+
+export const getSeasonHistory = () =>
+  api.get('/api/season/history').then((r) => r.data);
+
+export const getPlayerSeasonRank = () =>
+  api.get('/api/player/season-rank').then((r) => r.data);
+
 export default api;
