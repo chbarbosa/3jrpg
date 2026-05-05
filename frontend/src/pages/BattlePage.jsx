@@ -16,6 +16,7 @@ export default function BattlePage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const heroConfigs = location.state?.heroConfigs ?? null;
   const [battleState, setBattleState] = useState(location.state?.runState ?? null);
   const [targeting, setTargeting] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -69,7 +70,7 @@ export default function BattlePage() {
       );
       setBattleState(result);
       if (result.fightOver && !result.victory) {
-        navigate('/gameover', { state: { endReason: 'DEFEATED', fightsSurvived: result.fightNumber - 1 } });
+        navigate('/gameover', { state: { endReason: 'DEFEATED', fightsSurvived: result.fightNumber - 1, heroConfigs } });
       }
     } catch (err) {
       showError(err.response?.data?.error ?? err.message ?? 'Action failed.');
@@ -133,7 +134,7 @@ export default function BattlePage() {
     setLoading(true);
     try {
       const result = await giveUp(battleState.runUuid);
-      navigate('/gameover', { state: { endReason: 'GAVE_UP', fightsSurvived: result.fightsSurvived ?? battleState.fightNumber - 1 } });
+      navigate('/gameover', { state: { endReason: 'GAVE_UP', fightsSurvived: result.fightsSurvived ?? battleState.fightNumber - 1, heroConfigs } });
     } catch (err) {
       showError('Failed to give up. Try again.');
       setLoading(false);

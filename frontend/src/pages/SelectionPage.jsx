@@ -94,7 +94,7 @@ export default function SelectionPage() {
       }));
 
       const runState = await startRun(heroConfigs);
-      navigate('/battle', { state: { runState } });
+      navigate('/battle', { state: { runState, heroConfigs } });
     } catch (err) {
       if (err.response?.status === 409) {
         showError('Active Run Exists', 'You already have an active run. Give up or finish it first.');
