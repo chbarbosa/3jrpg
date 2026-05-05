@@ -9,6 +9,7 @@ import BattlePage from './pages/BattlePage';
 import PrepPage from './pages/PrepPage';
 import GameOverPage from './pages/GameOverPage';
 import SeasonPage from './pages/SeasonPage';
+import ProfilePage from './pages/ProfilePage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -37,6 +38,7 @@ function AppRoutes() {
         <Route path="/prep" element={<ProtectedRoute><PrepPage /></ProtectedRoute>} />
         <Route path="/gameover" element={<GameOverPage />} />
         <Route path="/season" element={<ProtectedRoute><SeasonPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

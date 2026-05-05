@@ -155,12 +155,15 @@ SeasonResult — id (Long), uuid (UUID), season_uuid, player_uuid, best_run_uuid
 | Route | Page | Description |
 |---|---|---|
 | `/` | `MenuPage` | Start / title screen (public) |
+| `/login` | `LoginPage` | Login form (public only) |
+| `/register` | `RegisterPage` | Registration form (public only) |
 | `/select` | `SelectionPage` | Team selection + loadout builder (protected) |
 | `/battle` | `BattlePage` | Active fight (protected) |
 | `/prep` | `PrepPage` | Between-fight preparation phase (protected) |
 | `/gameover` | `GameOverPage` | Run ended — defeat / give up / timeout (protected) |
+| `/season` | `SeasonPage` | Season leaderboard + player rank + history (protected) |
 
-Unknown routes redirect to `/`. Unauthenticated access to protected routes redirects to `/`.
+Unknown routes redirect to `/`. Unauthenticated access to protected routes redirects to `/login`.
 
 ---
 
@@ -236,35 +239,48 @@ Unknown routes redirect to `/`. Unauthenticated access to protected routes redir
 
 ## What Has Been Built
 
+### Backend
 - ✅ Spring Boot project — H2, JPA entities, CORS, Spring Security
 - ✅ JWT auth endpoints (`/auth/register`, `/auth/login`, `/auth/session-check`)
 - ✅ In-memory rate limiter (10 req/min per IP on auth endpoints)
-- ✅ React + Vite project — routing, `ProtectedRoute`, `theme.js`
-- ✅ `useAuth.jsx` — in-memory JWT, `AuthProvider`, `login()`, `logout()`
-- ✅ `services/api.js` — Axios + Bearer interceptor + 401 redirect
-- ✅ `services/sound.js` — Howler.js registry (no audio files yet)
-- ✅ Placeholder pages for all 5 routes
-- ✅ `AlertModal` component (`frontend/src/components/AlertModal.jsx`)
-- ✅ Game Data API (`src/main/java/com/jrpg/gamedata/`) — B3: classes, enemies, items, spells, weapons, armor, augmentations, status effects loaded from JSON
+- ✅ Game Data API (`src/main/java/com/jrpg/gamedata/`) — classes, enemies, items, spells, weapons, armor, augmentations, status effects loaded from JSON
 - ✅ Run & Battle API (`src/main/java/com/jrpg/battle/`) — `BattleController`, `BattleService`, `GameLogicService`, `MonsterCapService`, `LootService`; full battle state, give up, restart, prep phase, loot assign, player profile
+
+### Frontend — Infrastructure
+- ✅ React + Vite project — routing, `ProtectedRoute`, `PublicOnlyRoute`, `theme.js`
+- ✅ `useAuth.jsx` — in-memory JWT, `AuthProvider`, `login()`, `logout()`
+- ✅ `services/api.js` — Axios + Bearer interceptor + 401 redirect; all run/battle/profile/season endpoints
+- ✅ `services/sound.js` — Howler.js registry (no audio files yet)
+- ✅ `AlertModal` component (`frontend/src/components/AlertModal.jsx`)
+- ✅ `NavBar` component — sticky top nav, shows when authenticated; links to /select, /season; logout
+
+### Frontend — Data Layer (`frontend/src/data/`)
+- ✅ `classes.js` — CLASS_LIST (4 classes, colorKey, equippableWeapons, equippableArmor)
+- ✅ `augmentations.js` — AUGMENTATION_LIST (natural / cyber / enhanced, with advantages)
+- ✅ `weapons.js` — WEAPON_LIST (equippableBy, skills, mageSpec)
+- ✅ `armor.js` — ARMOR_LIST (tier, DEF, MDEF)
+- ✅ `spells.js` — SPELL_LIST (school, targetType, cost), MAGE_SPECIALIZATIONS
+- ✅ `items.js` — ITEM_LIST (usableIn, effect)
+- ✅ `statusEffects.js` — STATUS_EFFECTS (12 statuses, type, colorKey)
+- ✅ `enemies.js` — ENEMY_TYPE_LABELS, ENEMY_TYPE_COLORS, AI_TIER_LABELS
+- ✅ `avatars.js` — AVATAR_LIST (10 avatars matching backend)
+- ✅ `gameConstants.js` — MAX_HEROES, MAX_ENEMIES, END_REASONS, QUALITY_LABELS/COLORS, ARMOR_TIER_LABELS
+
+### Frontend — Pages & Components
+- ✅ `LoginPage` + `RegisterPage` — auth forms with error handling (F3)
+- ✅ `SelectionPage` + 5 sub-components — step-wizard hero config (class → augment → mageSpec → loadout → items), team summary, Start Run (F5)
+  - `HeroSlot`, `ClassPicker`, `AugmentationPicker`, `LoadoutBuilder`, `ItemStarter`, `TeamSummary`
+- ✅ `BattlePage` + 6 sub-components — full battle UI with action menu, targeting state machine, turn order bar, combat log, give up / restart (F6/F8)
+  - `ActionMenu`, `HPBar`, `StatusBadge`, `EnemyPanel`, `TurnOrderBar`, `CombatLog`
+- ✅ `PrepPage` + 2 sub-components — regen display, loot assignment, hero prep actions (use item / swap gear / revive / pass) (F12)
+  - `HeroPrepSlot`, `LootDropPanel`
+- ✅ `GameOverPage` + 3 sub-components — run summary, personal best, share panel, new run same team (F14)
+  - `EndReasonBadge`, `RunSummaryCard`, `SharePanel`
+- ✅ `SeasonPage` + 5 sub-components — current season, leaderboard with pagination, player rank, past seasons (F15)
+  - `SeasonHeader`, `LeaderboardTable`, `LeaderboardRow`, `PlayerRankBanner`, `SeasonHistoryList`
 
 ## What Comes Next
 
 | Prompt | Feature |
 |---|---|
-| B5 | Season System (frontend placeholder only) |
-| B6 | Player Profile |
-| F3 | Auth Screens |
-| F4 | Data Layer |
-| F5 | Team Selection + Loadout |
-| F6 | Battle Engine (logic) |
-| F7 | Status Effect Engine |
-| F8 | Battle Screen UI |
-| F9 | Enemy AI |
-| F10 | Item System |
-| F11 | Equipment & Weapon Swap |
-| F12 | Between-Fight Phase |
-| F13 | Difficulty Scaling |
-| F14 | Game Over & Run Summary |
-| F15 | Season & Leaderboard Screen |
 | F16 | Polish Pass |

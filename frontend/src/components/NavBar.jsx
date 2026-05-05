@@ -66,6 +66,14 @@ export default function NavBar() {
       >
         Season
       </Link>
+      <Link
+        to="/profile"
+        style={linkStyle}
+        onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+      >
+        Profile
+      </Link>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
