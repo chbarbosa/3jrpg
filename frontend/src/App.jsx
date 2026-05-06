@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import NavBar from './components/NavBar';
@@ -25,10 +26,28 @@ function PublicOnlyRoute({ children }) {
   return isAuthenticated ? <Navigate to="/select" replace /> : children;
 }
 
+function PageFade({ children }) {
+  const location = useLocation();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(false);
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    return () => cancelAnimationFrame(raf);
+  }, [location.pathname]);
+
+  return (
+    <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 200ms ease' }}>
+      {children}
+    </div>
+  );
+}
+
 function AppRoutes() {
   return (
     <>
       <NavBar />
+      <PageFade>
       <Routes>
         <Route path="/" element={<MenuPage />} />
         <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
@@ -41,6 +60,7 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </PageFade>
     </>
   );
 }

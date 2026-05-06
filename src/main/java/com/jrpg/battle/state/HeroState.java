@@ -10,10 +10,12 @@ import java.util.List;
 @NoArgsConstructor
 public class HeroState {
     private String id;               // "hero_0", "hero_1", "hero_2"
+    private String name;             // random hero name assigned at run start
     private String classId;
     private String augmentationId;
     private String advantageId;
     private String equippedWeaponId;
+    private String secondaryWeaponId;
     private String equippedArmorId;
     private String elementalWeakness; // set for Enhanced augmentation
 

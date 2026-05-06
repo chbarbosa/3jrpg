@@ -88,6 +88,25 @@ export default function LoadoutBuilder({ classId, augmentationType, primaryWeapo
 
       <SectionLabel>Secondary Weapon (optional)</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+        <button
+          onClick={() => onUpdate({ secondaryWeaponId: null })}
+          style={{
+            padding: theme.spacing.xs,
+            background: secondaryWeaponId == null ? theme.colors.bgPanelDark : theme.colors.bgPanel,
+            border: `${secondaryWeaponId == null ? 2 : 1}px solid ${secondaryWeaponId == null ? theme.colors.borderGold : theme.colors.borderBrown}`,
+            borderRadius: theme.radius.sm,
+            cursor: 'pointer',
+            textAlign: 'left',
+            width: '100%',
+            transition: `background ${theme.transitions.fast}`,
+          }}
+          onMouseEnter={(e) => { if (secondaryWeaponId != null) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
+          onMouseLeave={(e) => { if (secondaryWeaponId != null) e.currentTarget.style.background = theme.colors.bgPanel; }}
+        >
+          <div style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.bold, color: theme.colors.textMuted }}>
+            None
+          </div>
+        </button>
         {weapons.map((w) => (
           <WeaponCard
             key={w.id}

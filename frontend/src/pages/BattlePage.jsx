@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { theme } from '../styles/theme';
 import AlertModal from '../components/AlertModal';
@@ -9,6 +9,7 @@ import TurnOrderBar from '../components/battle/TurnOrderBar';
 import CombatLog from '../components/battle/CombatLog';
 import { CYCLE_POSITIONS } from '../data/gameConstants';
 import { performAction, startPrep, giveUp, restart, getActiveRun } from '../services/api';
+import { playSound } from '../services/sound';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
@@ -22,6 +23,10 @@ export default function BattlePage() {
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(MODAL_CLOSED);
   const [proceedingToPrep, setProceedingToPrep] = useState(false);
+  const [victoryVisible, setVictoryVisible] = useState(false);
+
+  const prevVictoryRef = useRef(false);
+  const enemyTurnScheduledRef = useRef(false);
 
   // Restore active run on page load if no state passed
   useEffect(() => {
@@ -36,20 +41,47 @@ export default function BattlePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Enemy-turn auto-loop: when activeActorId is an enemy, trigger ENEMY_TURN after 500ms
+  useEffect(() => {
+    if (!battleState || battleState.fightOver) {
+      enemyTurnScheduledRef.current = false;
+      return;
+    }
+    const heroIds = new Set(battleState.heroes.map((h) => h.id));
+    const isEnemyActor = battleState.activeActorId && !heroIds.has(battleState.activeActorId);
+    if (!isEnemyActor) {
+      enemyTurnScheduledRef.current = false;
+      return;
+    }
+    if (enemyTurnScheduledRef.current) return;
+    enemyTurnScheduledRef.current = true;
+    const timerId = setTimeout(() => {
+      enemyTurnScheduledRef.current = false;
+      submitAction({ actionType: 'ENEMY_TURN', actorId: battleState.activeActorId });
+    }, 500);
+    return () => { clearTimeout(timerId); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battleState]);
+
+  // Victory: fade overlay in + play sound once
+  useEffect(() => {
+    const isVictory = battleState?.fightOver && battleState?.victory;
+    if (isVictory && !prevVictoryRef.current) {
+      playSound('victory');
+      requestAnimationFrame(() => requestAnimationFrame(() => setVictoryVisible(true)));
+    }
+    if (!isVictory) setVictoryVisible(false);
+    prevVictoryRef.current = !!isVictory;
+  }, [battleState?.fightOver, battleState?.victory]);
+
   function closeModal() {
     setModal(MODAL_CLOSED);
   }
 
   function showError(message) {
     setModal({
-      open: true,
-      title: 'Error',
-      message,
-      variant: 'danger',
-      confirmLabel: 'OK',
-      cancelLabel: null,
-      onConfirm: closeModal,
-      onCancel: null,
+      open: true, title: 'Error', message, variant: 'danger',
+      confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null,
     });
   }
 
@@ -58,17 +90,30 @@ export default function BattlePage() {
   async function submitAction({ actionType, actorId, targetId, skillId, spellId, itemId }) {
     setTargeting(null);
     setLoading(true);
+    const prevState = battleState;
     try {
       const result = await performAction(
-        battleState.runUuid,
-        actionType,
-        actorId,
-        targetId ?? null,
-        skillId ?? null,
-        spellId ?? null,
-        itemId ?? null,
+        battleState.runUuid, actionType, actorId,
+        targetId ?? null, skillId ?? null, spellId ?? null, itemId ?? null,
       );
+
+      // Action sounds
+      if (actionType === 'ATTACK' || actionType === 'CHANGE_WEAPON') playSound('hit');
+      else if (actionType === 'SKILL' || actionType === 'MAGIC') playSound('skill');
+      else if (actionType === 'ITEM') playSound('itemUse');
+
+      // Death sounds — compare with previous state
+      result.enemies?.forEach((enemy) => {
+        const prev = prevState.enemies?.find((e) => e.id === enemy.id);
+        if (prev && prev.hp > 0 && enemy.hp <= 0) playSound('enemyDeath');
+      });
+      result.heroes?.forEach((hero) => {
+        const prev = prevState.heroes?.find((h) => h.id === hero.id);
+        if (prev && !prev.isKnockedOut && hero.isKnockedOut) playSound('heroDeath');
+      });
+
       setBattleState(result);
+
       if (result.fightOver && !result.victory) {
         navigate('/gameover', { state: { endReason: 'DEFEATED', fightsSurvived: result.fightNumber - 1, heroConfigs } });
       }
@@ -103,12 +148,9 @@ export default function BattlePage() {
 
   function promptChangeWeapon(actorId) {
     setModal({
-      open: true,
-      title: 'Change Weapon?',
+      open: true, title: 'Change Weapon?',
       message: 'Swapping your weapon costs your turn. Continue?',
-      variant: 'warning',
-      confirmLabel: 'Swap',
-      cancelLabel: 'Cancel',
+      variant: 'warning', confirmLabel: 'Swap', cancelLabel: 'Cancel',
       onConfirm: () => { closeModal(); submitAction({ actionType: 'CHANGE_WEAPON', actorId }); },
       onCancel: closeModal,
     });
@@ -118,14 +160,10 @@ export default function BattlePage() {
 
   function promptGiveUp() {
     setModal({
-      open: true,
-      title: 'Give Up?',
+      open: true, title: 'Give Up?',
       message: 'Give up this run? It will count as a defeat.',
-      variant: 'danger',
-      confirmLabel: 'Give Up',
-      cancelLabel: 'Cancel',
-      onConfirm: handleGiveUp,
-      onCancel: closeModal,
+      variant: 'danger', confirmLabel: 'Give Up', cancelLabel: 'Cancel',
+      onConfirm: handleGiveUp, onCancel: closeModal,
     });
   }
 
@@ -135,7 +173,7 @@ export default function BattlePage() {
     try {
       const result = await giveUp(battleState.runUuid);
       navigate('/gameover', { state: { endReason: 'GAVE_UP', fightsSurvived: result.fightsSurvived ?? battleState.fightNumber - 1, heroConfigs } });
-    } catch (err) {
+    } catch {
       showError('Failed to give up. Try again.');
       setLoading(false);
     }
@@ -145,14 +183,10 @@ export default function BattlePage() {
 
   function promptRestart() {
     setModal({
-      open: true,
-      title: 'Restart Run?',
+      open: true, title: 'Restart Run?',
       message: 'Restart with the same team? This run counts as a defeat.',
-      variant: 'warning',
-      confirmLabel: 'Restart',
-      cancelLabel: 'Cancel',
-      onConfirm: handleRestart,
-      onCancel: closeModal,
+      variant: 'warning', confirmLabel: 'Restart', cancelLabel: 'Cancel',
+      onConfirm: handleRestart, onCancel: closeModal,
     });
   }
 
@@ -163,7 +197,7 @@ export default function BattlePage() {
       const newState = await restart(battleState.runUuid);
       setBattleState(newState);
       setTargeting(null);
-    } catch (err) {
+    } catch {
       showError('Failed to restart. Try again.');
     } finally {
       setLoading(false);
@@ -177,7 +211,7 @@ export default function BattlePage() {
     try {
       const prepResult = await startPrep(battleState.runUuid);
       navigate('/prep', { state: { prepResult, runUuid: battleState.runUuid } });
-    } catch (err) {
+    } catch {
       showError('Failed to proceed. Try again.');
       setProceedingToPrep(false);
     }
@@ -193,10 +227,11 @@ export default function BattlePage() {
     );
   }
 
-  const { runUuid, fightNumber, cycleModifier, enemies, heroes, turnOrder, activeActorId, combatLog, fightOver, victory } = battleState;
+  const { fightNumber, cycleModifier, enemies, heroes, turnOrder, activeActorId, combatLog, fightOver, victory } = battleState;
 
   const activeHero = !fightOver ? heroes.find((h) => h.id === activeActorId && !h.isKnockedOut) : null;
-
+  const heroIds = new Set(heroes.map((h) => h.id));
+  const isEnemyTurn = !fightOver && activeActorId && !heroIds.has(activeActorId);
   const cycleLabel = cycleModifier && cycleModifier !== '' ? cycleModifier : null;
 
   // ── Layout styles ────────────────────────────────────────────────────────
@@ -245,18 +280,18 @@ export default function BattlePage() {
         <div style={{ display: 'flex', gap: theme.spacing.sm }}>
           <button
             onClick={promptGiveUp}
-            disabled={loading}
-            style={{ ...topBtnBase, background: theme.colors.statusBleed, color: theme.colors.bgPage }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#6B0000'; }}
+            disabled={loading || isEnemyTurn}
+            style={{ ...topBtnBase, background: theme.colors.statusBleed, color: theme.colors.bgPage, opacity: (loading || isEnemyTurn) ? 0.5 : 1 }}
+            onMouseEnter={(e) => { if (!loading && !isEnemyTurn) e.currentTarget.style.background = '#6B0000'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.statusBleed; }}
           >
             Give Up
           </button>
           <button
             onClick={promptRestart}
-            disabled={loading}
-            style={{ ...topBtnBase, background: theme.colors.bgPanelDark, color: theme.colors.textPrimary, border: `1px solid ${theme.colors.borderBrown}` }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.borderBrown; }}
+            disabled={loading || isEnemyTurn}
+            style={{ ...topBtnBase, background: theme.colors.bgPanelDark, color: theme.colors.textPrimary, border: `1px solid ${theme.colors.borderBrown}`, opacity: (loading || isEnemyTurn) ? 0.5 : 1 }}
+            onMouseEnter={(e) => { if (!loading && !isEnemyTurn) e.currentTarget.style.background = theme.colors.borderBrown; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
           >
             Restart
@@ -288,11 +323,7 @@ export default function BattlePage() {
       </div>
 
       {/* ── Turn order bar ── */}
-      <div style={{
-        background: theme.colors.bgPanel,
-        borderTop: `1px solid ${theme.colors.borderBrown}`,
-        flexShrink: 0,
-      }}>
+      <div style={{ background: theme.colors.bgPanel, borderTop: `1px solid ${theme.colors.borderBrown}`, flexShrink: 0 }}>
         <TurnOrderBar
           turnOrder={turnOrder}
           activeActorId={activeActorId}
@@ -301,25 +332,12 @@ export default function BattlePage() {
         />
       </div>
 
-      {/* ── Divider ── */}
       <div style={{ height: '1px', background: theme.colors.borderBrown, flexShrink: 0 }} />
 
       {/* ── Bottom area ── */}
-      <div style={{
-        display: 'flex',
-        flexShrink: 0,
-        height: '42vh',
-        overflow: 'hidden',
-      }}>
-        {/* Hero area + combat log — 65% */}
-        <div style={{
-          flex: '0 0 65%',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: theme.spacing.md,
-          gap: theme.spacing.sm,
-          overflow: 'hidden',
-        }}>
+      <div className="battle-bottom" style={{ display: 'flex', flexShrink: 0, height: '42vh', overflow: 'hidden' }}>
+        {/* Hero area + combat log */}
+        <div className="battle-hero-col" style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: theme.spacing.md, gap: theme.spacing.sm, overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: theme.spacing.sm, flex: 1, overflow: 'hidden' }}>
             {heroes.map((hero) => {
               const isAllyTarget = targeting && (targeting.mode === 'ally' || targeting.mode === 'ally-ko');
@@ -347,15 +365,8 @@ export default function BattlePage() {
           <CombatLog entries={combatLog ?? []} />
         </div>
 
-        {/* Action menu — 35% */}
-        <div style={{
-          flex: '0 0 35%',
-          padding: theme.spacing.md,
-          borderLeft: `1px solid ${theme.colors.borderBrown}`,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}>
+        {/* Action menu */}
+        <div className="battle-action-col" style={{ flex: '0 0 35%', padding: theme.spacing.md, borderLeft: `1px solid ${theme.colors.borderBrown}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {activeHero ? (
             <ActionMenu
               hero={activeHero}
@@ -366,17 +377,17 @@ export default function BattlePage() {
               onCancelTarget={handleCancelTarget}
               isLoading={loading}
             />
+          ) : isEnemyTurn ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: theme.spacing.sm }}>
+              <div style={{ color: theme.colors.textHeader, fontFamily: theme.fonts.header, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.bold }}>
+                Enemy is acting...
+              </div>
+              <div style={{ color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: theme.fontSizes.xs, fontStyle: 'italic' }}>
+                {enemies.find((e) => e.id === activeActorId)?.name ?? 'Enemy'}
+              </div>
+            </div>
           ) : !fightOver ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: theme.colors.textMuted,
-              fontFamily: theme.fonts.body,
-              fontSize: theme.fontSizes.sm,
-              fontStyle: 'italic',
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: theme.fontSizes.sm, fontStyle: 'italic' }}>
               Waiting...
             </div>
           ) : null}
@@ -385,23 +396,33 @@ export default function BattlePage() {
 
       {/* ── Victory overlay ── */}
       {fightOver && victory && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: theme.colors.overlayBg,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: theme.spacing.lg,
-          zIndex: 50,
-        }}>
-          <div style={{
-            fontFamily: theme.fonts.header,
-            fontSize: theme.fontSizes.xxl,
-            fontWeight: theme.fontWeights.black,
-            color: theme.colors.highlight,
-          }}>
+        <div
+          className="victory-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: theme.colors.overlayBg,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: theme.spacing.lg,
+            zIndex: 50,
+            opacity: victoryVisible ? 1 : 0,
+            transition: `opacity ${theme.transitions.slow}`,
+          }}
+        >
+          <div
+            className="victory-text"
+            style={{
+              fontFamily: theme.fonts.header,
+              fontSize: theme.fontSizes.xxl,
+              fontWeight: theme.fontWeights.black,
+              color: theme.colors.highlight,
+              transform: victoryVisible ? 'scale(1)' : 'scale(0.8)',
+              transition: `transform ${theme.transitions.slow}`,
+            }}
+          >
             Victory!
           </div>
           <div style={{ fontSize: theme.fontSizes.md, color: theme.colors.bgPage }}>
@@ -422,6 +443,8 @@ export default function BattlePage() {
               cursor: proceedingToPrep ? 'wait' : 'pointer',
               opacity: proceedingToPrep ? 0.7 : 1,
             }}
+            onMouseEnter={(e) => { if (!proceedingToPrep) e.currentTarget.style.background = theme.colors.actionHover; }}
+            onMouseLeave={(e) => { if (!proceedingToPrep) e.currentTarget.style.background = theme.colors.borderGold; }}
           >
             {proceedingToPrep ? 'Loading...' : 'Continue →'}
           </button>

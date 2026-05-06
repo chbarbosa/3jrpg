@@ -1,6 +1,7 @@
 package com.jrpg.battle.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import java.util.Map;
 
 public record HeroConfigDTO(
         @NotBlank String classId,
@@ -10,5 +11,6 @@ public record HeroConfigDTO(
         String secondaryWeaponId,
         String armorId,
         String accessoryId,
-        String mageSpecializationId
+        String mageSpecializationId,
+        Map<String, Integer> items
 ) {}

@@ -8,16 +8,19 @@ export default function HeroPanel({ hero, isActive }) {
   const classColor = theme.classColors[hero.className?.toLowerCase()] ?? theme.colors.textMuted;
 
   return (
-    <div style={{
-      flex: 1,
-      padding: theme.spacing.sm,
-      background: theme.colors.bgPanel,
-      border: `${isActive ? 2 : 1}px solid ${isActive ? theme.colors.highlight : theme.colors.borderGold}`,
-      borderRadius: theme.radius.md,
-      boxShadow: isActive ? theme.shadows.highlight : theme.shadows.panel,
-      opacity: ko ? 0.6 : 1,
-      transition: `border-color ${theme.transitions.fast}, box-shadow ${theme.transitions.fast}`,
-    }}>
+    <div
+      className={isActive && !ko ? 'hero-active' : undefined}
+      style={{
+        flex: 1,
+        padding: theme.spacing.sm,
+        background: theme.colors.bgPanel,
+        border: `${isActive ? 2 : 1}px solid ${isActive ? theme.colors.highlight : theme.colors.borderGold}`,
+        borderRadius: theme.radius.md,
+        boxShadow: isActive ? theme.shadows.highlight : theme.shadows.panel,
+        opacity: ko ? 0.6 : 1,
+        transition: `border-color ${theme.transitions.fast}, box-shadow ${theme.transitions.fast}`,
+      }}
+    >
       <div style={{ position: 'relative', width: '48px', height: '48px', margin: '0 auto 6px' }}>
         <div style={{
           width: '100%',
@@ -54,7 +57,7 @@ export default function HeroPanel({ hero, isActive }) {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
       }}>
-        {hero.name}
+        {hero.heroName ?? hero.name}
       </div>
       <div style={{
         fontSize: theme.fontSizes.xs,
@@ -62,7 +65,7 @@ export default function HeroPanel({ hero, isActive }) {
         textAlign: 'center',
         marginBottom: theme.spacing.xs,
       }}>
-        {hero.className}
+        {hero.name}
       </div>
 
       <div style={{ marginBottom: theme.spacing.xs }}>

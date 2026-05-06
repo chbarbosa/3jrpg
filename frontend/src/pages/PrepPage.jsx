@@ -156,7 +156,7 @@ export default function PrepPage() {
         </div>
 
         {/* Regen */}
-        <RegenDisplay regenLog={prepResult.regenLog ?? []} heroes={heroes} />
+        <RegenDisplay regenLog={prepResult.regenLog ?? []} heroes={heroes} autoRevivedHeroes={prepResult.autoRevivedHeroes ?? []} />
 
         {/* Loot */}
         {lootItem && (

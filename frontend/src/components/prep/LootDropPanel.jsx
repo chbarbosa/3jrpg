@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { theme } from '../../styles/theme';
 import { QUALITY_LABELS, QUALITY_COLORS } from '../../data/gameConstants';
+import { playSound } from '../../services/sound';
 
 export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssigned, lootRecipientHeroId }) {
   const [glowing, setGlowing] = useState(true);
@@ -18,6 +19,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
     setError(null);
     try {
       await onAssignLoot(heroId);
+      playSound('lootDrop');
     } catch (err) {
       setError(err.message ?? 'Failed to assign loot.');
     } finally {

@@ -59,7 +59,7 @@ export default function LeaderboardRow({ entry, isCurrentPlayer }) {
       </div>
 
       {/* Team dots */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+      <div className="lb-team-col" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         {(entry.teamSummary ?? []).map((cls, i) => (
           <div
             key={i}

@@ -25,10 +25,19 @@ public class GameLogicService {
     // Hero state construction
     // ═══════════════════════════════════════════════════════════════════════
 
+    private static final List<String> HERO_NAMES = List.of(
+            "Kael", "Vera", "Zorn", "Mira", "Dax", "Lyra", "Theron", "Sable", "Crix", "Elara",
+            "Voss", "Nira", "Aldric", "Zephyr", "Soryn", "Tanith", "Rook", "Celara", "Brix", "Mael",
+            "Ondra", "Tavar", "Lyss", "Doran", "Vex", "Caela", "Strix", "Morel", "Zada", "Fenric");
+
     public List<HeroState> buildHeroStates(List<HeroConfigDTO> team) {
+        List<String> namePool = new ArrayList<>(HERO_NAMES);
+        Collections.shuffle(namePool, ThreadLocalRandom.current());
         List<HeroState> heroes = new ArrayList<>();
         for (int i = 0; i < team.size(); i++) {
-            heroes.add(buildHeroState("hero_" + i, team.get(i)));
+            HeroState h = buildHeroState("hero_" + i, team.get(i));
+            h.setName(namePool.get(i));
+            heroes.add(h);
         }
         return heroes;
     }
@@ -109,8 +118,17 @@ public class GameLogicService {
         h.setKnockedOut(false);
 
         equipWeapon(h, cfg.primaryWeaponId());
+        if (cfg.secondaryWeaponId() != null) {
+            h.setSecondaryWeaponId(cfg.secondaryWeaponId());
+        }
         String armorId = (cfg.armorId() != null) ? cfg.armorId() : cls.equippableArmor();
         h.setEquippedArmorId(armorId);
+
+        if (cfg.items() != null) {
+            cfg.items().forEach((itemId, qty) -> {
+                if (qty != null && qty > 0) addToInventory(h, itemId, qty);
+            });
+        }
 
         return h;
     }
@@ -204,6 +222,7 @@ public class GameLogicService {
             case MAGIC         -> resolveMagic(state, req.actorId(), req.targetId(), req.spellId());
             case ITEM          -> resolveItem(state, req.actorId(), req.targetId(), req.itemId());
             case CHANGE_WEAPON -> changeWeapon(state, req.actorId(), req.itemId());
+            case ENEMY_TURN    -> resolveOneEnemyTurn(state);
         };
     }
 
@@ -574,6 +593,33 @@ public class GameLogicService {
         }
     }
 
+    public String resolveOneEnemyTurn(BattleState state) {
+        if (state.isFightOver()) return "Fight already over";
+        String activeId = findActiveActorId(state);
+        if (activeId == null || activeId.startsWith("hero_")) return "Hero turn";
+
+        EnemyState enemy = state.getEnemies().stream()
+                .filter(e -> e.getId().equals(activeId)).findFirst().orElse(null);
+        if (enemy == null || enemy.getHp() <= 0) {
+            advanceTurn(state);
+            return "Dead enemy skipped";
+        }
+
+        boolean stunned = enemy.getStatuses().stream()
+                .anyMatch(s -> "stun".equals(s.getType()) || "frozen".equals(s.getType()));
+        String msg;
+        if (!stunned) {
+            resolveEnemyAttack(enemy, state);
+            msg = enemy.getName() + " acts.";
+        } else {
+            addLog(state, enemy.getName() + " is stunned and cannot act.");
+            msg = enemy.getName() + " is stunned.";
+        }
+        tickEnemyStatuses(enemy, state);
+        advanceTurn(state);
+        return msg;
+    }
+
     private void resolveEnemyAttack(EnemyState enemy, BattleState state) {
         HeroState target = selectEnemyTarget(enemy, state);
         if (target == null) return;
@@ -820,6 +866,7 @@ public class GameLogicService {
 
     private HeroStateDTO toHeroDTO(HeroState h) {
         ClassData cls = gameDataService.findClass(h.getClassId()).orElse(null);
+        String heroName = h.getName() != null ? h.getName() : h.getClassId();
         String name = cls != null ? cls.name() : h.getClassId();
 
         List<ActiveStatusDTO> statuses = h.getStatuses().stream()
@@ -855,10 +902,11 @@ public class GameLogicService {
                 .collect(Collectors.toList());
 
         return new HeroStateDTO(
-                h.getId(), name, h.getClassId(),
+                h.getId(), heroName, name, h.getClassId(),
                 h.getHp(), h.getMaxHp(), h.getEn(), h.getMaxEn(),
                 h.getSpd(), h.getStr(), def, mdef,
-                statuses, h.isKnockedOut(), skills, spells, inventory);
+                statuses, h.isKnockedOut(), skills, spells, inventory,
+                h.getSecondaryWeaponId());
     }
 
     private List<SpellSummaryDTO> availableSpells(String classId) {

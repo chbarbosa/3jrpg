@@ -4,6 +4,7 @@ import java.util.List;
 
 public record HeroStateDTO(
         String id,
+        String heroName,
         String name,
         String className,
         int hp,
@@ -18,5 +19,6 @@ public record HeroStateDTO(
         boolean isKnockedOut,
         List<SkillSummaryDTO> availableSkills,
         List<SpellSummaryDTO> availableSpells,
-        List<ItemSummaryDTO> inventory
+        List<ItemSummaryDTO> inventory,
+        String secondaryWeaponId
 ) {}

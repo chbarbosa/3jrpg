@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { theme } from '../styles/theme';
 import { useAuth } from '../hooks/useAuth.jsx';
-import { getCurrentSeason, getLeaderboard, getPlayerSeasonRank, getSeasonHistory } from '../services/api';
+import { getCurrentSeason, getLeaderboard, getPlayerSeasonRank, getSeasonHistory, getActiveRun } from '../services/api';
 import SeasonHeader from '../components/season/SeasonHeader';
 import LeaderboardTable from '../components/season/LeaderboardTable';
 import PlayerRankBanner from '../components/season/PlayerRankBanner';
@@ -11,6 +12,7 @@ const PAGE_SIZE = 20;
 
 export default function SeasonPage() {
   const { player } = useAuth();
+  const navigate = useNavigate();
 
   const [season, setSeason] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -21,6 +23,7 @@ export default function SeasonPage() {
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeRun, setActiveRun] = useState(null);
 
   // Initial load
   useEffect(() => {
@@ -28,11 +31,12 @@ export default function SeasonPage() {
 
     async function load() {
       try {
-        const [seasonData, leaderboardData, rankResult, historyData] = await Promise.allSettled([
+        const [seasonData, leaderboardData, rankResult, historyData, runData] = await Promise.allSettled([
           getCurrentSeason(),
           getLeaderboard(0, PAGE_SIZE),
           getPlayerSeasonRank(),
           getSeasonHistory(),
+          getActiveRun(),
         ]);
 
         if (cancelled) return;
@@ -48,6 +52,7 @@ export default function SeasonPage() {
           const list = Array.isArray(historyData.value) ? historyData.value : [];
           setHistory(list);
         }
+        if (runData.status === 'fulfilled' && runData.value) setActiveRun(runData.value);
       } catch (err) {
         if (!cancelled) setError('Failed to load season data.');
       } finally {
@@ -123,6 +128,49 @@ export default function SeasonPage() {
   return (
     <div style={pageStyle}>
       <div style={contentStyle}>
+        {/* Active run banner */}
+        {activeRun && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: theme.colors.barHP,
+            border: `1px solid ${theme.colors.borderGold}`,
+            borderRadius: theme.radius.md,
+            padding: theme.spacing.md,
+            gap: theme.spacing.md,
+          }}>
+            <div style={{
+              fontFamily: theme.fonts.body,
+              fontSize: theme.fontSizes.sm,
+              fontWeight: theme.fontWeights.bold,
+              color: theme.colors.bgPage,
+            }}>
+              You have an active run in progress!
+            </div>
+            <button
+              onClick={() => navigate('/battle', { state: { runState: activeRun } })}
+              style={{
+                background: theme.colors.borderGold,
+                color: theme.colors.bgPage,
+                border: 'none',
+                borderRadius: theme.radius.sm,
+                padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes.sm,
+                fontWeight: theme.fontWeights.bold,
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: `background ${theme.transitions.fast}`,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
+            >
+              Return to Battle
+            </button>
+          </div>
+        )}
+
         {/* Season header */}
         <SeasonHeader season={season} />
 
@@ -145,10 +193,14 @@ export default function SeasonPage() {
         </div>
 
         {/* Season history */}
-        {history.length > 0 && (
+        {(history.length > 0 || season) && (
           <div>
             <div style={sectionTitle}>Past Seasons</div>
-            <SeasonHistoryList history={history} />
+            <SeasonHistoryList
+              history={history}
+              currentSeason={season}
+              currentPlayerFightsSurvived={rankData?.fightsSurvived ?? null}
+            />
           </div>
         )}
       </div>

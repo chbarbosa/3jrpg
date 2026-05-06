@@ -22,14 +22,13 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
         opacity: defeated ? 0.35 : 1,
         filter: defeated ? 'grayscale(1)' : 'none',
         cursor: clickable ? 'pointer' : 'default',
-        minWidth: '100px',
-        maxWidth: '130px',
+        width: '100px',
         transition: `opacity ${theme.transitions.fast}, border-color ${theme.transitions.fast}, box-shadow ${theme.transitions.fast}`,
       }}
     >
       <div style={{
-        width: '56px',
-        height: '56px',
+        width: '80px',
+        height: '80px',
         background: theme.enemyColors[enemy.enemyType] ?? theme.colors.textMuted,
         borderRadius: theme.radius.md,
         flexShrink: 0,
@@ -41,12 +40,17 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
         fontSize: theme.fontSizes.xs,
         color: theme.colors.textPrimary,
         textAlign: 'center',
-        wordBreak: 'break-word',
+        height: '20px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        maxWidth: '80px',
+        width: '80px',
       }}>
         {enemy.name}
       </div>
 
-      <div style={{ width: '100%' }}>
+      <div style={{ width: '80px' }}>
         <HPBar current={enemy.hp} max={enemy.maxHp} />
       </div>
 
@@ -56,6 +60,7 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
           flexWrap: 'wrap',
           gap: '3px',
           justifyContent: 'center',
+          maxWidth: '80px',
         }}>
           {enemy.statuses.map((s) => (
             <StatusBadge key={s.statusName} statusName={s.statusName} turnsRemaining={s.turnsRemaining} />

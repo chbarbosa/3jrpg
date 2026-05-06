@@ -1,6 +1,7 @@
 import { theme } from '../../styles/theme';
 import { ITEM_LIST } from '../../data/items';
 
+const MAX_ITEMS = 2;
 const EXCLUDE_IDS = new Set(['reviveScroll']);
 
 export default function ItemStarter({ items, onUpdate }) {
@@ -16,6 +17,7 @@ export default function ItemStarter({ items, onUpdate }) {
   }
 
   const totalItems = Object.values(items).reduce((s, q) => s + q, 0);
+  const atCap = totalItems >= MAX_ITEMS;
 
   const btnBase = {
     width: '28px',
@@ -37,6 +39,7 @@ export default function ItemStarter({ items, onUpdate }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
         {available.map((item) => {
           const qty = items[item.id] ?? 0;
+          const plusDisabled = atCap && qty === 0;
           return (
             <div
               key={item.id}
@@ -88,14 +91,19 @@ export default function ItemStarter({ items, onUpdate }) {
                   {qty}
                 </span>
                 <button
-                  onClick={() => adjust(item.id, 1)}
+                  onClick={() => !plusDisabled && adjust(item.id, 1)}
+                  disabled={plusDisabled}
+                  title={plusDisabled ? 'Maximum 2 starting items reached' : undefined}
                   style={{
                     ...btnBase,
-                    background: theme.colors.borderGold,
-                    color: theme.colors.bgPage,
+                    background: plusDisabled ? theme.colors.bgPanelDark : theme.colors.borderGold,
+                    color: plusDisabled ? theme.colors.textMuted : theme.colors.bgPage,
+                    cursor: plusDisabled ? 'not-allowed' : 'pointer',
+                    opacity: plusDisabled ? 0.5 : 1,
+                    border: `1px solid ${plusDisabled ? theme.colors.borderBrown : 'transparent'}`,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
+                  onMouseEnter={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.actionHover; }}
+                  onMouseLeave={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.borderGold; }}
                 >
                   +
                 </button>
@@ -107,10 +115,11 @@ export default function ItemStarter({ items, onUpdate }) {
       <div style={{
         marginTop: theme.spacing.sm,
         fontSize: theme.fontSizes.xs,
-        color: theme.colors.textMuted,
+        color: atCap ? theme.colors.textHeader : theme.colors.textMuted,
         textAlign: 'right',
+        fontWeight: atCap ? theme.fontWeights.bold : theme.fontWeights.normal,
       }}>
-        {totalItems} item{totalItems !== 1 ? 's' : ''} selected
+        Items: {totalItems} / {MAX_ITEMS}
       </div>
     </div>
   );

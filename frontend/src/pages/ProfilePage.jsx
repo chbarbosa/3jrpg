@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { theme } from '../styles/theme';
-import { getProfile, updateProfile } from '../services/api';
+import { getProfile, updateProfile, getActiveRun } from '../services/api';
 import AlertModal from '../components/AlertModal';
 import EditProfileForm from '../components/profile/EditProfileForm';
 import ProfileStats from '../components/profile/ProfileStats';
@@ -19,6 +20,7 @@ function avatarBg(id) {
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', onConfirm: null };
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -26,6 +28,7 @@ export default function ProfilePage() {
   const [successMsg, setSuccessMsg] = useState(null);
   const [modal, setModal] = useState(MODAL_CLOSED);
   const [pulse, setPulse] = useState(false);
+  const [activeRun, setActiveRun] = useState(null);
 
   // Pulsing for loading placeholders
   useEffect(() => {
@@ -54,6 +57,10 @@ export default function ProfilePage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
+
+  useEffect(() => {
+    getActiveRun().then((run) => { if (run) setActiveRun(run); }).catch(() => {});
+  }, []);
 
   async function handleSave({ nickname, avatarId }) {
     setIsSaving(true);
@@ -103,6 +110,49 @@ export default function ProfilePage() {
   return (
     <div style={pageStyle}>
       <div style={contentStyle}>
+        {/* Active run banner */}
+        {activeRun && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: theme.colors.barHP,
+            border: `1px solid ${theme.colors.borderGold}`,
+            borderRadius: theme.radius.md,
+            padding: theme.spacing.md,
+            gap: theme.spacing.md,
+          }}>
+            <div style={{
+              fontFamily: theme.fonts.body,
+              fontSize: theme.fontSizes.sm,
+              fontWeight: theme.fontWeights.bold,
+              color: theme.colors.bgPage,
+            }}>
+              You have an active run in progress!
+            </div>
+            <button
+              onClick={() => navigate('/battle', { state: { runState: activeRun } })}
+              style={{
+                background: theme.colors.borderGold,
+                color: theme.colors.bgPage,
+                border: 'none',
+                borderRadius: theme.radius.sm,
+                padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                fontFamily: theme.fonts.body,
+                fontSize: theme.fontSizes.sm,
+                fontWeight: theme.fontWeights.bold,
+                cursor: 'pointer',
+                flexShrink: 0,
+                transition: `background ${theme.transitions.fast}`,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
+            >
+              Return to Battle
+            </button>
+          </div>
+        )}
+
         {/* Page title */}
         <h1 style={{
           fontFamily: theme.fonts.header,

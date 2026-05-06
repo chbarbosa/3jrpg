@@ -100,6 +100,29 @@ public class BattleService {
         int enBefore = req.actorId().startsWith("hero_")
                 ? gameLogicService.findHero(state, req.actorId()).getEn() : 0;
 
+        // ENEMY_TURN: frontend-triggered enemy action (e.g. when enemy acts first in a fight)
+        if (req.actionType() == ActionType.ENEMY_TURN) {
+            String description = gameLogicService.resolveOneEnemyTurn(state);
+            boolean defeated = false;
+            if (gameLogicService.checkAllHeroesDead(state)) {
+                state.setFightOver(true);
+                state.setVictory(false);
+                state.getCombatLog().add("Defeat! All heroes have fallen.");
+                defeated = true;
+            }
+            saveState(run, state);
+            runRepository.save(run);
+            if (defeated) {
+                List<Map<String, Object>> heroFinalStates = buildHeroFinalStates(state);
+                runService.closeRun(run, EndReason.DEFEATED);
+                runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.RUN_ENDED, buildMap(
+                        "endReason", "DEFEATED",
+                        "fightsSurvived", run.getFightsSurvived(),
+                        "heroFinalStates", heroFinalStates));
+            }
+            return new ActionResultResponse(gameLogicService.toBattleStateResponse(run.getUuid(), state), description);
+        }
+
         String description;
         try {
             description = gameLogicService.resolveAction(state, req);
@@ -224,13 +247,32 @@ public class BattleService {
                 int enGain = ThreadLocalRandom.current().nextInt(1, 3);
                 hero.setHp(Math.min(hero.getHp() + hpGain, hero.getMaxHp()));
                 hero.setEn(Math.min(hero.getEn() + enGain, hero.getMaxEn()));
-                regenLog.add(hero.getClassId() + " recovers " + hpGain + " HP and " + enGain + " EN.");
+                String heroLabel = hero.getName() != null ? hero.getName() : hero.getClassId();
+                regenLog.add(heroLabel + " recovers " + hpGain + " HP and " + enGain + " EN.");
                 Map<String, Object> detail = new LinkedHashMap<>();
                 detail.put("heroId", hero.getId());
                 detail.put("classId", hero.getClassId());
                 detail.put("hpGain", hpGain);
                 detail.put("enGain", enGain);
                 regenDetails.add(detail);
+            }
+        }
+
+        // Auto-revive knocked-out heroes with random 1–2 HP
+        List<HeroState> autoRevived = new ArrayList<>();
+        for (HeroState hero : state.getHeroes()) {
+            if (hero.isKnockedOut()) {
+                int reviveHp = ThreadLocalRandom.current().nextInt(1, 3); // 1 or 2
+                hero.setKnockedOut(false);
+                hero.setHp(reviveHp);
+                hero.getStatuses().clear();
+                String heroLabel = hero.getName() != null ? hero.getName() : hero.getClassId();
+                regenLog.add(heroLabel + " is revived with " + reviveHp + " HP.");
+                autoRevived.add(hero);
+                runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.AUTO_REVIVE, buildMap(
+                        "heroId", hero.getId(),
+                        "heroName", heroLabel,
+                        "hpRestored", reviveHp));
             }
         }
 
@@ -249,7 +291,8 @@ public class BattleService {
                 "fightNumber",  state.getFightNumber(),
                 "regenDetails", regenDetails));
 
-        return new PrepResultResponse(gameLogicService.toHeroDTOs(state.getHeroes()), regenLog, loot);
+        List<HeroStateDTO> autoRevivedDTOs = gameLogicService.toHeroDTOs(autoRevived);
+        return new PrepResultResponse(gameLogicService.toHeroDTOs(state.getHeroes()), regenLog, loot, autoRevivedDTOs);
     }
 
     public List<HeroStateDTO> assignLoot(UUID playerUuid, LootAssignRequest req) {
@@ -375,7 +418,7 @@ public class BattleService {
             HeroState h = old.get(i);
             HeroConfigDTO cfg = new HeroConfigDTO(
                     h.getClassId(), h.getAugmentationId(), h.getAdvantageId(),
-                    h.getEquippedWeaponId(), null, h.getEquippedArmorId(), null, null);
+                    h.getEquippedWeaponId(), null, h.getEquippedArmorId(), null, null, null);
             HeroState fresh = gameLogicService.buildHeroStates(List.of(cfg)).get(0);
             fresh.setId("hero_" + i);
             freshHeroes.add(fresh);

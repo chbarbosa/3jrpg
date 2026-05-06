@@ -27,6 +27,7 @@ public class RunEventService {
     public static final String LOOT_ASSIGNED     = "LOOT_ASSIGNED";
     public static final String PREP_PHASE_STARTED = "PREP_PHASE_STARTED";
     public static final String PREP_ACTION       = "PREP_ACTION";
+    public static final String AUTO_REVIVE       = "AUTO_REVIVE";
     public static final String RUN_ENDED         = "RUN_ENDED";
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};

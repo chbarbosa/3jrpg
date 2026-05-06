@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { theme } from '../../styles/theme';
 import { SPELL_LIST } from '../../data/spells';
+import { ITEM_LIST } from '../../data/items';
+import { playSound } from '../../services/sound';
 
 const ALLY_TARGET_ITEMS = new Set(['reviveScroll']);
-const ALL_ITEMS_SELF = true; // non-revive items target self
 
 function MenuButton({ label, sublabel, disabled, onClick, highlight }) {
   return (
@@ -25,7 +26,7 @@ function MenuButton({ label, sublabel, disabled, onClick, highlight }) {
         opacity: disabled ? 0.5 : 1,
         transition: `background ${theme.transitions.fast}`,
       }}
-      onMouseEnter={(e) => { if (!disabled && !highlight) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
+      onMouseEnter={(e) => { if (!disabled) playSound('uiNav'); if (!disabled && !highlight) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
       onMouseLeave={(e) => { if (!disabled && !highlight) e.currentTarget.style.background = theme.colors.bgPanel; }}
     >
       <div>{label}</div>
@@ -70,11 +71,22 @@ function SubMenuItem({ label, cost, school, disabled, onClick }) {
   );
 }
 
+const secondaryBtnStyle = {
+  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+  background: 'transparent',
+  border: `1px solid ${theme.colors.borderBrown}`,
+  borderRadius: theme.radius.sm,
+  cursor: 'pointer',
+  fontSize: theme.fontSizes.xs,
+  color: theme.colors.textMuted,
+  fontFamily: theme.fonts.body,
+  transition: `background ${theme.transitions.fast}, border-color ${theme.transitions.fast}, color ${theme.transitions.fast}`,
+};
+
 export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, onChangeWeapon, onCancelTarget, isLoading }) {
   const [submenu, setSubmenu] = useState(null); // null | 'skill' | 'item'
 
   const actorId = hero.id;
-  const hasSecondary = false; // will be inferred from hero state if available
 
   function handleAttack() {
     onBeginTarget({ mode: 'enemy', actionType: 'ATTACK', actorId });
@@ -111,7 +123,16 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
   }
 
   const hasSkills = hero.availableSkills?.length > 0 || hero.availableSpells?.length > 0;
-  const hasItems = hero.inventory?.length > 0;
+
+  // Filter inventory to items usable in battle
+  const battleItems = (hero.inventory ?? []).filter((item) => {
+    const def = ITEM_LIST.find((i) => i.id === item.id);
+    return def?.usableIn?.includes('battle') ?? false;
+  });
+  if ((hero.inventory?.length ?? 0) > 0 && battleItems.length === 0) {
+    console.error('[ActionMenu] Hero has items but none are usable in battle:', hero.inventory);
+  }
+  const hasItems = battleItems.length > 0;
 
   // Targeting mode — show cancel only
   if (targeting) {
@@ -129,15 +150,16 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
         </div>
         <button
           onClick={() => { onCancelTarget(); setSubmenu(null); }}
-          style={{
-            padding: `${theme.spacing.xs} ${theme.spacing.lg}`,
-            background: 'transparent',
-            border: `1px solid ${theme.colors.borderBrown}`,
-            borderRadius: theme.radius.md,
-            cursor: 'pointer',
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.sm,
-            color: theme.colors.textPrimary,
+          style={secondaryBtnStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = theme.colors.bgPanelDark;
+            e.currentTarget.style.borderColor = theme.colors.borderGold;
+            e.currentTarget.style.color = theme.colors.textHeader;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = theme.colors.borderBrown;
+            e.currentTarget.style.color = theme.colors.textMuted;
           }}
         >
           Cancel
@@ -218,15 +240,16 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
         </div>
         <button
           onClick={() => setSubmenu(null)}
-          style={{
-            padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-            background: 'transparent',
-            border: `1px solid ${theme.colors.borderBrown}`,
-            borderRadius: theme.radius.sm,
-            cursor: 'pointer',
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textMuted,
-            fontFamily: theme.fonts.body,
+          style={secondaryBtnStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = theme.colors.bgPanelDark;
+            e.currentTarget.style.borderColor = theme.colors.borderGold;
+            e.currentTarget.style.color = theme.colors.textHeader;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = theme.colors.borderBrown;
+            e.currentTarget.style.color = theme.colors.textMuted;
           }}
         >
           ← Back
@@ -237,7 +260,6 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
 
   // Item submenu
   if (submenu === 'item') {
-    const items = hero.inventory ?? [];
     return (
       <div style={menuStyle}>
         {loadingOverlay}
@@ -251,9 +273,9 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
           Items
         </div>
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
-          {items.map((item) => (
+          {battleItems.map((item) => (
             <SubMenuItem
-              key={item.id}
+              key={item.id + item.name}
               label={item.name}
               cost={0}
               school={null}
@@ -261,21 +283,22 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
               onClick={() => handleItemSelect(item)}
             />
           ))}
-          {items.length === 0 && (
-            <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>No items</div>
+          {battleItems.length === 0 && (
+            <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>No items usable in battle</div>
           )}
         </div>
         <button
           onClick={() => setSubmenu(null)}
-          style={{
-            padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-            background: 'transparent',
-            border: `1px solid ${theme.colors.borderBrown}`,
-            borderRadius: theme.radius.sm,
-            cursor: 'pointer',
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textMuted,
-            fontFamily: theme.fonts.body,
+          style={secondaryBtnStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = theme.colors.bgPanelDark;
+            e.currentTarget.style.borderColor = theme.colors.borderGold;
+            e.currentTarget.style.color = theme.colors.textHeader;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = theme.colors.borderBrown;
+            e.currentTarget.style.color = theme.colors.textMuted;
           }}
         >
           ← Back
@@ -297,13 +320,14 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
       />
       <MenuButton
         label="🧪 Item"
-        sublabel={hero.inventory?.length > 0 ? `${hero.inventory.length} in bag` : 'Empty'}
+        sublabel={hasItems ? `${battleItems.length} in bag` : 'Empty'}
         onClick={() => setSubmenu('item')}
+        disabled={!hasItems}
       />
       {hero.secondaryWeaponId && (
         <MenuButton
           label="🔄 Change Weapon"
-          sublabel={`Swap — costs your turn`}
+          sublabel="Swap — costs your turn"
           onClick={onChangeWeapon}
         />
       )}

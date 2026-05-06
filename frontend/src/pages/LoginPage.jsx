@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { sessionCheck } from '../services/api';
+import { getActiveRun, giveUp } from '../services/api';
 import AlertModal from '../components/AlertModal';
 import { theme } from '../styles/theme';
 
@@ -85,6 +85,8 @@ const linkStyle = {
   textDecoration: 'none',
 };
 
+const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -94,32 +96,63 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [modal, setModal] = useState(null);
+  const [modal, setModal] = useState(MODAL_CLOSED);
 
-  const closeModal = () => setModal(null);
+  function closeModal() {
+    setModal(MODAL_CLOSED);
+  }
+
+  function showActiveRunModal(activeRun, proceedToNormal) {
+    setModal({
+      open: true,
+      title: 'Active Run Found',
+      message: 'You have an unfinished run. Would you like to resume it or give it up?',
+      variant: 'warning',
+      confirmLabel: 'Resume Run',
+      cancelLabel: 'Give Up Run',
+      onConfirm: () => {
+        closeModal();
+        navigate('/battle', { state: { runState: activeRun } });
+      },
+      onCancel: () => showGiveUpConfirm(activeRun, proceedToNormal),
+    });
+  }
+
+  function showGiveUpConfirm(activeRun, proceedToNormal) {
+    setModal({
+      open: true,
+      title: 'Give Up Run?',
+      message: 'This will permanently end your current run and count as a defeat.',
+      variant: 'danger',
+      confirmLabel: 'Give Up',
+      cancelLabel: 'Back',
+      onConfirm: async () => {
+        closeModal();
+        try {
+          await giveUp(activeRun.runUuid);
+        } catch { /* ignore */ }
+        proceedToNormal();
+      },
+      onCancel: () => showActiveRunModal(activeRun, proceedToNormal),
+    });
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await login(email, password);
-      const check = await sessionCheck();
-      if (check.timeout) {
-        setModal({
-          title: 'Session Expired',
-          message: 'Your previous session expired.',
-          variant: 'info',
-          onConfirm: () => {
-            closeModal();
-            navigate('/gameover', { state: { timeout: true, fightsSurvived: check.fightsSurvived } });
-          },
-        });
-      } else {
-        navigate(from, { replace: true });
+
+      const activeRun = await getActiveRun().catch(() => null);
+      if (activeRun) {
+        showActiveRunModal(activeRun, () => navigate(from, { replace: true }));
+        return;
       }
+
+      navigate(from, { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setModal({ title: 'Login Failed', message: msg, variant: 'danger', onConfirm: closeModal });
+      setModal({ open: true, title: 'Login Failed', message: msg, variant: 'danger', confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null });
     } finally {
       setLoading(false);
     }
@@ -176,16 +209,16 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {modal && (
-        <AlertModal
-          isOpen
-          title={modal.title}
-          message={modal.message}
-          variant={modal.variant}
-          confirmLabel="OK"
-          onConfirm={modal.onConfirm}
-        />
-      )}
+      <AlertModal
+        isOpen={modal.open}
+        title={modal.title}
+        message={modal.message}
+        variant={modal.variant}
+        confirmLabel={modal.confirmLabel}
+        cancelLabel={modal.cancelLabel}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+      />
     </div>
   );
 }

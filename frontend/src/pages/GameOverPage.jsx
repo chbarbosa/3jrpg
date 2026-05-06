@@ -7,6 +7,7 @@ import RunSummaryCard from '../components/gameover/RunSummaryCard';
 import SharePanel from '../components/gameover/SharePanel';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { startRun, getProfile } from '../services/api';
+import { playSound } from '../services/sound';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
@@ -27,8 +28,8 @@ export default function GameOverPage() {
   const [starting, setStarting] = useState(false);
   const [modal, setModal] = useState(MODAL_CLOSED);
 
-  // Load profile silently for best run indicator
   useEffect(() => {
+    playSound('gameOver');
     getProfile().then(setProfile).catch(() => {});
   }, []);
 

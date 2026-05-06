@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { theme } from '../styles/theme';
+import { playSound } from '../services/sound';
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -170,7 +171,7 @@ export default function AlertModal({
           <button
             ref={confirmRef}
             style={confirmBtnStyle}
-            onClick={onConfirm}
+            onClick={() => { playSound('uiClick'); onConfirm?.(); }}
             onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
             onMouseDown={(e) => { e.currentTarget.style.background = theme.colors.actionActive; }}

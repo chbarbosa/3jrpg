@@ -4,7 +4,7 @@ import { theme } from '../styles/theme';
 import AlertModal from '../components/AlertModal';
 import HeroSlot from '../components/selection/HeroSlot';
 import TeamSummary from '../components/selection/TeamSummary';
-import { startRun } from '../services/api';
+import { startRun, getActiveRun, giveUp } from '../services/api';
 
 function emptyHero() {
   return {
@@ -38,14 +38,39 @@ const titleStyle = {
   marginBottom: theme.spacing.lg,
 };
 
+const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
+
 export default function SelectionPage() {
   const navigate = useNavigate();
   const [heroes, setHeroes] = useState([emptyHero(), emptyHero(), emptyHero()]);
-  const [modal, setModal] = useState({ open: false, title: '', message: '', variant: 'info', onConfirm: null, cancelLabel: null });
+  const [modal, setModal] = useState(MODAL_CLOSED);
   const [loading, setLoading] = useState(false);
 
   function updateHero(index, updates) {
     setHeroes((prev) => prev.map((h, i) => i === index ? { ...h, ...updates } : h));
+  }
+
+  function closeModal() {
+    setModal(MODAL_CLOSED);
+  }
+
+  function buildHeroConfigs() {
+    return heroes.map((hero) => ({
+      classId: hero.classId,
+      augmentationType: hero.augmentationType ?? null,
+      augmentationAdvantageId: hero.augmentationAdvantageId ?? null,
+      mageSpecializationId: hero.mageSpecializationId ?? null,
+      primaryWeaponId: hero.primaryWeaponId,
+      secondaryWeaponId: hero.secondaryWeaponId ?? null,
+      armorId: null,
+      accessoryId: null,
+      items: Object.keys(hero.items ?? {}).length > 0 ? hero.items : null,
+    }));
+  }
+
+  async function doStartRun(heroConfigs) {
+    const runState = await startRun(heroConfigs);
+    navigate('/battle', { state: { runState, heroConfigs } });
   }
 
   function openConfirmStart() {
@@ -61,63 +86,87 @@ export default function SelectionPage() {
     });
   }
 
-  function closeModal() {
-    setModal((m) => ({ ...m, open: false }));
-  }
-
-  function showError(title, message) {
-    setModal({
-      open: true,
-      title,
-      message,
-      variant: 'danger',
-      confirmLabel: 'OK',
-      cancelLabel: null,
-      onConfirm: closeModal,
-      onCancel: null,
-    });
-  }
-
   async function handleConfirmStart() {
     closeModal();
     setLoading(true);
     try {
-      const heroConfigs = heroes.map((hero) => ({
-        classId: hero.classId,
-        augmentationType: hero.augmentationType ?? null,
-        augmentationAdvantageId: hero.augmentationAdvantageId ?? null,
-        mageSpecializationId: hero.mageSpecializationId ?? null,
-        primaryWeaponId: hero.primaryWeaponId,
-        secondaryWeaponId: hero.secondaryWeaponId ?? null,
-        armorId: null,
-        accessoryId: null,
-      }));
-
-      const runState = await startRun(heroConfigs);
-      navigate('/battle', { state: { runState, heroConfigs } });
+      await doStartRun(buildHeroConfigs());
     } catch (err) {
       if (err.response?.status === 409) {
-        showError('Active Run Exists', 'You already have an active run. Give up or finish it first.');
+        showActiveRunModal(buildHeroConfigs());
       } else {
         const msg = err.response?.data?.error ?? err.message ?? 'Failed to start run.';
-        showError('Could Not Start Run', msg);
+        setModal({
+          open: true, title: 'Could Not Start Run', message: msg, variant: 'danger',
+          confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null,
+        });
       }
     } finally {
       setLoading(false);
     }
   }
 
+  function showActiveRunModal(heroConfigs) {
+    setModal({
+      open: true,
+      title: 'Active Run Exists',
+      message: 'You already have an unfinished run in progress.',
+      variant: 'warning',
+      confirmLabel: 'Return to Run',
+      cancelLabel: 'Give Up Current Run',
+      onConfirm: async () => {
+        closeModal();
+        try {
+          const activeRun = await getActiveRun();
+          if (activeRun) navigate('/battle', { state: { runState: activeRun } });
+        } catch {
+          setModal({ open: true, title: 'Error', message: 'Could not load active run.', variant: 'danger', confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null });
+        }
+      },
+      onCancel: () => showGiveUpConfirm(heroConfigs),
+    });
+  }
+
+  function showGiveUpConfirm(heroConfigs) {
+    setModal({
+      open: true,
+      title: 'Give Up Run?',
+      message: 'This will permanently end your current run and count as a defeat.',
+      variant: 'danger',
+      confirmLabel: 'Give Up',
+      cancelLabel: 'Back',
+      onConfirm: async () => {
+        closeModal();
+        setLoading(true);
+        try {
+          const activeRun = await getActiveRun();
+          if (activeRun?.runUuid) await giveUp(activeRun.runUuid);
+          await doStartRun(heroConfigs);
+        } catch (err) {
+          const msg = err.response?.data?.error ?? err.message ?? 'Failed to start run.';
+          setModal({ open: true, title: 'Error', message: msg, variant: 'danger', confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null });
+        } finally {
+          setLoading(false);
+        }
+      },
+      onCancel: () => showActiveRunModal(heroConfigs),
+    });
+  }
+
   return (
     <div style={pageStyle}>
       <h1 style={titleStyle}>Assemble Your Team</h1>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: theme.spacing.md,
-        marginBottom: theme.spacing.lg,
-        flex: 1,
-      }}>
+      <div
+        className="selection-hero-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: theme.spacing.md,
+          marginBottom: theme.spacing.lg,
+          flex: 1,
+        }}
+      >
         {heroes.map((hero, i) => (
           <HeroSlot
             key={i}
