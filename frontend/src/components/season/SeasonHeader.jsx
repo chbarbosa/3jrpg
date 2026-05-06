@@ -24,43 +24,17 @@ export default function SeasonHeader({ season }) {
   const isActive = !end || end > now;
 
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderGold}`,
-      borderRadius: theme.radius.lg,
-      boxShadow: theme.shadows.panel,
-      padding: theme.spacing.lg,
-      textAlign: 'center',
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.xxl,
-        fontWeight: theme.fontWeights.black,
-        color: theme.colors.textHeader,
-        marginBottom: theme.spacing.xs,
-      }}>
+    <div className="season-header">
+      <div className="season-header-title">
         {emoji} {season.name}
       </div>
-      <div style={{
-        fontFamily: theme.fonts.body,
-        fontSize: theme.fontSizes.sm,
-        color: theme.colors.textMuted,
-        marginBottom: theme.spacing.sm,
-      }}>
+      <div className="season-header-dates">
         {formatDate(season.startDate)} – {season.endDate ? formatDate(season.endDate) : 'Ongoing'}
       </div>
-      <span style={{
-        display: 'inline-block',
-        padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-        background: isActive ? theme.colors.statusPositive : theme.colors.borderBrown,
-        color: theme.colors.bgPage,
-        borderRadius: theme.radius.pill,
-        fontFamily: theme.fonts.body,
-        fontWeight: theme.fontWeights.bold,
-        fontSize: theme.fontSizes.xs,
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-      }}>
+      <span
+        className="season-status-badge"
+        style={{ background: isActive ? theme.colors.statusPositive : theme.colors.borderBrown }}
+      >
         {isActive ? 'Active' : 'Ended'}
       </span>
     </div>

@@ -79,90 +79,34 @@ export default function SeasonPage() {
     }
   }
 
-  const pageStyle = {
-    minHeight: '100vh',
-    background: theme.colors.bgPage,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: `${theme.spacing.xl} ${theme.spacing.lg}`,
-    boxSizing: 'border-box',
-  };
-
-  const contentStyle = {
-    width: '100%',
-    maxWidth: '700px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.lg,
-  };
-
-  const sectionTitle = {
-    fontFamily: theme.fonts.header,
-    fontSize: theme.fontSizes.lg,
-    fontWeight: theme.fontWeights.bold,
-    color: theme.colors.textHeader,
-    marginBottom: theme.spacing.sm,
-  };
-
   if (loading) {
     return (
-      <div style={pageStyle}>
-        <div style={{ fontFamily: theme.fonts.body, color: theme.colors.textMuted, fontSize: theme.fontSizes.md }}>
-          Loading season data…
-        </div>
+      <div className="page-centered">
+        <div className="loading-text">Loading season data…</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={pageStyle}>
-        <div style={{ fontFamily: theme.fonts.body, color: theme.colors.statusBleed ?? theme.colors.barHP, fontSize: theme.fontSizes.md }}>
-          {error}
-        </div>
+      <div className="page-centered">
+        <div className="loading-text" style={{ color: theme.colors.barHP }}>{error}</div>
       </div>
     );
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={contentStyle}>
+    <div className="page-centered">
+      <div className="page-content-wide">
         {/* Active run banner */}
         {activeRun && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: theme.colors.barHP,
-            border: `1px solid ${theme.colors.borderGold}`,
-            borderRadius: theme.radius.md,
-            padding: theme.spacing.md,
-            gap: theme.spacing.md,
-          }}>
-            <div style={{
-              fontFamily: theme.fonts.body,
-              fontSize: theme.fontSizes.sm,
-              fontWeight: theme.fontWeights.bold,
-              color: theme.colors.bgPage,
-            }}>
+          <div className="active-run-banner">
+            <div className="active-run-banner-msg">
               You have an active run in progress!
             </div>
             <button
+              className="btn-return-to-battle"
               onClick={() => navigate('/battle', { state: { runState: activeRun } })}
-              style={{
-                background: theme.colors.borderGold,
-                color: theme.colors.bgPage,
-                border: 'none',
-                borderRadius: theme.radius.sm,
-                padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                fontFamily: theme.fonts.body,
-                fontSize: theme.fontSizes.sm,
-                fontWeight: theme.fontWeights.bold,
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: `background ${theme.transitions.fast}`,
-              }}
               onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
             >
@@ -179,7 +123,7 @@ export default function SeasonPage() {
 
         {/* Leaderboard */}
         <div>
-          <div style={sectionTitle}>Leaderboard</div>
+          <div className="season-section-title">Leaderboard</div>
           <div style={{ opacity: pageLoading ? 0.5 : 1, transition: `opacity ${theme.transitions.normal}` }}>
             <LeaderboardTable
               entries={entries}
@@ -195,7 +139,7 @@ export default function SeasonPage() {
         {/* Season history */}
         {(history.length > 0 || season) && (
           <div>
-            <div style={sectionTitle}>Past Seasons</div>
+            <div className="season-section-title">Past Seasons</div>
             <SeasonHistoryList
               history={history}
               currentSeason={season}

@@ -13,16 +13,7 @@ export default function EndReasonBadge({ endReason }) {
   const bg = BADGE_COLORS[endReason] ?? theme.colors.textMuted;
 
   return (
-    <span style={{
-      display: 'inline-block',
-      padding: `${theme.spacing.xs} ${theme.spacing.lg}`,
-      background: bg,
-      color: theme.colors.bgPage,
-      fontFamily: theme.fonts.body,
-      fontWeight: theme.fontWeights.bold,
-      fontSize: theme.fontSizes.sm,
-      borderRadius: theme.radius.pill,
-    }}>
+    <span className="end-reason-badge" style={{ background: bg }}>
       {label}
     </span>
   );

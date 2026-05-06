@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from 'react';
-import { theme } from '../../styles/theme';
 
 export default function ENBar({ current, max, showValues = false }) {
   const prevRef = useRef(current);
@@ -25,38 +24,19 @@ export default function ENBar({ current, max, showValues = false }) {
         aria-valuemin={0}
         aria-valuemax={max}
         aria-label="EN"
-        style={{
-          position: 'relative',
-          height: '7px',
-          background: theme.colors.barEmpty,
-          borderRadius: theme.radius.pill,
-          overflow: 'hidden',
-        }}
+        className="bar-track"
       >
-        <div style={{
-          height: '100%',
-          width: `${pct}%`,
-          background: theme.colors.barEN,
-          borderRadius: theme.radius.pill,
-          transition: `width ${theme.transitions.slow}`,
-        }} />
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: theme.colors.barEN,
-          opacity: flashing ? 0.4 : 0,
-          transition: `opacity ${theme.transitions.normal}`,
-          borderRadius: theme.radius.pill,
-          pointerEvents: 'none',
-        }} />
+        <div
+          className="bar-fill bar-fill--en"
+          style={{ width: `${pct}%` }}
+        />
+        <div
+          className="bar-flash-overlay bar-flash-overlay--en"
+          style={{ opacity: flashing ? 0.4 : 0 }}
+        />
       </div>
       {showValues && (
-        <div style={{
-          fontSize: theme.fontSizes.xs,
-          color: theme.colors.textMuted,
-          marginTop: '2px',
-          textAlign: 'right',
-        }}>
+        <div className="bar-values bar-values--normal">
           {current} / {max}
         </div>
       )}

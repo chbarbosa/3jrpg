@@ -16,64 +16,31 @@ export default function StatusBadge({ statusName, turnsRemaining }) {
   const label = ABBREV[statusName] ?? statusName.slice(0, 3).toUpperCase();
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div className="status-badge-wrapper">
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        className="status-badge"
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '2px',
-          padding: '1px 5px',
-          borderRadius: theme.radius.pill,
           border: `1px solid ${positive ? theme.colors.statusPositive : color}`,
           background: `${color}22`,
-          fontSize: '10px',
-          fontWeight: theme.fontWeights.bold,
           color: positive ? theme.colors.statusPositive : color,
-          cursor: 'default',
-          userSelect: 'none',
-          whiteSpace: 'nowrap',
         }}
       >
         {label}
         {turnsRemaining > 0 && (
-          <span style={{ opacity: 0.7, fontWeight: theme.fontWeights.normal }}>
+          <span className="status-badge-turns">
             {turnsRemaining}
           </span>
         )}
       </div>
 
       {hovered && data && (
-        <div style={{
-          position: 'absolute',
-          bottom: '120%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: theme.colors.bgPanel,
-          border: `1px solid ${theme.colors.borderGold}`,
-          borderRadius: theme.radius.sm,
-          padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-          boxShadow: theme.shadows.panel,
-          minWidth: '160px',
-          maxWidth: '220px',
-          zIndex: 100,
-          pointerEvents: 'none',
-        }}>
-          <div style={{
-            fontWeight: theme.fontWeights.bold,
-            fontSize: theme.fontSizes.xs,
-            color: color,
-            marginBottom: '2px',
-            fontFamily: theme.fonts.header,
-          }}>
+        <div className="status-tooltip">
+          <div className="status-tooltip-name" style={{ color }}>
             {statusName.charAt(0).toUpperCase() + statusName.slice(1)}
           </div>
-          <div style={{
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textMuted,
-            lineHeight: 1.4,
-          }}>
+          <div className="status-tooltip-desc">
             {data.description}
           </div>
         </div>

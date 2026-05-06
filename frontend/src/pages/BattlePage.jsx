@@ -48,7 +48,7 @@ export default function BattlePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Enemy-turn auto-loop: when activeActorId is an enemy, trigger ENEMY_TURN after 500ms delay
+  // Enemy-turn auto-loop
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!battleState || battleState.fightOver) {
@@ -62,7 +62,7 @@ export default function BattlePage() {
       return;
     }
     if (enemyTurnScheduledRef.current) return;
-    if (modal.open) return; // paused while modal is open; resumes when modal closes
+    if (modal.open) return;
     enemyTurnScheduledRef.current = true;
     setEnemyTurnPending(true);
     const actorId = battleState.activeActorId;
@@ -79,7 +79,6 @@ export default function BattlePage() {
       enemyTurnScheduledRef.current = false;
       setEnemyTurnPending(false);
     };
-  // modal.open in deps so effect re-runs when modal closes, re-scheduling enemy turn
   }, [battleState, modal.open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Victory: fade overlay in + play sound once
@@ -104,8 +103,6 @@ export default function BattlePage() {
     });
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
   function findNewLogEntries(prevLog, newLog) {
     for (let len = Math.min(prevLog.length, newLog.length); len >= 0; len--) {
       if (prevLog.slice(prevLog.length - len).every((v, i) => v === newLog[i])) return newLog.slice(len);
@@ -122,8 +119,6 @@ export default function BattlePage() {
     setEnemyTurnPending(false);
   }
 
-  // ── Action submission ────────────────────────────────────────────────────
-
   async function submitAction({ actionType, actorId, targetId, skillId, spellId, itemId }) {
     setTargeting(null);
     setLoading(true);
@@ -134,12 +129,10 @@ export default function BattlePage() {
         targetId ?? null, skillId ?? null, spellId ?? null, itemId ?? null,
       );
 
-      // Action sounds
       if (actionType === 'ATTACK' || actionType === 'CHANGE_WEAPON') playSound('hit');
       else if (actionType === 'SKILL' || actionType === 'MAGIC') playSound('skill');
       else if (actionType === 'ITEM') playSound('itemUse');
 
-      // Death sounds — compare with previous state
       result.enemies?.forEach((enemy) => {
         const prev = prevState.enemies?.find((e) => e.id === enemy.id);
         if (prev && prev.hp > 0 && enemy.hp <= 0) playSound('enemyDeath');
@@ -149,7 +142,6 @@ export default function BattlePage() {
         if (prev && !prev.isKnockedOut && hero.isKnockedOut) playSound('heroDeath');
       });
 
-      // BUG 4: enemy-attack hit animation and sounds
       if (actionType === 'ENEMY_TURN') {
         const hitIds = new Set();
         result.heroes?.forEach((hero) => {
@@ -161,7 +153,6 @@ export default function BattlePage() {
           setHitHeroIds(hitIds);
           setTimeout(() => setHitHeroIds(new Set()), 350);
         }
-        // Status sound: detect newly applied statuses on heroes
         result.heroes?.forEach((hero) => {
           const prev = prevState.heroes?.find((h) => h.id === hero.id);
           if (prev) {
@@ -171,7 +162,6 @@ export default function BattlePage() {
         });
       }
 
-      // BUG 4: maintain typed combat log (hero vs enemy entries)
       const prevLog = prevState.combatLog ?? [];
       const newLog = result.combatLog ?? [];
       const newEntries = findNewLogEntries(prevLog, newLog);
@@ -214,8 +204,6 @@ export default function BattlePage() {
     }
   }
 
-  // ── Weapon swap ──────────────────────────────────────────────────────────
-
   function promptChangeWeapon(actorId) {
     setModal({
       open: true, title: 'Change Weapon?',
@@ -225,8 +213,6 @@ export default function BattlePage() {
       onCancel: closeModal,
     });
   }
-
-  // ── Give Up ──────────────────────────────────────────────────────────────
 
   function promptGiveUp() {
     cancelEnemyTurnTimer();
@@ -249,8 +235,6 @@ export default function BattlePage() {
       setLoading(false);
     }
   }
-
-  // ── Restart ──────────────────────────────────────────────────────────────
 
   function promptRestart() {
     cancelEnemyTurnTimer();
@@ -276,8 +260,6 @@ export default function BattlePage() {
     }
   }
 
-  // ── Victory — proceed to prep ────────────────────────────────────────────
-
   async function handleProceedToPrep() {
     setProceedingToPrep(true);
     try {
@@ -289,12 +271,10 @@ export default function BattlePage() {
     }
   }
 
-  // ── Render guard ─────────────────────────────────────────────────────────
-
   if (!battleState) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.colors.bgPage }}>
-        <div style={{ fontFamily: theme.fonts.body, color: theme.colors.textMuted }}>Loading battle...</div>
+      <div className="page-loading-center">
+        <div className="loading-text">Loading battle...</div>
       </div>
     );
   }
@@ -306,54 +286,24 @@ export default function BattlePage() {
   const isEnemyTurn = !fightOver && activeActorId && !heroIds.has(activeActorId);
   const cycleLabel = cycleModifier && cycleModifier !== '' ? cycleModifier : null;
 
-  // ── Layout styles ────────────────────────────────────────────────────────
-
-  const pageStyle = {
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    background: theme.colors.bgPage,
-    overflow: 'hidden',
-  };
-
-  const topBarStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
-    background: theme.colors.bgPanel,
-    borderBottom: `1px solid ${theme.colors.borderBrown}`,
-    flexShrink: 0,
-  };
-
-  const topBtnBase = {
-    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-    fontFamily: theme.fonts.body,
-    fontSize: theme.fontSizes.sm,
-    borderRadius: theme.radius.sm,
-    cursor: 'pointer',
-    border: 'none',
-    fontWeight: theme.fontWeights.bold,
-    transition: `background ${theme.transitions.fast}`,
-  };
-
   return (
-    <div style={pageStyle}>
-      {/* ── Top bar ── */}
-      <div style={topBarStyle}>
-        <div style={{ fontFamily: theme.fonts.header, fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: theme.colors.textHeader }}>
+    <div className="battle-page">
+      {/* Top bar */}
+      <div className="battle-top-bar">
+        <div className="battle-top-title">
           Fight #{fightNumber}
         </div>
         {cycleLabel && (
-          <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontStyle: 'italic' }}>
+          <div className="battle-top-cycle-label">
             {cycleLabel}
           </div>
         )}
-        <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+        <div className="battle-top-btns">
           <button
             onClick={promptGiveUp}
             disabled={enemyTurnPending}
-            style={{ ...topBtnBase, background: theme.colors.statusBleed, color: theme.colors.bgPage, opacity: enemyTurnPending ? 0.5 : 1 }}
+            className="btn-danger"
+            style={{ opacity: enemyTurnPending ? 0.5 : 1 }}
             onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = '#6B0000'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.statusBleed; }}
           >
@@ -362,7 +312,8 @@ export default function BattlePage() {
           <button
             onClick={promptRestart}
             disabled={enemyTurnPending}
-            style={{ ...topBtnBase, background: theme.colors.bgPanelDark, color: theme.colors.textPrimary, border: `1px solid ${theme.colors.borderBrown}`, opacity: enemyTurnPending ? 0.5 : 1 }}
+            className="btn-restart"
+            style={{ opacity: enemyTurnPending ? 0.5 : 1 }}
             onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = theme.colors.borderBrown; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
           >
@@ -371,18 +322,9 @@ export default function BattlePage() {
         </div>
       </div>
 
-      {/* ── Enemy area ── */}
-      <div style={{
-        flex: '1 1 auto',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: theme.spacing.md,
-        gap: theme.spacing.sm,
-        overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', gap: theme.spacing.md, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end' }}>
+      {/* Enemy area */}
+      <div className="battle-enemy-area">
+        <div className="battle-enemy-row">
           {enemies.map((enemy) => (
             <EnemyPanel
               key={enemy.id}
@@ -394,8 +336,8 @@ export default function BattlePage() {
         </div>
       </div>
 
-      {/* ── Turn order bar ── */}
-      <div style={{ background: theme.colors.bgPanel, borderTop: `1px solid ${theme.colors.borderBrown}`, flexShrink: 0 }}>
+      {/* Turn order bar */}
+      <div className="battle-turn-bar-wrapper">
         <TurnOrderBar
           turnOrder={turnOrder}
           activeActorId={activeActorId}
@@ -404,13 +346,13 @@ export default function BattlePage() {
         />
       </div>
 
-      <div style={{ height: '1px', background: theme.colors.borderBrown, flexShrink: 0 }} />
+      <div className="battle-divider" />
 
-      {/* ── Bottom area ── */}
-      <div className="battle-bottom" style={{ display: 'flex', flexShrink: 0, height: '42vh', overflow: 'hidden' }}>
+      {/* Bottom area */}
+      <div className="battle-bottom">
         {/* Hero area + combat log */}
-        <div className="battle-hero-col" style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: theme.spacing.md, gap: theme.spacing.sm, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', gap: theme.spacing.sm, flex: 1, overflow: 'hidden' }}>
+        <div className="battle-hero-col">
+          <div className="battle-heroes-row">
             {heroes.map((hero) => {
               const isAllyTarget = targeting && (targeting.mode === 'ally' || targeting.mode === 'ally-ko');
               const canClickAlly = isAllyTarget && (targeting.mode === 'ally' ? !hero.isKnockedOut : hero.isKnockedOut);
@@ -418,13 +360,10 @@ export default function BattlePage() {
                 <div
                   key={hero.id}
                   onClick={canClickAlly ? () => handleHeroClick(hero) : undefined}
-                  className={hitHeroIds.has(hero.id) ? 'hero-hit' : undefined}
+                  className={`battle-hero-wrapper${hitHeroIds.has(hero.id) ? ' hero-hit' : ''}`}
                   style={{
-                    flex: 1,
                     cursor: canClickAlly ? 'pointer' : 'default',
                     outline: canClickAlly ? `2px solid ${theme.colors.highlight}` : 'none',
-                    borderRadius: theme.radius.md,
-                    transition: `outline ${theme.transitions.fast}`,
                   }}
                 >
                   <HeroPanel
@@ -439,7 +378,7 @@ export default function BattlePage() {
         </div>
 
         {/* Action menu */}
-        <div className="battle-action-col" style={{ flex: '0 0 35%', padding: theme.spacing.md, borderLeft: `1px solid ${theme.colors.borderBrown}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="battle-action-col">
           {activeHero ? (
             <ActionMenu
               hero={activeHero}
@@ -451,36 +390,27 @@ export default function BattlePage() {
               isLoading={loading}
             />
           ) : isEnemyTurn ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: theme.spacing.sm }}>
-              <div style={{ color: theme.colors.textHeader, fontFamily: theme.fonts.header, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.bold }}>
+            <div className="battle-enemy-turn-msg">
+              <div className="battle-enemy-turn-label">
                 Enemy is acting...
               </div>
-              <div style={{ color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: theme.fontSizes.xs, fontStyle: 'italic' }}>
+              <div className="battle-enemy-turn-name">
                 {enemies.find((e) => e.id === activeActorId)?.name ?? 'Enemy'}
               </div>
             </div>
           ) : !fightOver ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: theme.fontSizes.sm, fontStyle: 'italic' }}>
+            <div className="battle-waiting-msg">
               Waiting...
             </div>
           ) : null}
         </div>
       </div>
 
-      {/* ── Victory overlay ── */}
+      {/* Victory overlay */}
       {fightOver && victory && (
         <div
-          className="victory-overlay"
+          className="victory-overlay-panel victory-overlay"
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: theme.colors.overlayBg,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: theme.spacing.lg,
-            zIndex: 50,
             opacity: victoryVisible ? 1 : 0,
             transition: `opacity ${theme.transitions.slow}`,
           }}
@@ -488,9 +418,9 @@ export default function BattlePage() {
           <div
             className="victory-text"
             style={{
-              fontFamily: theme.fonts.header,
-              fontSize: theme.fontSizes.xxl,
-              fontWeight: theme.fontWeights.black,
+              fontFamily: 'var(--font-header)',
+              fontSize: 'var(--fs-xxl)',
+              fontWeight: 'var(--fw-black)',
               color: theme.colors.highlight,
               transform: victoryVisible ? 'scale(1)' : 'scale(0.8)',
               transition: `transform ${theme.transitions.slow}`,
@@ -498,24 +428,14 @@ export default function BattlePage() {
           >
             Victory!
           </div>
-          <div style={{ fontSize: theme.fontSizes.md, color: theme.colors.bgPage }}>
+          <div className="victory-cleared-label">
             Fight #{fightNumber} cleared
           </div>
           <button
             onClick={handleProceedToPrep}
             disabled={proceedingToPrep}
-            style={{
-              fontFamily: theme.fonts.header,
-              fontSize: theme.fontSizes.lg,
-              fontWeight: theme.fontWeights.bold,
-              padding: `${theme.spacing.sm} ${theme.spacing.xl}`,
-              background: theme.colors.borderGold,
-              color: theme.colors.bgPage,
-              border: 'none',
-              borderRadius: theme.radius.md,
-              cursor: proceedingToPrep ? 'wait' : 'pointer',
-              opacity: proceedingToPrep ? 0.7 : 1,
-            }}
+            className="btn-victory-continue"
+            style={{ cursor: proceedingToPrep ? 'wait' : 'pointer', opacity: proceedingToPrep ? 0.7 : 1 }}
             onMouseEnter={(e) => { if (!proceedingToPrep) e.currentTarget.style.background = theme.colors.actionHover; }}
             onMouseLeave={(e) => { if (!proceedingToPrep) e.currentTarget.style.background = theme.colors.borderGold; }}
           >

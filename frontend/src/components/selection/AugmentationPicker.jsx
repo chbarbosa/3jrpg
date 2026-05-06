@@ -5,32 +5,22 @@ function PickerCard({ label, sublabel, tradeoff, selected, onClick }) {
   return (
     <button
       onClick={onClick}
+      className="picker-card-btn"
       style={{
-        padding: theme.spacing.sm,
         background: selected ? theme.colors.bgPanelDark : theme.colors.bgPanel,
         border: `${selected ? 2 : 1}px solid ${selected ? theme.colors.borderGold : theme.colors.borderBrown}`,
-        borderRadius: theme.radius.md,
-        cursor: 'pointer',
-        textAlign: 'left',
-        width: '100%',
-        transition: `background ${theme.transitions.fast}`,
       }}
       onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
       onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = theme.colors.bgPanel; }}
     >
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.sm,
-        fontWeight: theme.fontWeights.bold,
-        color: theme.colors.textPrimary,
-      }}>{label}</div>
+      <div className="picker-card-label">{label}</div>
       {sublabel && (
-        <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '2px' }}>
+        <div className="picker-card-sublabel">
           {sublabel}
         </div>
       )}
       {tradeoff && (
-        <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.statusBleed, marginTop: '4px' }}>
+        <div className="picker-card-tradeoff">
           ⚠ {tradeoff}
         </div>
       )}
@@ -54,7 +44,7 @@ export default function AugmentationPicker({ classType, augmentationType, augmen
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
       {available.map((aug) => (
         <PickerCard
           key={aug.id}
@@ -67,21 +57,11 @@ export default function AugmentationPicker({ classType, augmentationType, augmen
       ))}
 
       {selectedAug && selectedAug.advantages.length > 0 && (
-        <div style={{
-          borderTop: `1px solid ${theme.colors.borderBrown}`,
-          paddingTop: theme.spacing.sm,
-          marginTop: theme.spacing.xs,
-        }}>
-          <div style={{
-            fontSize: theme.fontSizes.sm,
-            fontWeight: theme.fontWeights.bold,
-            color: theme.colors.textHeader,
-            fontFamily: theme.fonts.header,
-            marginBottom: theme.spacing.xs,
-          }}>
+        <div className="picker-card-advantage-header">
+          <div className="picker-card-advantage-title">
             Choose your advantage:
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+          <div className="picker-card-advantage-list">
             {selectedAug.advantages.map((adv) => (
               <PickerCard
                 key={adv.id}

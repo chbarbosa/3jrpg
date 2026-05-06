@@ -87,64 +87,20 @@ export default function ProfilePage() {
     setIsEditing(false);
   }
 
-  const pageStyle = {
-    minHeight: '100vh',
-    background: theme.colors.bgPage,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: `${theme.spacing.xl} ${theme.spacing.lg}`,
-    boxSizing: 'border-box',
-  };
-
-  const contentStyle = {
-    width: '100%',
-    maxWidth: '500px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.lg,
-  };
-
   const pulseOpacity = pulse ? 0.4 : 0.85;
 
   return (
-    <div style={pageStyle}>
-      <div style={contentStyle}>
+    <div className="page-centered">
+      <div className="page-content-medium">
         {/* Active run banner */}
         {activeRun && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: theme.colors.barHP,
-            border: `1px solid ${theme.colors.borderGold}`,
-            borderRadius: theme.radius.md,
-            padding: theme.spacing.md,
-            gap: theme.spacing.md,
-          }}>
-            <div style={{
-              fontFamily: theme.fonts.body,
-              fontSize: theme.fontSizes.sm,
-              fontWeight: theme.fontWeights.bold,
-              color: theme.colors.bgPage,
-            }}>
+          <div className="active-run-banner">
+            <div className="active-run-banner-msg">
               You have an active run in progress!
             </div>
             <button
+              className="btn-return-to-battle"
               onClick={() => navigate('/battle', { state: { runState: activeRun } })}
-              style={{
-                background: theme.colors.borderGold,
-                color: theme.colors.bgPage,
-                border: 'none',
-                borderRadius: theme.radius.sm,
-                padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                fontFamily: theme.fonts.body,
-                fontSize: theme.fontSizes.sm,
-                fontWeight: theme.fontWeights.bold,
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: `background ${theme.transitions.fast}`,
-              }}
               onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
             >
@@ -154,89 +110,47 @@ export default function ProfilePage() {
         )}
 
         {/* Page title */}
-        <h1 style={{
-          fontFamily: theme.fonts.header,
-          fontSize: theme.fontSizes.xxl,
-          fontWeight: theme.fontWeights.black,
-          color: theme.colors.textHeader,
-          margin: 0,
-        }}>
-          Profile
-        </h1>
+        <h1 className="profile-page-title">Profile</h1>
 
         {/* Avatar + nickname header */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
+        <div className="profile-avatar-section">
           {/* Avatar circle */}
           {isLoading ? (
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: theme.radius.pill,
-              background: theme.colors.bgPanelDark,
-              border: `3px solid ${theme.colors.borderGold}`,
-              opacity: pulseOpacity,
-              transition: `opacity ${theme.transitions.normal}`,
-            }} />
+            <div
+              className="profile-avatar-circle profile-avatar-placeholder"
+              style={{ opacity: pulseOpacity, transition: `opacity ${theme.transitions.normal}` }}
+            />
           ) : (
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: theme.radius.pill,
-              background: avatarBg(profile?.avatarId),
-              border: `3px solid ${theme.colors.borderGold}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: theme.colors.bgPage,
-              fontFamily: theme.fonts.header,
-              fontWeight: theme.fontWeights.black,
-              fontSize: theme.fontSizes.xl,
-              flexShrink: 0,
-            }}>
+            <div
+              className="profile-avatar-circle"
+              style={{ background: avatarBg(profile?.avatarId) }}
+            >
               {(profile?.avatarId?.[0] ?? '?').toUpperCase()}
             </div>
           )}
 
           {/* Nickname */}
           {isLoading ? (
-            <div style={{
-              width: '120px',
-              height: '28px',
-              borderRadius: theme.radius.sm,
-              background: theme.colors.bgPanelDark,
-              opacity: pulseOpacity,
-              transition: `opacity ${theme.transitions.normal}`,
-            }} />
+            <div
+              className="profile-nickname-placeholder"
+              style={{ opacity: pulseOpacity, transition: `opacity ${theme.transitions.normal}` }}
+            />
           ) : (
-            <div style={{
-              fontFamily: theme.fonts.header,
-              fontSize: theme.fontSizes.xl,
-              fontWeight: theme.fontWeights.bold,
-              color: theme.colors.textHeader,
-            }}>
+            <div className="profile-nickname">
               {profile?.nickname}
             </div>
           )}
 
           {/* Email */}
           {!isLoading && profile?.email && (
-            <div style={{
-              fontFamily: theme.fonts.body,
-              fontSize: theme.fontSizes.sm,
-              color: theme.colors.textMuted,
-            }}>
+            <div className="profile-email">
               {profile.email}
             </div>
           )}
 
           {/* Success message */}
           {successMsg && (
-            <div style={{
-              fontFamily: theme.fonts.body,
-              fontSize: theme.fontSizes.sm,
-              fontWeight: theme.fontWeights.bold,
-              color: theme.colors.statusPositive,
-            }}>
+            <div className="profile-success-msg">
               {successMsg}
             </div>
           )}
@@ -244,19 +158,8 @@ export default function ProfilePage() {
           {/* Edit button */}
           {!isLoading && !isEditing && (
             <button
+              className="btn-edit-profile"
               onClick={() => setIsEditing(true)}
-              style={{
-                padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                background: 'transparent',
-                border: `1px solid ${theme.colors.borderGold}`,
-                borderRadius: theme.radius.sm,
-                color: theme.colors.textHeader,
-                fontFamily: theme.fonts.body,
-                fontSize: theme.fontSizes.sm,
-                fontWeight: theme.fontWeights.bold,
-                cursor: 'pointer',
-                transition: `background ${theme.transitions.fast}`,
-              }}
               onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.bgPanel; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
@@ -277,14 +180,10 @@ export default function ProfilePage() {
 
         {/* Stats */}
         {isLoading ? (
-          <div style={{
-            height: '180px',
-            background: theme.colors.bgPanel,
-            border: `1px solid ${theme.colors.borderGold}`,
-            borderRadius: theme.radius.md,
-            opacity: pulseOpacity,
-            transition: `opacity ${theme.transitions.normal}`,
-          }} />
+          <div
+            className="profile-stats-placeholder"
+            style={{ opacity: pulseOpacity, transition: `opacity ${theme.transitions.normal}` }}
+          />
         ) : (
           <ProfileStats profile={profile} />
         )}

@@ -32,51 +32,11 @@ export default function EditProfileForm({ profile, onSave, onCancel, isSaving })
     onSave({ nickname: nickname.trim(), avatarId });
   }
 
-  const inputStyle = {
-    width: '100%',
-    background: theme.colors.bgPanelDark,
-    border: `1px solid ${theme.colors.borderBrown}`,
-    borderRadius: theme.radius.sm,
-    padding: theme.spacing.sm,
-    fontFamily: theme.fonts.body,
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.textPrimary,
-    boxSizing: 'border-box',
-    outline: 'none',
-  };
-
-  const btnBase = {
-    flex: 1,
-    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-    borderRadius: theme.radius.sm,
-    fontFamily: theme.fonts.body,
-    fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.bold,
-    cursor: 'pointer',
-    border: 'none',
-    transition: `background ${theme.transitions.fast}`,
-  };
-
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderGold}`,
-      borderRadius: theme.radius.md,
-      boxShadow: theme.shadows.panel,
-      padding: theme.spacing.lg,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: theme.spacing.md,
-    }}>
+    <div className="edit-profile-form">
       {/* Nickname */}
       <div>
-        <label style={{
-          display: 'block',
-          fontFamily: theme.fonts.body,
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textMuted,
-          marginBottom: theme.spacing.xs,
-        }}>
+        <label className="edit-profile-label">
           Nickname
         </label>
         <input
@@ -85,17 +45,12 @@ export default function EditProfileForm({ profile, onSave, onCancel, isSaving })
           onChange={handleNicknameChange}
           onBlur={handleBlur}
           onFocus={(e) => { e.target.style.borderColor = theme.colors.borderGold; }}
-          style={inputStyle}
+          className="edit-profile-input"
           disabled={isSaving}
           maxLength={30}
         />
         {nicknameError && (
-          <div style={{
-            marginTop: theme.spacing.xs,
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.statusBleed,
-          }}>
+          <div className="edit-profile-error">
             {nicknameError}
           </div>
         )}
@@ -103,24 +58,19 @@ export default function EditProfileForm({ profile, onSave, onCancel, isSaving })
 
       {/* Avatar picker */}
       <div>
-        <div style={{
-          fontFamily: theme.fonts.body,
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textMuted,
-          marginBottom: theme.spacing.sm,
-        }}>
+        <div className="edit-profile-avatar-title">
           Choose Avatar
         </div>
         <AvatarPicker selectedAvatarId={avatarId} onSelect={setAvatarId} />
       </div>
 
       {/* Buttons */}
-      <div style={{ display: 'flex', gap: theme.spacing.md }}>
+      <div className="edit-profile-btn-row">
         <button
           onClick={handleSave}
           disabled={isSaving}
+          className="edit-profile-save-btn"
           style={{
-            ...btnBase,
             background: isSaving ? theme.colors.bgPanelDark : theme.colors.borderGold,
             color: isSaving ? theme.colors.textMuted : theme.colors.bgPage,
             cursor: isSaving ? 'wait' : 'pointer',
@@ -133,13 +83,8 @@ export default function EditProfileForm({ profile, onSave, onCancel, isSaving })
         <button
           onClick={onCancel}
           disabled={isSaving}
-          style={{
-            ...btnBase,
-            background: 'transparent',
-            border: `1px solid ${theme.colors.borderBrown}`,
-            color: theme.colors.textPrimary,
-            cursor: isSaving ? 'default' : 'pointer',
-          }}
+          className="edit-profile-cancel-btn"
+          style={{ cursor: isSaving ? 'default' : 'pointer' }}
           onMouseEnter={(e) => { if (!isSaving) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
         >

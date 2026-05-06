@@ -30,41 +30,22 @@ export default function RunSummaryCard({ fightsSurvived, heroConfigs }) {
   });
 
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderGold}`,
-      borderRadius: theme.radius.lg,
-      boxShadow: theme.shadows.panel,
-      padding: theme.spacing.lg,
-    }}>
+    <div className="panel--lg">
       {/* Fights survived */}
-      <div style={{ textAlign: 'center', marginBottom: theme.spacing.lg }}>
-        <div style={{
-          fontFamily: theme.fonts.header,
-          fontSize: theme.fontSizes.xxl,
-          fontWeight: theme.fontWeights.black,
-          color: theme.colors.textHeader,
-          lineHeight: 1,
-        }}>
+      <div className="run-summary-center">
+        <div className="run-summary-fights-count">
           {fightsSurvived}
         </div>
-        <div style={{
-          fontFamily: theme.fonts.body,
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textMuted,
-          marginTop: theme.spacing.xs,
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-        }}>
+        <div className="run-summary-fights-label">
           Fights Survived
         </div>
         {label && (
           <div style={{
-            marginTop: theme.spacing.sm,
-            fontSize: theme.fontSizes.sm,
+            marginTop: 'var(--sp-sm)',
+            fontSize: 'var(--fs-sm)',
             color: label.color,
             fontStyle: label.italic ? 'italic' : 'normal',
-            fontWeight: label.bold ? theme.fontWeights.bold : theme.fontWeights.normal,
+            fontWeight: label.bold ? 'var(--fw-bold)' : 'var(--fw-normal)',
           }}>
             {label.text}
           </div>
@@ -74,37 +55,20 @@ export default function RunSummaryCard({ fightsSurvived, heroConfigs }) {
       {/* Team */}
       {teamRows.length > 0 && (
         <>
-          <div style={{
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.xs,
-            color: theme.colors.textMuted,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            marginBottom: theme.spacing.sm,
-          }}>
+          <div className="run-summary-team-header">
             Your Team
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+          <div className="run-summary-team-list">
             {teamRows.map((row, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-                <div style={{
-                  width: '10px', height: '10px',
-                  borderRadius: theme.radius.pill,
-                  background: theme.classColors[row.colorKey] ?? theme.colors.textMuted,
-                  flexShrink: 0,
-                }} />
-                <span style={{
-                  fontFamily: theme.fonts.body,
-                  fontSize: theme.fontSizes.sm,
-                  fontWeight: theme.fontWeights.bold,
-                  color: theme.colors.textPrimary,
-                }}>
+              <div key={i} className="run-summary-team-row">
+                <div
+                  className="team-dot"
+                  style={{ background: theme.classColors[row.colorKey] ?? theme.colors.textMuted }}
+                />
+                <span className="run-summary-hero-class">
                   {row.className}
                 </span>
-                <span style={{
-                  fontSize: theme.fontSizes.xs,
-                  color: theme.colors.textMuted,
-                }}>
+                <span className="run-summary-hero-aug">
                   {row.augmentationLabel}
                 </span>
               </div>

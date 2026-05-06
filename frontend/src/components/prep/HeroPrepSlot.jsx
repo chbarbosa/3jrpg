@@ -7,22 +7,18 @@ function ActionCard({ label, sublabel, selected, disabled, onClick }) {
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
+      className={`picker-card-btn${selected ? ' picker-card-btn--selected' : ''}${disabled ? ' picker-card-btn--disabled' : ''}`}
       style={{
-        padding: theme.spacing.sm,
         background: selected ? theme.colors.bgPanelDark : theme.colors.bgPanel,
         border: `${selected ? 2 : 1}px solid ${selected ? theme.colors.borderGold : theme.colors.borderBrown}`,
-        borderRadius: theme.radius.sm,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        textAlign: 'left',
-        width: '100%',
         opacity: disabled ? 0.4 : 1,
-        transition: `background ${theme.transitions.fast}`,
+        cursor: disabled ? 'not-allowed' : 'pointer',
       }}
       onMouseEnter={(e) => { if (!disabled && !selected) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
       onMouseLeave={(e) => { if (!disabled && !selected) e.currentTarget.style.background = theme.colors.bgPanel; }}
     >
-      <div style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>{label}</div>
-      {sublabel && <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '2px' }}>{sublabel}</div>}
+      <div className="picker-card-label">{label}</div>
+      {sublabel && <div className="picker-card-sublabel">{sublabel}</div>}
     </button>
   );
 }
@@ -62,41 +58,26 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     }
   }
 
-  const slotStyle = {
-    padding: theme.spacing.md,
-    background: theme.colors.bgPanel,
-    border: `1px solid ${isDone ? theme.colors.borderGold : theme.colors.borderBrown}`,
-    borderRadius: theme.radius.md,
-    display: 'flex',
-    gap: theme.spacing.md,
-    alignItems: 'flex-start',
-    opacity: submitting ? 0.7 : 1,
-    transition: `border-color ${theme.transitions.fast}`,
-  };
-
   const heroLabel = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs, flexShrink: 0, minWidth: '90px' }}>
-      <div style={{
-        width: '10px', height: '10px',
-        borderRadius: theme.radius.pill,
-        background: classColor,
-        flexShrink: 0,
-      }} />
+    <div className="prep-slot-hero-label">
+      <div className="team-dot" style={{ background: classColor }} />
       <div>
-        <div style={{ fontFamily: theme.fonts.header, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.bold, color: theme.colors.textPrimary }}>
+        <div className="prep-slot-hero-name">
           {hero.name}
         </div>
-        <div style={{ fontSize: theme.fontSizes.xs, color: classColor }}>{hero.className}</div>
+        <div style={{ fontSize: 'var(--fs-xs)', color: classColor }}>{hero.className}</div>
       </div>
     </div>
   );
 
+  const slotBorderColor = isDone ? theme.colors.borderGold : theme.colors.borderBrown;
+
   // Knocked out — show info, no action picker
   if (hero.isKnockedOut) {
     return (
-      <div style={{ ...slotStyle, opacity: 0.55 }}>
+      <div className="prep-slot prep-slot--ko" style={{ border: `1px solid ${slotBorderColor}`, opacity: 0.55 }}>
         {heroLabel}
-        <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.statusBleed, fontStyle: 'italic', paddingTop: '4px' }}>
+        <div className="prep-slot-ko-label">
           Needs Revival
         </div>
       </div>
@@ -106,11 +87,11 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // Done
   if (isDone) {
     return (
-      <div style={slotStyle}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
         {heroLabel}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-          <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{doneLabel ?? 'Action taken'}</span>
-          <span style={{ color: theme.colors.statusPositive, fontWeight: theme.fontWeights.bold }}>✓</span>
+        <div className="prep-slot-done-row">
+          <span className="prep-slot-done-label">{doneLabel ?? 'Action taken'}</span>
+          <span className="prep-slot-done-check">✓</span>
         </div>
       </div>
     );
@@ -119,17 +100,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   const smallBtn = (label, onClick, variant = 'default') => (
     <button
       onClick={onClick}
-      style={{
-        padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-        background: variant === 'primary' ? theme.colors.borderGold : 'transparent',
-        color: variant === 'primary' ? theme.colors.bgPage : theme.colors.textMuted,
-        border: `1px solid ${variant === 'primary' ? theme.colors.borderGold : theme.colors.borderBrown}`,
-        borderRadius: theme.radius.sm,
-        cursor: 'pointer',
-        fontSize: theme.fontSizes.xs,
-        fontFamily: theme.fonts.body,
-        fontWeight: variant === 'primary' ? theme.fontWeights.bold : theme.fontWeights.normal,
-      }}
+      className={`prep-small-btn prep-small-btn--${variant}`}
     >
       {label}
     </button>
@@ -138,36 +109,25 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // REVIVE sub-view
   if (selectedAction === 'REVIVE') {
     return (
-      <div style={slotStyle}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
         {heroLabel}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.bold, color: theme.colors.textHeader, marginBottom: theme.spacing.xs }}>
+          <div className="prep-slot-sub-title">
             Revive who?
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+          <div className="prep-slot-sub-list">
             {knockedOutAllies.map((ally) => (
               <button
                 key={ally.id}
                 onClick={() => submit('REVIVE', null, ally.id)}
                 disabled={submitting}
-                style={{
-                  padding: theme.spacing.xs,
-                  background: theme.colors.bgPanel,
-                  border: `1px solid ${theme.colors.borderGold}`,
-                  borderRadius: theme.radius.sm,
-                  cursor: 'pointer',
-                  fontSize: theme.fontSizes.sm,
-                  color: theme.colors.textPrimary,
-                  textAlign: 'left',
-                  fontFamily: theme.fonts.body,
-                  fontWeight: theme.fontWeights.bold,
-                }}
+                className="prep-slot-ally-btn"
               >
-                {ally.name} <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>({ally.className})</span>
+                {ally.name} <span className="prep-slot-ally-class">({ally.className})</span>
               </button>
             ))}
           </div>
-          <div style={{ marginTop: theme.spacing.xs }}>
+          <div className="prep-slot-back-row">
             {smallBtn('← Back', () => setSelectedAction(null))}
           </div>
         </div>
@@ -178,13 +138,13 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // SWAP_GEAR sub-view
   if (selectedAction === 'SWAP_GEAR') {
     return (
-      <div style={slotStyle}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
         {heroLabel}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginBottom: theme.spacing.sm }}>
+          <div className="prep-slot-swap-desc">
             Swap primary and secondary weapon. Your available skills will change for the next fight.
           </div>
-          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+          <div className="prep-slot-swap-btns">
             {smallBtn('← Back', () => setSelectedAction(null))}
             {smallBtn('Confirm Swap', () => submit('SWAP_GEAR'), 'primary')}
           </div>
@@ -197,39 +157,28 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   if (selectedAction === 'USE_ITEM' && selectedItemId) {
     if (selectedItemId === 'reviveScroll') {
       return (
-        <div style={slotStyle}>
+        <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
           {heroLabel}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.bold, color: theme.colors.textHeader, marginBottom: theme.spacing.xs }}>
+            <div className="prep-slot-sub-title">
               Revive Scroll — target:
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+            <div className="prep-slot-sub-list">
               {knockedOutAllies.map((ally) => (
                 <button
                   key={ally.id}
                   onClick={() => submit('USE_ITEM', 'reviveScroll', ally.id)}
                   disabled={submitting}
-                  style={{
-                    padding: theme.spacing.xs,
-                    background: theme.colors.bgPanel,
-                    border: `1px solid ${theme.colors.borderGold}`,
-                    borderRadius: theme.radius.sm,
-                    cursor: 'pointer',
-                    fontSize: theme.fontSizes.sm,
-                    color: theme.colors.textPrimary,
-                    textAlign: 'left',
-                    fontFamily: theme.fonts.body,
-                    fontWeight: theme.fontWeights.bold,
-                  }}
+                  className="prep-slot-ally-btn"
                 >
                   {ally.name}
                 </button>
               ))}
               {knockedOutAllies.length === 0 && (
-                <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>No allies need revival</div>
+                <div className="prep-slot-no-allies">No allies need revival</div>
               )}
             </div>
-            <div style={{ marginTop: theme.spacing.xs }}>
+            <div className="prep-slot-back-row">
               {smallBtn('← Back', () => { setSelectedItemId(null); })}
             </div>
           </div>
@@ -245,35 +194,25 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // USE_ITEM: show item list
   if (selectedAction === 'USE_ITEM') {
     return (
-      <div style={slotStyle}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
         {heroLabel}
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.bold, color: theme.colors.textHeader, marginBottom: theme.spacing.xs }}>
+          <div className="prep-slot-sub-title">
             Use which item?
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+          <div className="prep-slot-sub-list">
             {prepItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setSelectedItemId(item.id)}
-                style={{
-                  padding: theme.spacing.xs,
-                  background: theme.colors.bgPanel,
-                  border: `1px solid ${theme.colors.borderBrown}`,
-                  borderRadius: theme.radius.sm,
-                  cursor: 'pointer',
-                  fontSize: theme.fontSizes.sm,
-                  color: theme.colors.textPrimary,
-                  textAlign: 'left',
-                  fontFamily: theme.fonts.body,
-                  fontWeight: theme.fontWeights.bold,
-                }}
+                className="prep-slot-ally-btn"
+                style={{ border: `1px solid ${theme.colors.borderBrown}` }}
               >
                 {item.name}
               </button>
             ))}
           </div>
-          <div style={{ marginTop: theme.spacing.xs }}>
+          <div className="prep-slot-back-row">
             {smallBtn('← Back', () => setSelectedAction(null))}
           </div>
         </div>
@@ -283,9 +222,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
 
   // Default: action picker
   return (
-    <div style={slotStyle}>
+    <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
       {heroLabel}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+      <div className="prep-slot-actions">
         <ActionCard
           label="Use Item"
           sublabel={hasItems ? `${prepItems.length} item${prepItems.length !== 1 ? 's' : ''} available` : 'No prep items'}

@@ -11,27 +11,16 @@ function MenuButton({ label, sublabel, disabled, onClick, highlight }) {
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      style={{
-        width: '100%',
-        padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-        background: highlight ? theme.colors.borderGold : theme.colors.bgPanel,
-        color: highlight ? theme.colors.bgPage : disabled ? theme.colors.textMuted : theme.colors.textPrimary,
-        border: `1px solid ${disabled ? theme.colors.borderBrown : theme.colors.borderGold}`,
-        borderRadius: theme.radius.md,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        textAlign: 'left',
-        fontFamily: theme.fonts.body,
-        fontSize: theme.fontSizes.sm,
-        fontWeight: theme.fontWeights.bold,
-        opacity: disabled ? 0.5 : 1,
-        transition: `background ${theme.transitions.fast}`,
-      }}
+      className={`menu-btn${highlight ? ' menu-btn--highlight' : ''}${disabled ? ' menu-btn--disabled' : ''}`}
       onMouseEnter={(e) => { if (!disabled) playSound('uiNav'); if (!disabled && !highlight) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
       onMouseLeave={(e) => { if (!disabled && !highlight) e.currentTarget.style.background = theme.colors.bgPanel; }}
     >
       <div>{label}</div>
       {sublabel && (
-        <div style={{ fontSize: theme.fontSizes.xs, color: highlight ? theme.colors.bgPage : theme.colors.textMuted, fontWeight: theme.fontWeights.normal }}>
+        <div
+          className="menu-btn-sublabel"
+          style={{ color: highlight ? theme.colors.bgPage : theme.colors.textMuted }}
+        >
           {sublabel}
         </div>
       )}
@@ -44,44 +33,20 @@ function SubMenuItem({ label, cost, school, disabled, onClick }) {
     <button
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      style={{
-        width: '100%',
-        padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-        background: theme.colors.bgPanel,
-        border: `1px solid ${disabled ? theme.colors.borderBrown : theme.colors.borderGold}`,
-        borderRadius: theme.radius.sm,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        opacity: disabled ? 0.45 : 1,
-        fontFamily: theme.fonts.body,
-        transition: `background ${theme.transitions.fast}`,
-      }}
+      className={`submenu-btn${disabled ? ' submenu-btn--disabled' : ''}`}
+      style={{ border: `1px solid ${disabled ? theme.colors.borderBrown : theme.colors.borderGold}` }}
       onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
       onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = theme.colors.bgPanel; }}
     >
-      <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textPrimary, fontWeight: theme.fontWeights.bold }}>
+      <span className="submenu-btn-label">
         {label}
       </span>
-      <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap', marginLeft: theme.spacing.sm }}>
+      <span className="submenu-btn-cost">
         {school ? `[${school}] ` : ''}{cost > 0 ? `${cost} EN` : ''}
       </span>
     </button>
   );
 }
-
-const secondaryBtnStyle = {
-  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-  background: 'transparent',
-  border: `1px solid ${theme.colors.borderBrown}`,
-  borderRadius: theme.radius.sm,
-  cursor: 'pointer',
-  fontSize: theme.fontSizes.xs,
-  color: theme.colors.textMuted,
-  fontFamily: theme.fonts.body,
-  transition: `background ${theme.transitions.fast}, border-color ${theme.transitions.fast}, color ${theme.transitions.fast}`,
-};
 
 export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, onChangeWeapon, onCancelTarget, isLoading }) {
   const [submenu, setSubmenu] = useState(null); // null | 'skill' | 'item'
@@ -138,19 +103,13 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
   if (targeting) {
     const modeLabel = targeting.mode === 'enemy' ? 'Select an enemy target' : 'Select an ally target';
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textHeader,
-          fontFamily: theme.fonts.header,
-          fontWeight: theme.fontWeights.bold,
-          textAlign: 'center',
-        }}>
+      <div className="action-menu-targeting">
+        <div className="action-menu-target-label">
           {modeLabel}
         </div>
         <button
           onClick={() => { onCancelTarget(); setSubmenu(null); }}
-          style={secondaryBtnStyle}
+          className="btn-secondary-sm"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = theme.colors.bgPanelDark;
             e.currentTarget.style.borderColor = theme.colors.borderGold;
@@ -168,30 +127,9 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
     );
   }
 
-  const menuStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.sm,
-    height: '100%',
-    position: 'relative',
-  };
-
   const loadingOverlay = isLoading ? (
-    <div style={{
-      position: 'absolute',
-      inset: 0,
-      background: 'rgba(237,224,196,0.75)',
-      borderRadius: theme.radius.md,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10,
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.body,
-        fontSize: theme.fontSizes.sm,
-        color: theme.colors.textMuted,
-      }}>
+    <div className="action-menu-loading-overlay">
+      <div className="action-menu-loading-text">
         Processing...
       </div>
     </div>
@@ -202,18 +140,12 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
     const skills = hero.availableSkills ?? [];
     const spells = hero.availableSpells ?? [];
     return (
-      <div style={menuStyle}>
+      <div className="action-menu">
         {loadingOverlay}
-        <div style={{
-          fontFamily: theme.fonts.header,
-          fontSize: theme.fontSizes.sm,
-          fontWeight: theme.fontWeights.bold,
-          color: theme.colors.textHeader,
-          marginBottom: theme.spacing.xs,
-        }}>
+        <div className="action-menu-section-title">
           Skills &amp; Magic
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+        <div className="action-menu-scroll-list">
           {skills.map((sk) => (
             <SubMenuItem
               key={sk.id}
@@ -235,12 +167,12 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
             />
           ))}
           {skills.length === 0 && spells.length === 0 && (
-            <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>No skills available</div>
+            <div className="action-menu-empty">No skills available</div>
           )}
         </div>
         <button
           onClick={() => setSubmenu(null)}
-          style={secondaryBtnStyle}
+          className="btn-secondary-sm"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = theme.colors.bgPanelDark;
             e.currentTarget.style.borderColor = theme.colors.borderGold;
@@ -261,18 +193,12 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
   // Item submenu
   if (submenu === 'item') {
     return (
-      <div style={menuStyle}>
+      <div className="action-menu">
         {loadingOverlay}
-        <div style={{
-          fontFamily: theme.fonts.header,
-          fontSize: theme.fontSizes.sm,
-          fontWeight: theme.fontWeights.bold,
-          color: theme.colors.textHeader,
-          marginBottom: theme.spacing.xs,
-        }}>
+        <div className="action-menu-section-title">
           Items
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+        <div className="action-menu-scroll-list">
           {battleItems.map((item) => (
             <SubMenuItem
               key={item.id + item.name}
@@ -284,12 +210,12 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
             />
           ))}
           {battleItems.length === 0 && (
-            <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>No items usable in battle</div>
+            <div className="action-menu-empty">No items usable in battle</div>
           )}
         </div>
         <button
           onClick={() => setSubmenu(null)}
-          style={secondaryBtnStyle}
+          className="btn-secondary-sm"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = theme.colors.bgPanelDark;
             e.currentTarget.style.borderColor = theme.colors.borderGold;
@@ -309,7 +235,7 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
 
   // Default action buttons
   return (
-    <div style={menuStyle}>
+    <div className="action-menu">
       {loadingOverlay}
       <MenuButton label="⚔ Attack" onClick={handleAttack} />
       <MenuButton

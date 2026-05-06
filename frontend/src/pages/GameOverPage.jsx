@@ -76,55 +76,21 @@ export default function GameOverPage() {
 
   const canNewRun = heroConfigs && endReason !== 'RESTARTED';
 
-  const pageStyle = {
-    minHeight: '100vh',
-    background: theme.colors.bgPage,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: `${theme.spacing.xl} ${theme.spacing.lg}`,
-    boxSizing: 'border-box',
-  };
-
-  const contentStyle = {
-    width: '100%',
-    maxWidth: '600px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: theme.spacing.lg,
-  };
-
-  const btnBase = {
-    flex: 1,
-    padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
-    borderRadius: theme.radius.md,
-    cursor: 'pointer',
-    fontFamily: theme.fonts.body,
-    fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.bold,
-    border: 'none',
-    transition: `background ${theme.transitions.fast}`,
-    whiteSpace: 'nowrap',
-  };
-
   // No run data — generic fallback
   if (!hasRunData) {
     return (
-      <div style={pageStyle}>
-        <div style={contentStyle}>
-          <h1 style={{ fontFamily: theme.fonts.header, fontSize: theme.fontSizes.xxl, color: theme.colors.textHeader, margin: 0 }}>
-            Run Over
-          </h1>
-          <div style={{ color: theme.colors.textMuted, fontFamily: theme.fonts.body, fontSize: theme.fontSizes.md }}>
+      <div className="gameover-page">
+        <div className="gameover-content">
+          <h1 className="gameover-title">Run Over</h1>
+          <div className="gameover-fallback-msg">
             No active run information.
             {bestFights !== null && (
               <span> Your best run: {bestFights} fights.</span>
             )}
           </div>
           <button
+            className="btn-back-to-menu"
             onClick={() => navigate('/')}
-            style={{ ...btnBase, background: 'transparent', border: `1px solid ${theme.colors.borderBrown}`, color: theme.colors.textPrimary, flex: 'none', width: 'fit-content' }}
           >
             Back to Menu
           </button>
@@ -134,7 +100,7 @@ export default function GameOverPage() {
   }
 
   return (
-    <div style={pageStyle}>
+    <div className="gameover-page">
       {/* Timeout modal — shown immediately on mount if timeout */}
       <AlertModal
         isOpen={isTimeout && !timeoutDismissed}
@@ -145,22 +111,11 @@ export default function GameOverPage() {
         onConfirm={() => setTimeoutDismissed(true)}
       />
 
-      <div style={contentStyle}>
+      <div className="gameover-content">
         {/* Title */}
         <div>
-          <h1 style={{
-            fontFamily: theme.fonts.header,
-            fontSize: theme.fontSizes.xxl,
-            fontWeight: theme.fontWeights.black,
-            color: theme.colors.textHeader,
-            margin: 0,
-            marginBottom: theme.spacing.sm,
-            textAlign: 'center',
-            width: '100%',
-          }}>
-            Run Over
-          </h1>
-          <div style={{ textAlign: 'center', width: '100%' }}>
+          <h1 className="gameover-title">Run Over</h1>
+          <div className="gameover-badge-center">
             <EndReasonBadge endReason={endReason} />
           </div>
         </div>
@@ -173,23 +128,12 @@ export default function GameOverPage() {
 
         {/* Best run indicator */}
         {isNewBest && (
-          <div style={{
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.md,
-            fontWeight: theme.fontWeights.bold,
-            color: theme.colors.statusPositive,
-            textAlign: 'center',
-          }}>
+          <div className="gameover-new-best">
             ★ New personal best!
           </div>
         )}
         {showBestNote && (
-          <div style={{
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.sm,
-            color: theme.colors.textMuted,
-            textAlign: 'center',
-          }}>
+          <div className="gameover-best-note">
             Your best run: {bestFights} fights survived
           </div>
         )}
@@ -203,17 +147,15 @@ export default function GameOverPage() {
         />
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: theme.spacing.md, flexWrap: 'wrap' }}>
+        <div className="gameover-action-row">
           {canNewRun && (
             <button
+              className="btn-new-run"
               onClick={starting ? undefined : promptNewRun}
               disabled={starting}
               style={{
-                ...btnBase,
                 background: starting ? theme.colors.bgPanelDark : theme.colors.borderGold,
                 color: starting ? theme.colors.textMuted : theme.colors.bgPage,
-                fontFamily: theme.fonts.header,
-                fontSize: theme.fontSizes.lg,
                 cursor: starting ? 'wait' : 'pointer',
               }}
               onMouseEnter={(e) => { if (!starting) e.currentTarget.style.background = theme.colors.actionHover; }}
@@ -225,13 +167,8 @@ export default function GameOverPage() {
             </button>
           )}
           <button
+            className="btn-back-to-menu"
             onClick={() => navigate('/')}
-            style={{
-              ...btnBase,
-              background: 'transparent',
-              border: `1px solid ${theme.colors.borderBrown}`,
-              color: theme.colors.textPrimary,
-            }}
             onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >

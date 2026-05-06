@@ -37,7 +37,7 @@ function PageFade({ children }) {
   }, [location.pathname]);
 
   return (
-    <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 200ms ease' }}>
+    <div className="page-fade" style={{ opacity: visible ? 1 : 0 }}>
       {children}
     </div>
   );

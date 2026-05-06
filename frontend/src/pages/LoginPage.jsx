@@ -5,86 +5,6 @@ import { getActiveRun, giveUp } from '../services/api';
 import AlertModal from '../components/AlertModal';
 import { theme } from '../styles/theme';
 
-const pageStyle = {
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: theme.colors.bgPage,
-};
-
-const panelStyle = {
-  background: theme.colors.bgPanel,
-  border: `2px solid ${theme.colors.borderGold}`,
-  borderRadius: theme.radius.md,
-  boxShadow: theme.shadows.panel,
-  padding: theme.spacing.xl,
-  width: '100%',
-  maxWidth: '380px',
-};
-
-const titleStyle = {
-  fontFamily: theme.fonts.header,
-  fontSize: theme.fontSizes.xxl,
-  color: theme.colors.textHeader,
-  textAlign: 'center',
-  margin: `0 0 ${theme.spacing.xl}`,
-};
-
-const fieldGroupStyle = {
-  marginBottom: theme.spacing.md,
-};
-
-const labelStyle = {
-  display: 'block',
-  fontFamily: theme.fonts.body,
-  fontSize: theme.fontSizes.sm,
-  color: theme.colors.textPrimary,
-  marginBottom: theme.spacing.xs,
-};
-
-const inputStyle = {
-  width: '100%',
-  boxSizing: 'border-box',
-  background: theme.colors.bgPage,
-  border: `1px solid ${theme.colors.borderBrown}`,
-  borderRadius: theme.radius.sm,
-  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-  fontFamily: theme.fonts.body,
-  fontSize: theme.fontSizes.md,
-  color: theme.colors.textPrimary,
-  outline: 'none',
-  transition: `border-color ${theme.transitions.fast}`,
-};
-
-const submitBtnStyle = {
-  width: '100%',
-  marginTop: theme.spacing.md,
-  padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
-  background: theme.colors.borderGold,
-  color: theme.colors.bgPage,
-  border: 'none',
-  borderRadius: theme.radius.md,
-  fontFamily: theme.fonts.body,
-  fontSize: theme.fontSizes.md,
-  fontWeight: theme.fontWeights.bold,
-  cursor: 'pointer',
-  transition: `background ${theme.transitions.fast}`,
-};
-
-const linkRowStyle = {
-  marginTop: theme.spacing.md,
-  textAlign: 'center',
-  fontFamily: theme.fonts.body,
-  fontSize: theme.fontSizes.sm,
-  color: theme.colors.textMuted,
-};
-
-const linkStyle = {
-  color: theme.colors.textHeader,
-  textDecoration: 'none',
-};
-
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
 export default function LoginPage() {
@@ -159,16 +79,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={panelStyle}>
-        <h1 style={titleStyle}>3JRPG</h1>
+    <div className="auth-page">
+      <div className="auth-panel">
+        <h1 className="auth-title">3JRPG</h1>
         <form onSubmit={handleSubmit} noValidate>
-          <div style={fieldGroupStyle}>
-            <label style={labelStyle} htmlFor="email">Email</label>
+          <div className="form-field-group">
+            <label className="form-label" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
-              style={inputStyle}
+              className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onFocus={(e) => { e.currentTarget.style.borderColor = theme.colors.borderGold; }}
@@ -177,12 +97,12 @@ export default function LoginPage() {
               required
             />
           </div>
-          <div style={fieldGroupStyle}>
-            <label style={labelStyle} htmlFor="password">Password</label>
+          <div className="form-field-group">
+            <label className="form-label" htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
-              style={inputStyle}
+              className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={(e) => { e.currentTarget.style.borderColor = theme.colors.borderGold; }}
@@ -193,7 +113,8 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            style={{ ...submitBtnStyle, opacity: loading ? 0.7 : 1 }}
+            className="form-submit-btn"
+            style={{ opacity: loading ? 0.7 : 1 }}
             disabled={loading}
             onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = theme.colors.actionHover; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.borderGold; }}
@@ -203,9 +124,9 @@ export default function LoginPage() {
             {loading ? 'Logging in…' : 'Login'}
           </button>
         </form>
-        <div style={linkRowStyle}>
+        <div className="form-link-row">
           No account?{' '}
-          <Link to="/register" style={linkStyle}>Register</Link>
+          <Link to="/register" className="form-link">Register</Link>
         </div>
       </div>
 

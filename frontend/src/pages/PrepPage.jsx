@@ -116,43 +116,15 @@ export default function PrepPage() {
   const allActionsDone = Object.values(heroActions).every((v) => v);
   const readyToStart = lootReady && allActionsDone;
 
-  const fightNumber = (prepResult?.heroes?.[0] ? 1 : 1); // unknown from PrepResultResponse
-  const nextFightLabel = 'Next Fight';
-
   if (!prepResult) return null;
 
-  const pageStyle = {
-    minHeight: '100vh',
-    background: theme.colors.bgPage,
-    padding: theme.spacing.lg,
-    boxSizing: 'border-box',
-  };
-
-  const maxWidth = '720px';
-  const centerStyle = { maxWidth, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: theme.spacing.lg };
-
   return (
-    <div style={pageStyle}>
-      <div style={centerStyle}>
+    <div className="prep-page">
+      <div className="prep-content">
         {/* Header */}
         <div>
-          <h1 style={{
-            fontFamily: theme.fonts.header,
-            fontSize: theme.fontSizes.xxl,
-            fontWeight: theme.fontWeights.bold,
-            color: theme.colors.textHeader,
-            margin: 0,
-          }}>
-            Between Fights
-          </h1>
-          <div style={{
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes.sm,
-            color: theme.colors.textMuted,
-            marginTop: theme.spacing.xs,
-          }}>
-            Prepare your team for the next fight
-          </div>
+          <h1 className="prep-header-title">Between Fights</h1>
+          <div className="prep-header-subtitle">Prepare your team for the next fight</div>
         </div>
 
         {/* Regen */}
@@ -177,14 +149,9 @@ export default function PrepPage() {
         />
 
         {/* Ready button */}
-        <div style={{ paddingBottom: theme.spacing.xl }}>
+        <div className="prep-bottom">
           {!readyToStart && (
-            <div style={{
-              textAlign: 'center',
-              fontSize: theme.fontSizes.xs,
-              color: theme.colors.textMuted,
-              marginBottom: theme.spacing.sm,
-            }}>
+            <div className="prep-ready-hint">
               {!lootReady && !allActionsDone
                 ? 'Assign loot and complete all hero actions'
                 : !lootReady
@@ -193,20 +160,14 @@ export default function PrepPage() {
             </div>
           )}
           <button
+            className="btn-ready"
             onClick={readyToStart && !loadingReady ? handleReady : undefined}
             disabled={!readyToStart || loadingReady}
             style={{
-              width: '100%',
-              padding: `${theme.spacing.md} ${theme.spacing.xl}`,
-              fontFamily: theme.fonts.header,
-              fontSize: theme.fontSizes.lg,
-              fontWeight: theme.fontWeights.bold,
               background: readyToStart ? theme.colors.borderGold : theme.colors.bgPanelDark,
               color: readyToStart ? theme.colors.bgPage : theme.colors.textMuted,
               border: `1px solid ${readyToStart ? theme.colors.borderGold : theme.colors.borderBrown}`,
-              borderRadius: theme.radius.md,
               cursor: readyToStart && !loadingReady ? 'pointer' : 'not-allowed',
-              transition: `background ${theme.transitions.fast}`,
             }}
             onMouseEnter={(e) => { if (readyToStart) e.currentTarget.style.background = theme.colors.actionHover; }}
             onMouseLeave={(e) => { if (readyToStart) e.currentTarget.style.background = theme.colors.borderGold; }}

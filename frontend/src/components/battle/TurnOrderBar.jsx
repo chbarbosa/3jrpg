@@ -20,49 +20,31 @@ export default function TurnOrderBar({ turnOrder, activeActorId, heroes, enemies
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      gap: theme.spacing.sm,
-      overflowX: 'auto',
-      padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-      alignItems: 'flex-end',
-      scrollbarWidth: 'thin',
-    }}>
+    <div className="turn-order-bar">
       {turnOrder.map((id, i) => {
         const actor = resolveActor(id);
         const active = id === activeActorId;
         return (
           <div
             key={`${id}-${i}`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '3px',
-              flexShrink: 0,
-              transform: active ? 'scale(1.25)' : 'scale(1)',
-              transition: `transform ${theme.transitions.slow}`,
-            }}
+            className="turn-order-item"
+            style={{ transform: active ? 'scale(1.25)' : 'scale(1)' }}
           >
-            <div style={{
-              width: '26px',
-              height: '26px',
-              borderRadius: '50%',
-              background: actor.color,
-              border: `2px solid ${active ? theme.colors.highlight : 'transparent'}`,
-              boxShadow: active ? theme.shadows.highlight : 'none',
-              transition: `box-shadow ${theme.transitions.slow}, border-color ${theme.transitions.slow}`,
-            }} />
-            <div style={{
-              fontSize: '9px',
-              color: active ? theme.colors.textPrimary : theme.colors.textMuted,
-              maxWidth: '40px',
-              textAlign: 'center',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              fontWeight: active ? theme.fontWeights.bold : theme.fontWeights.normal,
-            }}>
+            <div
+              className="turn-order-avatar"
+              style={{
+                background: actor.color,
+                border: `2px solid ${active ? theme.colors.highlight : 'transparent'}`,
+                boxShadow: active ? theme.shadows.highlight : 'none',
+              }}
+            />
+            <div
+              className="turn-order-name"
+              style={{
+                color: active ? theme.colors.textPrimary : theme.colors.textMuted,
+                fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-normal)',
+              }}
+            >
               {actor.name.split(' ')[0]}
             </div>
           </div>

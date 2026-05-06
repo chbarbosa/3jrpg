@@ -51,11 +51,7 @@ function isAccessible(stepId, steps) {
 
 function ProgressBar({ steps, displayStepId, onStepClick }) {
   return (
-    <div style={{
-      display: 'flex',
-      gap: '4px',
-      marginBottom: theme.spacing.md,
-    }}>
+    <div className="progress-bar">
       {steps.map((step, i) => {
         const isActive = step.id === displayStepId;
         const accessible = isAccessible(step.id, steps);
@@ -68,21 +64,13 @@ function ProgressBar({ steps, displayStepId, onStepClick }) {
           <button
             key={step.id}
             onClick={() => accessible && onStepClick(step.id)}
+            className="progress-step-btn"
             style={{
-              flex: 1,
-              padding: '4px 2px',
               background: isActive ? theme.colors.borderGold : 'transparent',
               border: `1px solid ${step.done || isActive ? theme.colors.borderGold : theme.colors.borderBrown}`,
-              borderRadius: theme.radius.sm,
               cursor: accessible ? 'pointer' : 'default',
-              fontSize: '10px',
               color: isActive ? theme.colors.bgPage : color,
-              fontFamily: theme.fonts.body,
               fontWeight: isActive ? theme.fontWeights.bold : theme.fontWeights.normal,
-              transition: `background ${theme.transitions.fast}`,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
             }}
           >
             {i + 1}. {step.label}
@@ -139,42 +127,14 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
     onUpdate({ items });
   }
 
-  const headerLabel = cls
-    ? cls.label
-    : `Hero ${heroIndex + 1}`;
-
+  const headerLabel = cls ? cls.label : `Hero ${heroIndex + 1}`;
   const headerColor = cls ? theme.classColors[cls.colorKey] : theme.colors.textMuted;
 
-  const sectionStyle = {
-    background: theme.colors.bgPanel,
-    border: `1px solid ${theme.colors.borderGold}`,
-    borderRadius: theme.radius.md,
-    boxShadow: theme.shadows.panel,
-    padding: theme.spacing.md,
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '480px',
-  };
-
   return (
-    <div style={sectionStyle}>
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.lg,
-        fontWeight: theme.fontWeights.bold,
-        color: headerColor,
-        marginBottom: theme.spacing.sm,
-        display: 'flex',
-        alignItems: 'center',
-        gap: theme.spacing.xs,
-      }}>
+    <div className="hero-slot-panel">
+      <div className="hero-slot-header" style={{ color: headerColor }}>
         {cls && (
-          <div style={{
-            width: '10px', height: '10px',
-            borderRadius: theme.radius.pill,
-            background: headerColor,
-            flexShrink: 0,
-          }} />
+          <div className="team-dot" style={{ background: headerColor }} />
         )}
         {headerLabel}
       </div>
@@ -185,7 +145,7 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
         onStepClick={(id) => isAccessible(id, steps) && setViewStepId(id)}
       />
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div className="hero-slot-scroll">
         {displayStepId === 'class' && (
           <ClassPicker selectedClassId={hero.classId} onSelect={handleClassSelect} />
         )}
@@ -200,8 +160,8 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
         )}
 
         {displayStepId === 'mageSpec' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
-            <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginBottom: theme.spacing.xs }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
+            <div className="picker-card-sublabel" style={{ marginBottom: 'var(--sp-xs)' }}>
               Choose your school of magic:
             </div>
             {MAGE_SPECIALIZATIONS.map((spec) => {
@@ -210,34 +170,22 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
                 <button
                   key={spec.id}
                   onClick={() => handleMageSpecSelect(spec.id)}
+                  className="picker-card-btn"
                   style={{
-                    padding: theme.spacing.sm,
                     background: sel ? theme.colors.bgPanelDark : theme.colors.bgPanel,
                     border: `${sel ? 2 : 1}px solid ${sel ? theme.colors.borderGold : theme.colors.borderBrown}`,
-                    borderRadius: theme.radius.md,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    width: '100%',
-                    transition: `background ${theme.transitions.fast}`,
                   }}
                   onMouseEnter={(e) => { if (!sel) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
                   onMouseLeave={(e) => { if (!sel) e.currentTarget.style.background = sel ? theme.colors.bgPanelDark : theme.colors.bgPanel; }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
-                    <div style={{
-                      width: '10px', height: '10px',
-                      borderRadius: theme.radius.pill,
-                      background: SCHOOL_COLORS[spec.school],
-                      flexShrink: 0,
-                    }} />
-                    <div style={{
-                      fontFamily: theme.fonts.header,
-                      fontSize: theme.fontSizes.sm,
-                      fontWeight: theme.fontWeights.bold,
-                      color: theme.colors.textPrimary,
-                    }}>{spec.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-xs)' }}>
+                    <div
+                      className="team-dot"
+                      style={{ background: SCHOOL_COLORS[spec.school] }}
+                    />
+                    <div className="picker-card-label">{spec.label}</div>
                   </div>
-                  <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '2px' }}>
+                  <div className="picker-card-sublabel">
                     {spec.description}
                   </div>
                 </button>

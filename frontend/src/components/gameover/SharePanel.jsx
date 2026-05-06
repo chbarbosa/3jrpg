@@ -44,21 +44,8 @@ export default function SharePanel({ fightsSurvived, heroConfigs, endReason, pla
   }
 
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderBrown}`,
-      borderRadius: theme.radius.md,
-      padding: theme.spacing.md,
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.body,
-        fontSize: theme.fontSizes.sm,
-        fontWeight: theme.fontWeights.bold,
-        color: theme.colors.textMuted,
-        marginBottom: theme.spacing.sm,
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-      }}>
+    <div className="share-panel">
+      <div className="share-panel-title">
         Share Your Run
       </div>
 
@@ -66,37 +53,14 @@ export default function SharePanel({ fightsSurvived, heroConfigs, endReason, pla
         readOnly
         value={shareText}
         rows={6}
-        style={{
-          width: '100%',
-          background: theme.colors.bgPanelDark,
-          border: `1px solid ${theme.colors.borderBrown}`,
-          borderRadius: theme.radius.sm,
-          padding: theme.spacing.sm,
-          fontFamily: theme.fonts.mono,
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textPrimary,
-          resize: 'none',
-          boxSizing: 'border-box',
-          lineHeight: 1.5,
-        }}
+        className="share-textarea"
         onFocus={(e) => e.target.select()}
       />
 
       <button
         onClick={handleCopy}
-        style={{
-          marginTop: theme.spacing.sm,
-          padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-          background: copied ? theme.colors.statusPositive : theme.colors.borderGold,
-          color: theme.colors.bgPage,
-          border: 'none',
-          borderRadius: theme.radius.sm,
-          cursor: 'pointer',
-          fontFamily: theme.fonts.body,
-          fontSize: theme.fontSizes.sm,
-          fontWeight: theme.fontWeights.bold,
-          transition: `background ${theme.transitions.fast}`,
-        }}
+        className="share-copy-btn"
+        style={{ background: copied ? theme.colors.statusPositive : theme.colors.borderGold }}
         onMouseEnter={(e) => { if (!copied) e.currentTarget.style.background = theme.colors.actionHover; }}
         onMouseLeave={(e) => { if (!copied) e.currentTarget.style.background = theme.colors.borderGold; }}
       >

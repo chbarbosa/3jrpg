@@ -31,67 +31,38 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
   const qualityLabel = QUALITY_LABELS[lootItem.quality?.toLowerCase()] ?? lootItem.quality ?? '';
 
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderGold}`,
-      borderRadius: theme.radius.md,
-      boxShadow: glowing ? theme.shadows.highlight : theme.shadows.panel,
-      padding: theme.spacing.lg,
-      transition: `box-shadow ${theme.transitions.slow}`,
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.lg,
-        fontWeight: theme.fontWeights.bold,
-        color: theme.colors.textHeader,
-        marginBottom: theme.spacing.md,
-      }}>
+    <div
+      className="panel"
+      style={{ boxShadow: glowing ? theme.shadows.highlight : theme.shadows.panel, transition: `box-shadow var(--t-slow)` }}
+    >
+      <div className="panel-title">
         Loot Drop
       </div>
 
       {/* Item details */}
-      <div style={{
-        padding: theme.spacing.md,
-        background: theme.colors.bgPanelDark,
-        borderRadius: theme.radius.sm,
-        border: `1px solid ${theme.colors.borderBrown}`,
-        marginBottom: theme.spacing.md,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.xs }}>
-          <div style={{
-            fontFamily: theme.fonts.header,
-            fontSize: theme.fontSizes.lg,
-            fontWeight: theme.fontWeights.bold,
-            color: theme.colors.textHeader,
-          }}>
+      <div className="loot-item-box">
+        <div className="loot-item-name-row">
+          <div className="loot-item-name">
             {lootItem.name}
           </div>
-          <div style={{
-            fontSize: theme.fontSizes.xs,
-            fontWeight: theme.fontWeights.bold,
-            color: qualityColor,
-            border: `1px solid ${qualityColor}`,
-            borderRadius: theme.radius.pill,
-            padding: '1px 8px',
-          }}>
+          <div
+            className="loot-quality-badge"
+            style={{ color: qualityColor, border: `1px solid ${qualityColor}` }}
+          >
             {qualityLabel}
           </div>
         </div>
 
         {lootItem.description && (
-          <div style={{
-            fontSize: theme.fontSizes.sm,
-            color: theme.colors.textPrimary,
-            marginBottom: theme.spacing.xs,
-          }}>
+          <div className="loot-item-desc">
             {lootItem.description}
           </div>
         )}
 
         {lootItem.modifiers?.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div className="loot-item-modifiers">
             {lootItem.modifiers.map((mod, i) => (
-              <div key={i} style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+              <div key={i} className="loot-item-modifier">
                 + {mod}
               </div>
             ))}
@@ -101,24 +72,15 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
 
       {/* Assignment */}
       {lootAssigned ? (
-        <div style={{
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.statusPositive,
-          fontWeight: theme.fontWeights.bold,
-        }}>
+        <div className="loot-assigned-msg">
           ✓ Assigned to {heroes.find(h => h.id === lootRecipientHeroId)?.name ?? 'hero'}
         </div>
       ) : (
         <>
-          <div style={{
-            fontSize: theme.fontSizes.sm,
-            fontWeight: theme.fontWeights.bold,
-            color: theme.colors.textPrimary,
-            marginBottom: theme.spacing.sm,
-          }}>
+          <div className="loot-assign-label">
             Assign to:
           </div>
-          <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
+          <div className="loot-hero-btns">
             {heroes.map((hero) => {
               const classColor = theme.classColors[hero.className?.toLowerCase()] ?? theme.colors.textMuted;
               const disabled = hero.isKnockedOut || assigning;
@@ -127,39 +89,17 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
                   key={hero.id}
                   onClick={() => !disabled && handleHeroClick(hero.id)}
                   disabled={disabled}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: theme.spacing.xs,
-                    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                    background: theme.colors.bgPanel,
-                    border: `1px solid ${theme.colors.borderGold}`,
-                    borderRadius: theme.radius.md,
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    opacity: disabled ? 0.4 : 1,
-                    fontFamily: theme.fonts.body,
-                    fontSize: theme.fontSizes.sm,
-                    fontWeight: theme.fontWeights.bold,
-                    color: theme.colors.textPrimary,
-                    transition: `background ${theme.transitions.fast}`,
-                  }}
-                  onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
-                  onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = theme.colors.bgPanel; }}
+                  className={`loot-hero-btn${disabled ? ' loot-hero-btn--disabled' : ''}`}
                 >
-                  <div style={{
-                    width: '10px', height: '10px',
-                    borderRadius: theme.radius.pill,
-                    background: classColor,
-                    flexShrink: 0,
-                  }} />
+                  <div className="team-dot" style={{ background: classColor }} />
                   {hero.name}
-                  {hero.isKnockedOut && <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.statusBleed }}> (KO)</span>}
+                  {hero.isKnockedOut && <span className="loot-ko-label"> (KO)</span>}
                 </button>
               );
             })}
           </div>
           {error && (
-            <div style={{ marginTop: theme.spacing.sm, fontSize: theme.fontSizes.xs, color: theme.colors.statusBleed }}>
+            <div className="loot-error">
               {error}
             </div>
           )}

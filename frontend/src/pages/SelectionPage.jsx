@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { theme } from '../styles/theme';
 import AlertModal from '../components/AlertModal';
 import HeroSlot from '../components/selection/HeroSlot';
 import TeamSummary from '../components/selection/TeamSummary';
@@ -19,24 +18,6 @@ function emptyHero() {
     items: {},
   };
 }
-
-const pageStyle = {
-  minHeight: '100vh',
-  background: theme.colors.bgPage,
-  display: 'flex',
-  flexDirection: 'column',
-  padding: theme.spacing.lg,
-  boxSizing: 'border-box',
-};
-
-const titleStyle = {
-  fontFamily: theme.fonts.header,
-  fontSize: theme.fontSizes.xxl,
-  fontWeight: theme.fontWeights.bold,
-  color: theme.colors.textHeader,
-  textAlign: 'center',
-  marginBottom: theme.spacing.lg,
-};
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
@@ -154,19 +135,10 @@ export default function SelectionPage() {
   }
 
   return (
-    <div style={pageStyle}>
-      <h1 style={titleStyle}>Assemble Your Team</h1>
+    <div className="selection-page">
+      <h1 className="selection-title">Assemble Your Team</h1>
 
-      <div
-        className="selection-hero-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: theme.spacing.md,
-          marginBottom: theme.spacing.lg,
-          flex: 1,
-        }}
-      >
+      <div className="selection-hero-grid">
         {heroes.map((hero, i) => (
           <HeroSlot
             key={i}

@@ -19,89 +19,46 @@ export default function ItemStarter({ items, onUpdate }) {
   const totalItems = Object.values(items).reduce((s, q) => s + q, 0);
   const atCap = totalItems >= MAX_ITEMS;
 
-  const btnBase = {
-    width: '28px',
-    height: '28px',
-    borderRadius: theme.radius.sm,
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.bold,
-    lineHeight: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: `background ${theme.transitions.fast}`,
-  };
-
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+      <div className="item-starter-list">
         {available.map((item) => {
           const qty = items[item.id] ?? 0;
           const plusDisabled = atCap;
           return (
             <div
               key={item.id}
+              className="item-starter-row"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing.sm,
-                padding: theme.spacing.xs,
                 background: qty > 0 ? theme.colors.bgPanelDark : theme.colors.bgPanel,
                 border: `1px solid ${qty > 0 ? theme.colors.borderGold : theme.colors.borderBrown}`,
-                borderRadius: theme.radius.sm,
-                transition: `background ${theme.transitions.fast}`,
               }}
             >
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontSize: theme.fontSizes.sm,
-                  fontWeight: theme.fontWeights.bold,
-                  color: theme.colors.textPrimary,
-                }}>
+              <div className="item-starter-info">
+                <div className="item-starter-label">
                   {item.label}
                 </div>
-                <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                <div className="item-starter-desc">
                   {item.description}
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
+              <div className="item-qty-controls">
                 <button
                   onClick={() => adjust(item.id, -1)}
                   disabled={qty === 0}
-                  style={{
-                    ...btnBase,
-                    background: theme.colors.bgPanel,
-                    border: `1px solid ${theme.colors.borderBrown}`,
-                    color: theme.colors.textPrimary,
-                    cursor: qty === 0 ? 'not-allowed' : 'pointer',
-                    opacity: qty === 0 ? 0.4 : 1,
-                  }}
+                  className="item-qty-btn item-qty-btn--minus"
+                  style={{ cursor: qty === 0 ? 'not-allowed' : 'pointer', opacity: qty === 0 ? 0.4 : 1 }}
                 >
                   −
                 </button>
-                <span style={{
-                  minWidth: '20px',
-                  textAlign: 'center',
-                  fontSize: theme.fontSizes.sm,
-                  fontWeight: theme.fontWeights.bold,
-                  color: theme.colors.textPrimary,
-                }}>
+                <span className="item-qty-value">
                   {qty}
                 </span>
                 <button
                   onClick={() => !plusDisabled && adjust(item.id, 1)}
                   disabled={plusDisabled}
                   title={plusDisabled ? 'Maximum 2 starting items reached' : undefined}
-                  style={{
-                    ...btnBase,
-                    background: plusDisabled ? theme.colors.bgPanelDark : theme.colors.borderGold,
-                    color: plusDisabled ? theme.colors.textMuted : theme.colors.bgPage,
-                    cursor: plusDisabled ? 'not-allowed' : 'pointer',
-                    opacity: plusDisabled ? 0.5 : 1,
-                    border: `1px solid ${plusDisabled ? theme.colors.borderBrown : 'transparent'}`,
-                  }}
+                  className={`item-qty-btn ${plusDisabled ? 'item-qty-btn--plus-disabled' : 'item-qty-btn--plus-active'}`}
                   onMouseEnter={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.actionHover; }}
                   onMouseLeave={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.borderGold; }}
                 >
@@ -112,13 +69,13 @@ export default function ItemStarter({ items, onUpdate }) {
           );
         })}
       </div>
-      <div style={{
-        marginTop: theme.spacing.sm,
-        fontSize: theme.fontSizes.xs,
-        color: atCap ? theme.colors.textHeader : theme.colors.textMuted,
-        textAlign: 'right',
-        fontWeight: atCap ? theme.fontWeights.bold : theme.fontWeights.normal,
-      }}>
+      <div
+        className="item-starter-counter"
+        style={{
+          color: atCap ? theme.colors.textHeader : theme.colors.textMuted,
+          fontWeight: atCap ? 'var(--fw-bold)' : 'var(--fw-normal)',
+        }}
+      >
         Items: {totalItems} / {MAX_ITEMS}
       </div>
     </div>

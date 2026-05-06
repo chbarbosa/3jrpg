@@ -7,27 +7,11 @@ function classColor(name) {
 
 function StatBlock({ label, value, children }) {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: theme.spacing.xs,
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.body,
-        fontSize: theme.fontSizes.xs,
-        color: theme.colors.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-      }}>
+    <div className="stat-block">
+      <div className="stat-block-label">
         {label}
       </div>
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.xl,
-        fontWeight: theme.fontWeights.bold,
-        color: theme.colors.textHeader,
-        lineHeight: 1,
-      }}>
+      <div className="stat-block-value">
         {value}
       </div>
       {children}
@@ -45,55 +29,28 @@ export default function ProfileStats({ profile }) {
   const allZero = totalRuns === 0 && bestFights === 0 && seasonRank === 0 && seasonFights === 0;
 
   return (
-    <div style={{
-      background: theme.colors.bgPanel,
-      border: `1px solid ${theme.colors.borderGold}`,
-      borderRadius: theme.radius.md,
-      boxShadow: theme.shadows.panel,
-      padding: theme.spacing.lg,
-    }}>
-      <div style={{
-        fontFamily: theme.fonts.header,
-        fontSize: theme.fontSizes.lg,
-        fontWeight: theme.fontWeights.bold,
-        color: theme.colors.textHeader,
-        marginBottom: theme.spacing.md,
-      }}>
+    <div className="profile-stats-panel">
+      <div className="profile-stats-title">
         Stats
       </div>
 
       {allZero ? (
-        <div style={{
-          fontFamily: theme.fonts.body,
-          fontSize: theme.fontSizes.sm,
-          color: theme.colors.textMuted,
-          textAlign: 'center',
-          padding: `${theme.spacing.md} 0`,
-        }}>
+        <div className="profile-stats-empty">
           Play your first run to see stats here.
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: theme.spacing.lg,
-        }}>
+        <div className="profile-stats-grid">
           <StatBlock label="Total Runs" value={totalRuns} />
 
           <StatBlock label="Best Run Ever" value={bestFights > 0 ? `${bestFights} fights` : '—'}>
             {bestFights > 0 && teamSummary.length > 0 && (
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+              <div className="stat-block-team-dots">
                 {teamSummary.map((cls, i) => (
                   <div
                     key={i}
                     title={cls}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: theme.radius.pill,
-                      background: classColor(cls),
-                      flexShrink: 0,
-                    }}
+                    className="team-dot"
+                    style={{ background: classColor(cls) }}
                   />
                 ))}
               </div>
