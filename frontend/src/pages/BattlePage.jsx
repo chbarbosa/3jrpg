@@ -25,8 +25,15 @@ export default function BattlePage() {
   const [proceedingToPrep, setProceedingToPrep] = useState(false);
   const [victoryVisible, setVictoryVisible] = useState(false);
 
+  const [hitHeroIds, setHitHeroIds] = useState(new Set());
+  const [combatLogTypes, setCombatLogTypes] = useState(() =>
+    (location.state?.runState?.combatLog ?? []).map(() => 'hero')
+  );
+  const [enemyTurnPending, setEnemyTurnPending] = useState(false);
+
   const prevVictoryRef = useRef(false);
   const enemyTurnScheduledRef = useRef(false);
+  const enemyTurnTimerRef = useRef(null);
 
   // Restore active run on page load if no state passed
   useEffect(() => {
@@ -41,7 +48,8 @@ export default function BattlePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Enemy-turn auto-loop: when activeActorId is an enemy, trigger ENEMY_TURN after 500ms
+  // Enemy-turn auto-loop: when activeActorId is an enemy, trigger ENEMY_TURN after 500ms delay
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!battleState || battleState.fightOver) {
       enemyTurnScheduledRef.current = false;
@@ -54,14 +62,25 @@ export default function BattlePage() {
       return;
     }
     if (enemyTurnScheduledRef.current) return;
+    if (modal.open) return; // paused while modal is open; resumes when modal closes
     enemyTurnScheduledRef.current = true;
+    setEnemyTurnPending(true);
+    const actorId = battleState.activeActorId;
     const timerId = setTimeout(() => {
+      enemyTurnTimerRef.current = null;
       enemyTurnScheduledRef.current = false;
-      submitAction({ actionType: 'ENEMY_TURN', actorId: battleState.activeActorId });
+      setEnemyTurnPending(false);
+      submitAction({ actionType: 'ENEMY_TURN', actorId });
     }, 500);
-    return () => { clearTimeout(timerId); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [battleState]);
+    enemyTurnTimerRef.current = timerId;
+    return () => {
+      clearTimeout(timerId);
+      enemyTurnTimerRef.current = null;
+      enemyTurnScheduledRef.current = false;
+      setEnemyTurnPending(false);
+    };
+  // modal.open in deps so effect re-runs when modal closes, re-scheduling enemy turn
+  }, [battleState, modal.open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Victory: fade overlay in + play sound once
   useEffect(() => {
@@ -83,6 +102,24 @@ export default function BattlePage() {
       open: true, title: 'Error', message, variant: 'danger',
       confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null,
     });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  function findNewLogEntries(prevLog, newLog) {
+    for (let len = Math.min(prevLog.length, newLog.length); len >= 0; len--) {
+      if (prevLog.slice(prevLog.length - len).every((v, i) => v === newLog[i])) return newLog.slice(len);
+    }
+    return [...newLog];
+  }
+
+  function cancelEnemyTurnTimer() {
+    if (enemyTurnTimerRef.current) {
+      clearTimeout(enemyTurnTimerRef.current);
+      enemyTurnTimerRef.current = null;
+    }
+    enemyTurnScheduledRef.current = false;
+    setEnemyTurnPending(false);
   }
 
   // ── Action submission ────────────────────────────────────────────────────
@@ -110,6 +147,39 @@ export default function BattlePage() {
       result.heroes?.forEach((hero) => {
         const prev = prevState.heroes?.find((h) => h.id === hero.id);
         if (prev && !prev.isKnockedOut && hero.isKnockedOut) playSound('heroDeath');
+      });
+
+      // BUG 4: enemy-attack hit animation and sounds
+      if (actionType === 'ENEMY_TURN') {
+        const hitIds = new Set();
+        result.heroes?.forEach((hero) => {
+          const prev = prevState.heroes?.find((h) => h.id === hero.id);
+          if (prev && prev.hp > hero.hp) hitIds.add(hero.id);
+        });
+        if (hitIds.size > 0) {
+          playSound('hit');
+          setHitHeroIds(hitIds);
+          setTimeout(() => setHitHeroIds(new Set()), 350);
+        }
+        // Status sound: detect newly applied statuses on heroes
+        result.heroes?.forEach((hero) => {
+          const prev = prevState.heroes?.find((h) => h.id === hero.id);
+          if (prev) {
+            const prevSNames = new Set(prev.statuses?.map((s) => s.statusName));
+            if (hero.statuses?.some((s) => !prevSNames.has(s.statusName))) playSound('statusApply');
+          }
+        });
+      }
+
+      // BUG 4: maintain typed combat log (hero vs enemy entries)
+      const prevLog = prevState.combatLog ?? [];
+      const newLog = result.combatLog ?? [];
+      const newEntries = findNewLogEntries(prevLog, newLog);
+      const keptCount = newLog.length - newEntries.length;
+      setCombatLogTypes((prevTypes) => {
+        const kept = prevTypes.slice(prevTypes.length - keptCount);
+        const added = newEntries.map(() => actionType === 'ENEMY_TURN' ? 'enemy' : 'hero');
+        return [...kept, ...added];
       });
 
       setBattleState(result);
@@ -159,6 +229,7 @@ export default function BattlePage() {
   // ── Give Up ──────────────────────────────────────────────────────────────
 
   function promptGiveUp() {
+    cancelEnemyTurnTimer();
     setModal({
       open: true, title: 'Give Up?',
       message: 'Give up this run? It will count as a defeat.',
@@ -182,6 +253,7 @@ export default function BattlePage() {
   // ── Restart ──────────────────────────────────────────────────────────────
 
   function promptRestart() {
+    cancelEnemyTurnTimer();
     setModal({
       open: true, title: 'Restart Run?',
       message: 'Restart with the same team? This run counts as a defeat.',
@@ -280,18 +352,18 @@ export default function BattlePage() {
         <div style={{ display: 'flex', gap: theme.spacing.sm }}>
           <button
             onClick={promptGiveUp}
-            disabled={loading || isEnemyTurn}
-            style={{ ...topBtnBase, background: theme.colors.statusBleed, color: theme.colors.bgPage, opacity: (loading || isEnemyTurn) ? 0.5 : 1 }}
-            onMouseEnter={(e) => { if (!loading && !isEnemyTurn) e.currentTarget.style.background = '#6B0000'; }}
+            disabled={enemyTurnPending}
+            style={{ ...topBtnBase, background: theme.colors.statusBleed, color: theme.colors.bgPage, opacity: enemyTurnPending ? 0.5 : 1 }}
+            onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = '#6B0000'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.statusBleed; }}
           >
             Give Up
           </button>
           <button
             onClick={promptRestart}
-            disabled={loading || isEnemyTurn}
-            style={{ ...topBtnBase, background: theme.colors.bgPanelDark, color: theme.colors.textPrimary, border: `1px solid ${theme.colors.borderBrown}`, opacity: (loading || isEnemyTurn) ? 0.5 : 1 }}
-            onMouseEnter={(e) => { if (!loading && !isEnemyTurn) e.currentTarget.style.background = theme.colors.borderBrown; }}
+            disabled={enemyTurnPending}
+            style={{ ...topBtnBase, background: theme.colors.bgPanelDark, color: theme.colors.textPrimary, border: `1px solid ${theme.colors.borderBrown}`, opacity: enemyTurnPending ? 0.5 : 1 }}
+            onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = theme.colors.borderBrown; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
           >
             Restart
@@ -346,6 +418,7 @@ export default function BattlePage() {
                 <div
                   key={hero.id}
                   onClick={canClickAlly ? () => handleHeroClick(hero) : undefined}
+                  className={hitHeroIds.has(hero.id) ? 'hero-hit' : undefined}
                   style={{
                     flex: 1,
                     cursor: canClickAlly ? 'pointer' : 'default',
@@ -362,7 +435,7 @@ export default function BattlePage() {
               );
             })}
           </div>
-          <CombatLog entries={combatLog ?? []} />
+          <CombatLog entries={combatLog ?? []} entryTypes={combatLogTypes} />
         </div>
 
         {/* Action menu */}

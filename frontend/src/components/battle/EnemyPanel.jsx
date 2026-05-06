@@ -5,6 +5,15 @@ import StatusBadge from './StatusBadge';
 export default function EnemyPanel({ enemy, isTargeted, onClick }) {
   const defeated = enemy.hp <= 0;
   const clickable = !!onClick && !defeated;
+  const nameLen = enemy.name?.length ?? 0;
+  let nameFontSize = theme.fontSizes.sm;
+  let nameTextStyle = {};
+  if (nameLen > 18) {
+    nameFontSize = '0.65rem';
+    nameTextStyle = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' };
+  } else if (nameLen > 12) {
+    nameFontSize = theme.fontSizes.xs;
+  }
 
   return (
     <div
@@ -34,20 +43,18 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
         flexShrink: 0,
       }} />
 
-      <div style={{
-        fontFamily: theme.fonts.body,
-        fontWeight: theme.fontWeights.bold,
-        fontSize: theme.fontSizes.xs,
-        color: theme.colors.textPrimary,
-        textAlign: 'center',
-        height: '20px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        maxWidth: '80px',
-        width: '80px',
-      }}>
-        {enemy.name}
+      <div style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '80px', width: '80px' }}>
+        <div style={{
+          fontFamily: theme.fonts.body,
+          fontWeight: theme.fontWeights.bold,
+          fontSize: nameFontSize,
+          color: theme.colors.textPrimary,
+          textAlign: 'center',
+          maxWidth: '80px',
+          ...nameTextStyle,
+        }}>
+          {enemy.name}
+        </div>
       </div>
 
       <div style={{ width: '80px' }}>

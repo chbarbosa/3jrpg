@@ -35,6 +35,13 @@ h1, h2, h3 {
   50%       { transform: scale(1.02); box-shadow: 0 0 18px rgba(255,224,102,0.9); }
 }
 
+@keyframes heroHit {
+  0%   { transform: translateX(0);    box-shadow: 0 0 0 2px #C0392B; }
+  25%  { transform: translateX(-4px); box-shadow: 0 0 0 2px #C0392B; }
+  75%  { transform: translateX(4px);  box-shadow: 0 0 0 2px #C0392B; }
+  100% { transform: translateX(0);    box-shadow: none; }
+}
+
 @keyframes victory-fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -54,6 +61,10 @@ h1, h2, h3 {
 
 .hero-active {
   animation: hero-pulse 2s ease-in-out infinite;
+}
+
+.hero-hit {
+  animation: heroHit 300ms ease forwards;
 }
 
 .page-enter {

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { theme } from '../../styles/theme';
 
-export default function CombatLog({ entries }) {
+export default function CombatLog({ entries, entryTypes }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -21,18 +21,22 @@ export default function CombatLog({ entries }) {
       color: theme.colors.textMuted,
       scrollbarWidth: 'thin',
     }}>
-      {entries.map((entry, i) => (
-        <div
-          key={i}
-          style={{
-            paddingBottom: '2px',
-            color: i === entries.length - 1 ? theme.colors.textPrimary : theme.colors.textMuted,
-            transition: `color ${theme.transitions.fast}`,
-          }}
-        >
-          {entry}
-        </div>
-      ))}
+      {entries.map((entry, i) => {
+        const isEnemy = entryTypes?.[i] === 'enemy';
+        const isLast = i === entries.length - 1;
+        return (
+          <div
+            key={i}
+            style={{
+              paddingBottom: '2px',
+              color: isEnemy ? theme.colors.statusBleed : (isLast ? theme.colors.textPrimary : theme.colors.textMuted),
+              transition: `color ${theme.transitions.fast}`,
+            }}
+          >
+            {entry}
+          </div>
+        );
+      })}
       <div ref={bottomRef} />
     </div>
   );

@@ -39,7 +39,7 @@ export default function ItemStarter({ items, onUpdate }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
         {available.map((item) => {
           const qty = items[item.id] ?? 0;
-          const plusDisabled = atCap && qty === 0;
+          const plusDisabled = atCap;
           return (
             <div
               key={item.id}

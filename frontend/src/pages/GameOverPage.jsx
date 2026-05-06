@@ -82,6 +82,7 @@ export default function GameOverPage() {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: `${theme.spacing.xl} ${theme.spacing.lg}`,
     boxSizing: 'border-box',
   };
@@ -154,10 +155,14 @@ export default function GameOverPage() {
             color: theme.colors.textHeader,
             margin: 0,
             marginBottom: theme.spacing.sm,
+            textAlign: 'center',
+            width: '100%',
           }}>
             Run Over
           </h1>
-          <EndReasonBadge endReason={endReason} />
+          <div style={{ textAlign: 'center', width: '100%' }}>
+            <EndReasonBadge endReason={endReason} />
+          </div>
         </div>
 
         {/* Run summary */}

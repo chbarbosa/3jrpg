@@ -72,6 +72,9 @@ public class BattleService {
                 "fightNumber", 1,
                 "enemyGroup", buildEnemyGroupPayload(state.getEnemies()),
                 "cycleModifier", state.getCyclePosition()));
+        resolveLeadingEnemyTurns(state, run, playerUuid);
+        saveState(run, state);
+        runRepository.save(run);
         log.info("Run {} started — player {}, fight 1", run.getUuid(), playerUuid);
         return gameLogicService.toBattleStateResponse(run.getUuid(), state);
     }
@@ -221,6 +224,9 @@ public class BattleService {
                 "fightNumber",   nextFight,
                 "enemyGroup",    buildEnemyGroupPayload(state.getEnemies()),
                 "cycleModifier", state.getCyclePosition()));
+        resolveLeadingEnemyTurns(state, run, playerUuid);
+        saveState(run, state);
+        runRepository.save(run);
         log.info("Fight {} started — run {}", nextFight, run.getUuid());
         return gameLogicService.toBattleStateResponse(run.getUuid(), state);
     }
@@ -449,6 +455,9 @@ public class BattleService {
                 "fightNumber",   1,
                 "enemyGroup",    buildEnemyGroupPayload(newState.getEnemies()),
                 "cycleModifier", newState.getCyclePosition()));
+        resolveLeadingEnemyTurns(newState, newRun, playerUuid);
+        saveState(newRun, newState);
+        runRepository.save(newRun);
         log.info("Player {} restarted — new run {}", playerUuid, newRun.getUuid());
         return gameLogicService.toBattleStateResponse(newRun.getUuid(), newState);
     }
@@ -460,6 +469,31 @@ public class BattleService {
     public Optional<BattleStateResponse> getActiveRunState(UUID playerUuid) {
         return runService.findActiveRun(playerUuid)
                 .map(run -> gameLogicService.toBattleStateResponse(run.getUuid(), loadState(run)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Leading enemy turn resolution (new fight starts with enemy first)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private void resolveLeadingEnemyTurns(BattleState state, Run run, UUID playerUuid) {
+        int limit = state.getTurnOrder().size() + 1;
+        for (int guard = 0; guard < limit; guard++) {
+            if (state.isFightOver()) break;
+            String activeId = gameLogicService.findActiveActorId(state);
+            if (activeId == null || activeId.startsWith("hero_")) break;
+            String description = gameLogicService.resolveOneEnemyTurn(state);
+            runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.COMBAT_ACTION, buildMap(
+                    "actor",       activeId,
+                    "actionType",  "ENEMY_TURN",
+                    "description", description,
+                    "fightNumber", state.getFightNumber()));
+            if (gameLogicService.checkAllHeroesDead(state)) {
+                state.setFightOver(true);
+                state.setVictory(false);
+                state.getCombatLog().add("Defeat! All heroes have fallen.");
+                break;
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
