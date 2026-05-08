@@ -9,6 +9,7 @@ import TurnOrderBar from '../components/battle/TurnOrderBar';
 import CombatLog from '../components/battle/CombatLog';
 import { CYCLE_POSITIONS } from '../data/gameConstants';
 import { SPELL_LIST } from '../data/spells';
+import { STATUS_EFFECTS } from '../data/statusEffects';
 import { performAction, startPrep, giveUp, restart, getActiveRun } from '../services/api';
 import { playSound } from '../services/sound';
 
@@ -186,7 +187,7 @@ export default function BattlePage() {
         });
       }
 
-      // Enemy turn: hit flash + float damage on heroes
+      // Enemy turn: hit flash + float damage + status floats on heroes
       if (actionType === 'ENEMY_TURN') {
         const hitIds = new Set();
         result.heroes?.forEach((hero) => {
@@ -204,8 +205,15 @@ export default function BattlePage() {
         result.heroes?.forEach((hero) => {
           const prev = prevState.heroes?.find((h) => h.id === hero.id);
           if (prev) {
-            const prevSNames = new Set(prev.statuses?.map((s) => s.statusName));
-            if (hero.statuses?.some((s) => !prevSNames.has(s.statusName))) playSound('statusApply');
+            const prevSTypes = new Set(prev.statuses?.map((s) => s.type));
+            hero.statuses?.forEach((s) => {
+              if (!prevSTypes.has(s.type)) {
+                const statusColor = STATUS_EFFECTS[s.type]?.colorKey ?? theme.colors.textMuted;
+                const statusLabel = s.type.charAt(0).toUpperCase() + s.type.slice(1);
+                showFloatDamage(hero.id, statusLabel, statusColor);
+                playSound('statusApply');
+              }
+            });
           }
         });
       }
@@ -462,8 +470,23 @@ export default function BattlePage() {
             />
           ) : isEnemyTurn ? (
             <div className="battle-enemy-turn-msg">
-              <div className="battle-enemy-turn-label">
-                Enemy is acting...
+              <div
+                className="battle-enemy-turn-label"
+                style={{
+                  color: theme.colors.textMuted,
+                  fontFamily: theme.fonts.body,
+                  fontSize: theme.fontSizes.sm,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-xs)',
+                }}
+              >
+                Enemy is acting
+                <span className="pulsing-dots">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                </span>
               </div>
               <div className="battle-enemy-turn-name">
                 {enemies.find((e) => e.id === activeActorId)?.name ?? 'Enemy'}

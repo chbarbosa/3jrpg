@@ -25,4 +25,9 @@ public class EnemyState {
     private List<String> elementalImmunity = new ArrayList<>();
     private boolean instantKillImmune;
     private List<ActiveStatus> statuses = new ArrayList<>();
+
+    // Persistent battle debuffs applied by Hammer / Scythe skills
+    private boolean destroyArmorDebuff; // +2-3 extra damage on every subsequent hit
+    private boolean disarmedDebuff;     // deals half damage
+    private boolean broken;             // always acts last in turn order
 }

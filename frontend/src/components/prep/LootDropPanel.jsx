@@ -1,7 +1,74 @@
 import { useEffect, useState } from 'react';
 import { theme } from '../../styles/theme';
-import { QUALITY_LABELS, QUALITY_COLORS } from '../../data/gameConstants';
+import { QUALITY_LABELS, QUALITY_COLORS, ARMOR_TIER_LABELS } from '../../data/gameConstants';
+import { WEAPON_LIST, SKILL_LABELS } from '../../data/weapons';
+import { ITEM_LIST } from '../../data/items';
 import { playSound } from '../../services/sound';
+
+function ItemCategoryDetail({ lootItem }) {
+  const category = (lootItem.itemCategory ?? lootItem.itemType ?? '').toUpperCase();
+
+  if (category === 'WEAPON') {
+    const weaponData = WEAPON_LIST.find((w) => w.id === lootItem.weaponTypeId);
+    return (
+      <div className="loot-item-category-detail">
+        <div className="loot-item-category-label" style={{ color: theme.colors.textMuted }}>
+          Weapon{weaponData ? ` — ${weaponData.label}` : ''}
+        </div>
+        {weaponData?.skills?.length > 0 && (
+          <div className="loot-item-skills">
+            {weaponData.skills.map((s) => (
+              <span key={s} className="loot-skill-tag">{SKILL_LABELS[s] ?? s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (category === 'ARMOR') {
+    const tierLabel = ARMOR_TIER_LABELS[lootItem.armorTierId] ?? lootItem.armorTierId ?? 'Armor';
+    return (
+      <div className="loot-item-category-detail">
+        <div className="loot-item-category-label" style={{ color: theme.colors.textMuted }}>
+          Armor — {tierLabel}
+        </div>
+      </div>
+    );
+  }
+
+  if (category === 'ACCESSORY') {
+    const typeLabel = lootItem.accessoryType
+      ? lootItem.accessoryType.charAt(0).toUpperCase() + lootItem.accessoryType.slice(1)
+      : 'Accessory';
+    return (
+      <div className="loot-item-category-detail">
+        <div className="loot-item-category-label" style={{ color: theme.colors.textMuted }}>
+          Accessory — {typeLabel}
+        </div>
+      </div>
+    );
+  }
+
+  if (category === 'CONSUMABLE') {
+    const itemData = ITEM_LIST.find((i) => i.id === lootItem.itemId);
+    const label = itemData?.label ?? lootItem.name;
+    return (
+      <div className="loot-item-category-detail">
+        <div className="loot-item-category-label" style={{ color: theme.colors.textMuted }}>
+          Consumable — {label}
+        </div>
+        {itemData?.description && (
+          <div className="loot-item-desc" style={{ fontSize: 'var(--fs-xs)' }}>
+            {itemData.description}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssigned, lootRecipientHeroId }) {
   const [glowing, setGlowing] = useState(true);
@@ -52,6 +119,8 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
             {qualityLabel}
           </div>
         </div>
+
+        <ItemCategoryDetail lootItem={lootItem} />
 
         {lootItem.description && (
           <div className="loot-item-desc">

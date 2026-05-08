@@ -28,7 +28,10 @@ export default function TurnOrderBar({ turnOrder, activeActorId, heroes, enemies
           <div
             key={`${id}-${i}`}
             className="turn-order-item"
-            style={{ transform: active ? 'scale(1.25)' : 'scale(1)' }}
+            style={{
+              transform: active ? 'scale(1.25)' : 'scale(1)',
+              transition: `transform ${theme.transitions.slow}`,
+            }}
           >
             <div
               className="turn-order-avatar"
@@ -36,6 +39,7 @@ export default function TurnOrderBar({ turnOrder, activeActorId, heroes, enemies
                 background: actor.color,
                 border: `2px solid ${active ? theme.colors.highlight : 'transparent'}`,
                 boxShadow: active ? theme.shadows.highlight : 'none',
+                transition: `border-color ${theme.transitions.slow}, box-shadow ${theme.transitions.slow}`,
               }}
             />
             <div

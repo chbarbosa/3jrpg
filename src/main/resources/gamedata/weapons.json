@@ -30,14 +30,18 @@
     "id": "bow", "name": "Bow",
     "equippableBy": ["ranger"],
     "skills": [
-      {"id": "normalAttack","name": "Normal Attack", "effect": "Ranged strike dealing STR−DEF damage",                 "enCost": 0, "statusEffect": null,    "statusChance": 0.0},
-      {"id": "doubleShot",  "name": "Double Shot",   "effect": "Two ranged strikes at half damage each, no status",   "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+      {"id": "normalAttack","name": "Normal Attack", "effect": "Ranged strike dealing STR−DEF damage; 20% slow, 10% pain chance.", "enCost": 0, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "doubleShot",  "name": "Double Shot",   "effect": "Two ranged strikes at half damage each, no status.",              "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "fatalShot",   "name": "Fatal Shot",    "effect": "50% chance of double damage; on fail deals 1-2 raw damage.",      "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "piercingShot","name": "Piercing Shot", "effect": "Normal damage +1-2 extra vs armored (DEF>0) enemies.",            "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "poisonShot",  "name": "Poison Shot",   "effect": "Normal damage and applies Poison status.",                        "enCost": 2, "statusEffect": "poison", "statusChance": 1.0},
+      {"id": "fireShot",    "name": "Fire Shot",     "effect": "Normal damage and applies Burn status.",                          "enCost": 2, "statusEffect": "burn",   "statusChance": 1.0}
     ],
-    "passiveEffect": null, "bonusVsLarge": false
+    "passiveEffect": "Each shot reduces your SPD by 1 this battle.", "bonusVsLarge": false
   },
   {
     "id": "staff", "name": "Staff",
-    "equippableBy": ["mage", "cleric"],
+    "equippableBy": ["mage"],
     "skills": [
       {"id": "arcaneBolt",  "name": "Arcane Bolt",   "effect": "Magic bolt dealing INT−MDEF; auto-triggers on attack", "enCost": 0, "statusEffect": null,    "statusChance": 0.0}
     ],
@@ -45,7 +49,7 @@
   },
   {
     "id": "wand", "name": "Wand",
-    "equippableBy": ["mage", "cleric"],
+    "equippableBy": ["mage"],
     "skills": [
       {"id": "elementalShot","name": "Elemental Shot","effect": "Elemental projectile dealing INT−MDEF; auto-triggers","enCost": 0, "statusEffect": null,    "statusChance": 0.0}
     ],
@@ -61,5 +65,25 @@
       {"id": "heavyStrike", "name": "Heavy Strike",  "effect": "Powerful blow; +4 bonus damage",                       "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
     ],
     "passiveEffect": "Passive: −1 DEX to wielder", "bonusVsLarge": true
+  },
+  {
+    "id": "hammer", "name": "Hammer",
+    "equippableBy": ["cleric"],
+    "skills": [
+      {"id": "destroyArmor","name": "Destroy Armor", "effect": "Hit + shatters armor; every subsequent hit deals +2-3 extra damage.", "enCost": 2, "statusEffect": null, "statusChance": 0.0},
+      {"id": "breakSkill",  "name": "Break",         "effect": "Hit + breaks momentum; target always acts last this battle.",         "enCost": 2, "statusEffect": null, "statusChance": 0.0},
+      {"id": "disarm",      "name": "Disarm",        "effect": "Hit + disarms target; target deals half damage for the battle.",      "enCost": 2, "statusEffect": null, "statusChance": 0.0}
+    ],
+    "passiveEffect": "30% chance to apply Pain on normal attack.", "bonusVsLarge": false
+  },
+  {
+    "id": "scythe", "name": "Scythe",
+    "equippableBy": ["cleric"],
+    "skills": [
+      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack; 30% Trauma chance (reduces STR or DEX).", "enCost": 2, "statusEffect": "trauma", "statusChance": 0.3},
+      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids.",          "enCost": 2, "statusEffect": "bleed",  "statusChance": 0.9},
+      {"id": "deathDance",  "name": "Death Dance",   "effect": "3 rapid hits on a single target. Each calculated separately.", "enCost": 11, "statusEffect": null, "statusChance": 0.0}
+    ],
+    "passiveEffect": null, "bonusVsLarge": false
   }
 ]

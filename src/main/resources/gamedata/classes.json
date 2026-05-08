@@ -23,7 +23,7 @@
   {
     "id": "cleric", "name": "Cleric", "type": "MAGIC",
     "str": 7, "dex": 7, "intel": 8, "hp": 14, "spd": 14, "en": 16,
-    "equippableWeapons": ["mace", "staff", "wand"],
+    "equippableWeapons": ["mace", "hammer", "scythe"],
     "equippableArmor": "medium",
     "damageBonus": null
   }

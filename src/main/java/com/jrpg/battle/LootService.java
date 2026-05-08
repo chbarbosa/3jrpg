@@ -66,7 +66,8 @@ public class LootService {
         String name = prefix + weapon.name();
         String desc = "A " + quality.toLowerCase() + " " + weapon.name().toLowerCase()
                 + (modifiers.isEmpty() ? "." : " enhanced with " + String.join(" and ", modifiers) + ".");
-        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid, "WEAPON");
+        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
+                "WEAPON", "WEAPON", weapon.id(), null, null, null);
     }
 
     private LootItemDTO generateArmorLoot(String quality, String itemUuid) {
@@ -77,7 +78,8 @@ public class LootService {
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
         String name = prefix + tierName;
         String desc = tierDesc + (modifiers.isEmpty() ? "" : " Enhanced with " + String.join(" and ", modifiers) + ".");
-        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid, "ARMOR");
+        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
+                "ARMOR", "ARMOR", null, null, ARMOR_TIER_IDS[idx], null);
     }
 
     private LootItemDTO generateAccessoryLoot(String quality, String itemUuid) {
@@ -89,7 +91,8 @@ public class LootService {
         String name = prefix + type;
         String desc = "A " + quality.toLowerCase() + " accessory"
                 + (modifiers.isEmpty() ? "." : " enhanced with " + modifiers.get(0) + ".");
-        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid, "ACCESSORY");
+        return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
+                "ACCESSORY", "ACCESSORY", null, type.toLowerCase(), null, null);
     }
 
     private LootItemDTO generateConsumableLoot(String quality, String itemUuid) {
@@ -98,7 +101,8 @@ public class LootService {
         ItemData item = gameDataService.findItem(itemId).orElseThrow();
         List<String> modifiers = pickModifiers(quality, ALL_MODIFIERS);
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
-        return new LootItemDTO(prefix + item.name(), quality, item.effect(), List.copyOf(modifiers), itemUuid, "CONSUMABLE");
+        return new LootItemDTO(prefix + item.name(), quality, item.effect(), List.copyOf(modifiers), itemUuid,
+                "CONSUMABLE", "CONSUMABLE", null, null, null, itemId);
     }
 
     private List<String> pickModifiers(String quality, String[] pool) {

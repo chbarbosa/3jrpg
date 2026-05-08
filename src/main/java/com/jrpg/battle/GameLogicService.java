@@ -154,15 +154,39 @@ public class GameLogicService {
     // ═══════════════════════════════════════════════════════════════════════
 
     public List<String> buildTurnOrder(BattleState state) {
-        List<Map.Entry<String, Integer>> actors = new ArrayList<>();
+        final List<String> prev = state.getTurnOrder() != null
+                ? List.copyOf(state.getTurnOrder()) : List.of();
+
+        List<Map.Entry<String, Integer>> normalActors = new ArrayList<>();
+        List<String> brokenActors = new ArrayList<>();
+
         for (HeroState h : state.getHeroes()) {
-            if (!h.isKnockedOut()) actors.add(Map.entry(h.getId(), h.getSpd()));
+            if (!h.isKnockedOut()) normalActors.add(Map.entry(h.getId(), h.getSpd()));
         }
         for (EnemyState e : state.getEnemies()) {
-            if (e.getHp() > 0) actors.add(Map.entry(e.getId(), e.getSpd()));
+            if (e.getHp() > 0) {
+                if (e.isBroken()) brokenActors.add(e.getId());
+                else normalActors.add(Map.entry(e.getId(), e.getSpd()));
+            }
         }
-        actors.sort((a, b) -> b.getValue() - a.getValue());
-        return actors.stream().map(Map.Entry::getKey).collect(Collectors.toList());
+
+        normalActors.sort((a, b) -> {
+            int spdDiff = b.getValue() - a.getValue();
+            if (spdDiff != 0) return spdDiff;
+            boolean aHero = a.getKey().startsWith("hero_");
+            boolean bHero = b.getKey().startsWith("hero_");
+            if (aHero && !bHero) return -1;
+            if (!aHero && bHero) return 1;
+            int aIdx = prev.indexOf(a.getKey());
+            int bIdx = prev.indexOf(b.getKey());
+            if (aIdx < 0) aIdx = Integer.MAX_VALUE;
+            if (bIdx < 0) bIdx = Integer.MAX_VALUE;
+            return Integer.compare(aIdx, bIdx);
+        });
+
+        List<String> result = normalActors.stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        result.addAll(brokenActors);
+        return result;
     }
 
     public String findActiveActorId(BattleState state) {
@@ -178,12 +202,18 @@ public class GameLogicService {
     }
 
     public void advanceTurn(BattleState state) {
-        List<String> order = state.getTurnOrder();
-        int n = order.size();
+        String currentId = findActiveActorId(state);
+
+        List<String> newOrder = buildTurnOrder(state);
+        state.setTurnOrder(newOrder);
+
+        int n = newOrder.size();
         if (n == 0) return;
-        int next = (state.getCurrentTurnIndex() + 1) % n;
+
+        int currentIdx = currentId != null ? newOrder.indexOf(currentId) : -1;
+        int next = (currentIdx + 1) % n;
         for (int safety = 0; safety < n; safety++) {
-            if (isAlive(order.get(next), state)) break;
+            if (isAlive(newOrder.get(next), state)) break;
             next = (next + 1) % n;
         }
         state.setCurrentTurnIndex(next);
@@ -258,7 +288,11 @@ public class GameLogicService {
         // Greatsword bonus vs beast
         if ("greatsword".equals(weapon.id()) && "beast".equals(target.getType())) dmg += 2;
 
-        // Bow: 20% chance slow, 10% chance pain
+        applyDmgToEnemy(target, dmg, state);
+        String msg = heroLabel(hero) + " attacks " + target.getName() + " for " + dmg + " damage.";
+        addLog(state, msg);
+
+        // Bow: 20% chance slow, 10% chance pain; and per-shot SPD debuff on archer
         if ("bow".equals(weapon.id())) {
             double roll = ThreadLocalRandom.current().nextDouble();
             if (roll < 0.10) {
@@ -268,11 +302,17 @@ public class GameLogicService {
                 applyStatusEnemy(target, "slow", 2, 0);
                 addLog(state, target.getName() + " is slowed!");
             }
+            applyBowSpdDebuff(state, hero);
         }
 
-        applyDmgToEnemy(target, dmg, state);
-        String msg = heroLabel(hero) + " attacks " + target.getName() + " for " + dmg + " damage.";
-        addLog(state, msg);
+        // Hammer: 30% chance Pain on normal attack
+        if ("hammer".equals(weapon.id()) && target.getHp() > 0) {
+            if (ThreadLocalRandom.current().nextDouble() < 0.30) {
+                applyStatusEnemy(target, "pain", 2, 1);
+                addLog(state, target.getName() + " is in pain (-1 STR)!");
+            }
+        }
+
         return msg;
     }
 
@@ -291,8 +331,14 @@ public class GameLogicService {
         }
         if (skill.enCost() > 0) hero.setEn(hero.getEn() - skill.enCost());
 
-        if ("doubleShot".equals(skillId)) return resolveDoubleShot(state, hero, targetId);
-        if ("cleave".equals(skillId)) return resolveCleave(state, hero);
+        if ("doubleShot".equals(skillId))   return resolveDoubleShot(state, hero, targetId);
+        if ("cleave".equals(skillId))        return resolveCleave(state, hero);
+        if ("normalAttack".equals(skillId))  return resolveAttack(state, actorId, targetId);
+        if ("deathDance".equals(skillId))    return resolveDeathDance(state, hero, target);
+        if ("fatalShot".equals(skillId))     return resolveFatalShot(state, hero, target);
+        if ("piercingShot".equals(skillId))  return resolvePiercingShot(state, hero, target);
+        if ("poisonShot".equals(skillId))    return resolvePoisonShot(state, hero, target);
+        if ("fireShot".equals(skillId))      return resolveFireShot(state, hero, target);
 
         int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
 
@@ -336,6 +382,25 @@ public class GameLogicService {
             msg.append(" ").append(target.getName()).append(" is in pain!");
         }
 
+        // Hammer: Destroy Armor — +2-3 extra damage on all subsequent hits
+        if ("destroyArmor".equals(skillId)) {
+            target.setDestroyArmorDebuff(true);
+            msg.append(" ").append(target.getName()).append("'s armor is shattered!");
+        }
+
+        // Hammer: Break — pushed to last in turn order permanently
+        if ("breakSkill".equals(skillId)) {
+            target.setBroken(true);
+            state.setTurnOrder(buildTurnOrder(state));
+            msg.append(" ").append(target.getName()).append(" is broken and will act last this battle!");
+        }
+
+        // Hammer: Disarm — deals half damage permanently
+        if ("disarm".equals(skillId)) {
+            target.setDisarmedDebuff(true);
+            msg.append(" ").append(target.getName()).append(" is disarmed and deals half damage!");
+        }
+
         // Generic skill status from data
         if (skill.statusEffect() != null && !"stun".equals(skillId) && !"pain".equals(skillId)
                 && ThreadLocalRandom.current().nextDouble() < skill.statusChance()) {
@@ -360,7 +425,9 @@ public class GameLogicService {
 
         int dmg = Math.max(1, (hero.getStr() - enemyPhysDef(t1)) / 2);
         applyDmgToEnemy(t1, dmg, state);
+        applyBowSpdDebuff(state, hero); // shot 1
         applyDmgToEnemy(t2, dmg, state);
+        applyBowSpdDebuff(state, hero); // shot 2
 
         String msg = heroLabel(hero) + " fires Double Shot: " + t1.getName()
                 + " and " + t2.getName() + " each take " + dmg + " damage.";
@@ -379,6 +446,81 @@ public class GameLogicService {
         String msg = sb.toString();
         addLog(state, msg);
         return msg;
+    }
+
+    private void applyBowSpdDebuff(BattleState state, HeroState hero) {
+        if (hero.getSpd() > 1) {
+            hero.setSpd(hero.getSpd() - 1);
+            addLog(state, hero.getName() + "'s SPD reduced by 1 from bow strain.");
+        }
+    }
+
+    private String resolveDeathDance(BattleState state, HeroState hero, EnemyState target) {
+        String intro = heroLabel(hero) + " performs Death Dance on " + target.getName() + "!";
+        addLog(state, intro);
+        for (int hit = 1; hit <= 3 && target.getHp() > 0; hit++) {
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+            applyDmgToEnemy(target, dmg, state);
+            addLog(state, "  Hit " + hit + ": " + dmg + " damage.");
+        }
+        return intro;
+    }
+
+    private String resolveFatalShot(BattleState state, HeroState hero, EnemyState target) {
+        applyBowSpdDebuff(state, hero);
+        String msg;
+        if (ThreadLocalRandom.current().nextDouble() < 0.5) {
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target)) * 2;
+            applyDmgToEnemy(target, dmg, state);
+            msg = heroLabel(hero) + " lands a Fatal Shot on " + target.getName() + " for " + dmg + " damage!";
+        } else {
+            int dmg = ThreadLocalRandom.current().nextInt(1, 3);
+            target.setHp(Math.max(0, target.getHp() - dmg));
+            if (target.getHp() == 0) { target.getStatuses().clear(); addLog(state, target.getName() + " is defeated!"); }
+            msg = heroLabel(hero) + "'s Fatal Shot grazes " + target.getName() + " for " + dmg + " damage.";
+        }
+        addLog(state, msg);
+        return msg;
+    }
+
+    private String resolvePiercingShot(BattleState state, HeroState hero, EnemyState target) {
+        applyBowSpdDebuff(state, hero);
+        int baseDmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        int extra = enemyPhysDef(target) > 0 ? ThreadLocalRandom.current().nextInt(1, 3) : 0;
+        int dmg = baseDmg + extra;
+        applyDmgToEnemy(target, dmg, state);
+        String msg = heroLabel(hero) + " fires Piercing Shot at " + target.getName() + " for " + dmg + " damage"
+                + (extra > 0 ? " (+" + extra + " piercing)!" : ".");
+        addLog(state, msg);
+        return msg;
+    }
+
+    private String resolvePoisonShot(BattleState state, HeroState hero, EnemyState target) {
+        applyBowSpdDebuff(state, hero);
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        applyDmgToEnemy(target, dmg, state);
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " fires Poison Shot at " + target.getName() + " for " + dmg + " damage.");
+        if (target.getHp() > 0) {
+            applyStatusEnemy(target, "poison", statusDuration("poison"), 1);
+            msg.append(" ").append(target.getName()).append(" is poisoned!");
+        }
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
+    }
+
+    private String resolveFireShot(BattleState state, HeroState hero, EnemyState target) {
+        applyBowSpdDebuff(state, hero);
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        applyDmgToEnemy(target, dmg, state);
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " fires Fire Shot at " + target.getName() + " for " + dmg + " damage.");
+        if (target.getHp() > 0) {
+            applyStatusEnemy(target, "burn", statusDuration("burn"), 1);
+            msg.append(" ").append(target.getName()).append(" is burning!");
+        }
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
     }
 
     private String resolveMagic(BattleState state, String actorId, String targetId, String spellId) {
@@ -667,6 +809,10 @@ public class GameLogicService {
             dmg = Math.max(1, dmg - 2);
         }
 
+        if (enemy.isDisarmedDebuff()) {
+            dmg = Math.max(1, dmg / 2);
+        }
+
         applyDmgToHero(target, dmg, state);
         String msg = enemy.getName() + " attacks " + heroLabel(target) + " for " + dmg + " damage.";
         addLog(state, msg);
@@ -746,6 +892,10 @@ public class GameLogicService {
                 if ("pain".equals(s.getType())) {
                     enemy.setStr(enemy.getStr() + s.getMagnitude());
                 }
+                if ("trauma".equals(s.getType())) {
+                    if (s.getMagnitude() == 1) enemy.setStr(enemy.getStr() + 1);
+                    else                       enemy.setDex(enemy.getDex() + 1);
+                }
                 it.remove();
             }
         }
@@ -757,6 +907,16 @@ public class GameLogicService {
         switch (type) {
             case "stun", "slow" -> enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
             case "pain"         -> enemy.setStr(Math.max(1, enemy.getStr() - magnitude));
+            case "trauma" -> {
+                // magnitude: 1 = reduce STR, 2 = reduce DEX (determined randomly at application)
+                int statChoice = ThreadLocalRandom.current().nextBoolean() ? 1 : 2;
+                enemy.getStatuses().stream()
+                        .filter(s -> "trauma".equals(s.getType()))
+                        .findFirst()
+                        .ifPresent(s -> s.setMagnitude(statChoice));
+                if (statChoice == 1) enemy.setStr(Math.max(1, enemy.getStr() - 1));
+                else                 enemy.setDex(Math.max(1, enemy.getDex() - 1));
+            }
         }
     }
 
@@ -822,7 +982,13 @@ public class GameLogicService {
     }
 
     private void applyDmgToEnemy(EnemyState enemy, int dmg, BattleState state) {
-        enemy.setHp(Math.max(0, enemy.getHp() - dmg));
+        int finalDmg = dmg;
+        if (enemy.isDestroyArmorDebuff()) {
+            int bonus = ThreadLocalRandom.current().nextInt(2, 4); // 2-3
+            finalDmg += bonus;
+            addLog(state, "Shattered armor: +" + bonus + " bonus damage to " + enemy.getName() + ".");
+        }
+        enemy.setHp(Math.max(0, enemy.getHp() - finalDmg));
         if (enemy.getHp() == 0) {
             enemy.getStatuses().clear();
             addLog(state, enemy.getName() + " is defeated!");
@@ -875,6 +1041,11 @@ public class GameLogicService {
     }
 
     public void addLootToInventory(HeroState hero, LootItemDTO loot) {
+        if ("CONSUMABLE".equals(loot.itemType()) && loot.itemId() != null) {
+            // Consumable loot merges into the hero's regular consumable stack
+            addToInventory(hero, loot.itemId(), 1);
+            return;
+        }
         hero.getInventory().add(InventoryItem.loot(
                 loot.itemUuid(), loot.itemType(), loot.name(),
                 loot.quality(), loot.modifiers(), loot.description()));

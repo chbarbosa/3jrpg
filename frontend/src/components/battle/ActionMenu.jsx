@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { theme } from '../../styles/theme';
 import { SPELL_LIST } from '../../data/spells';
 import { ITEM_LIST } from '../../data/items';
+import { SKILL_DESCRIPTIONS } from '../../data/weapons';
 import { playSound } from '../../services/sound';
 import Tooltip from '../Tooltip';
 
@@ -147,16 +148,25 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
           Skills &amp; Magic
         </div>
         <div className="action-menu-scroll-list">
-          {skills.map((sk) => (
-            <SubMenuItem
-              key={sk.id}
-              label={sk.name}
-              cost={sk.enCost}
-              school={null}
-              disabled={hero.en < sk.enCost}
-              onClick={() => handleSkillSelect(sk)}
-            />
-          ))}
+          {skills.map((sk) => {
+            const desc = SKILL_DESCRIPTIONS[sk.id];
+            const tooltipText = desc
+              ? `${desc}${sk.enCost > 0 ? ` | Cost: ${sk.enCost} EN` : ''}`
+              : sk.enCost > 0 ? `Cost: ${sk.enCost} EN` : null;
+            const btn = (
+              <SubMenuItem
+                key={sk.id}
+                label={sk.name}
+                cost={sk.enCost}
+                school={null}
+                disabled={hero.en < sk.enCost}
+                onClick={() => handleSkillSelect(sk)}
+              />
+            );
+            return tooltipText ? (
+              <Tooltip key={sk.id} text={tooltipText}>{btn}</Tooltip>
+            ) : btn;
+          })}
           {spells.map((sp) => {
             const spellData = SPELL_LIST.find((s) => s.id === sp.id);
             const tooltipText = spellData

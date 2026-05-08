@@ -26,5 +26,6 @@ export const CLASS_LIST = [
     type: 'magic',
     description: 'Healer and support. Light magic and holy power.',
     colorKey: 'cleric',
+    equippableWeapons: ['mace', 'hammer', 'scythe'],
   },
 ];

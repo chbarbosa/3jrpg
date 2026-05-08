@@ -147,7 +147,10 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     return itemData?.usableIn.includes('prep') ?? false;
   });
 
-  const lootItems = (hero.inventory ?? []).filter((i) => !!i.uuid);
+  // Only WEAPON, ARMOR, ACCESSORY loot items are equippable; CONSUMABLE loot is in the consumable stack
+  const lootItems = (hero.inventory ?? []).filter(
+    (i) => !!i.uuid && ['weapon', 'armor', 'accessory'].includes(i.itemType?.toLowerCase()),
+  );
 
   const knockedOutAllies = allHeroes.filter((h) => h.isKnockedOut && h.id !== hero.id);
   const canRevive = knockedOutAllies.length > 0;
