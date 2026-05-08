@@ -19,7 +19,7 @@
   },
   {
     "id": "mace", "name": "Mace",
-    "equippableBy": ["warrior", "priest"],
+    "equippableBy": ["warrior", "cleric"],
     "skills": [
       {"id": "headBash",    "name": "Head Bash",     "effect": "Crushing blow that may stun the target",               "enCost": 2, "statusEffect": "stun",  "statusChance": 0.6},
       {"id": "limbStrike",  "name": "Limb Strike",   "effect": "Targets limbs, applying pain (slow)",                  "enCost": 2, "statusEffect": "slow",  "statusChance": 0.7}
@@ -37,7 +37,7 @@
   },
   {
     "id": "staff", "name": "Staff",
-    "equippableBy": ["mage", "priest"],
+    "equippableBy": ["mage", "cleric"],
     "skills": [
       {"id": "arcaneBolt",  "name": "Arcane Bolt",   "effect": "Magic bolt dealing INT−MDEF; auto-triggers on attack", "enCost": 0, "statusEffect": null,    "statusChance": 0.0}
     ],
@@ -45,7 +45,7 @@
   },
   {
     "id": "wand", "name": "Wand",
-    "equippableBy": ["mage", "priest"],
+    "equippableBy": ["mage", "cleric"],
     "skills": [
       {"id": "elementalShot","name": "Elemental Shot","effect": "Elemental projectile dealing INT−MDEF; auto-triggers","enCost": 0, "statusEffect": null,    "statusChance": 0.0}
     ],

@@ -2,7 +2,7 @@ import { theme } from '../../styles/theme';
 import { WEAPON_LIST, SKILL_LABELS } from '../../data/weapons';
 import { ARMOR_TIER_LABELS } from '../../data/gameConstants';
 
-const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', priest: 'medium', mage: 'light' };
+const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', cleric: 'medium', mage: 'light' };
 
 function SectionLabel({ children }) {
   return (

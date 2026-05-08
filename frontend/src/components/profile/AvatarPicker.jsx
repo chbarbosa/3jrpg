@@ -7,7 +7,7 @@ const AVATAR_BG = {
   warrior: theme.classColors.warrior,
   ranger: theme.classColors.ranger,
   mage: theme.classColors.mage,
-  priest: theme.classColors.priest,
+  cleric: theme.classColors.cleric,
 };
 
 function avatarBg(id) {

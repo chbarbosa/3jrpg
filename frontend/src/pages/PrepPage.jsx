@@ -86,9 +86,9 @@ export default function PrepPage() {
     setLootRecipientHeroId(heroId);
   }
 
-  async function handlePrepAction(heroId, actionType, itemId, targetHeroId) {
+  async function handlePrepAction(heroId, actionType, itemId, targetHeroId, equipSlot = null, itemUuid = null) {
     try {
-      const updatedHeroes = await wrapApiCall(prepAction)(runUuid, heroId, actionType, itemId ?? null, targetHeroId ?? null);
+      const updatedHeroes = await wrapApiCall(prepAction)(runUuid, heroId, actionType, itemId ?? null, targetHeroId ?? null, equipSlot, itemUuid);
       setHeroes(updatedHeroes);
       setHeroActions((prev) => ({ ...prev, [heroId]: true }));
     } catch (err) {

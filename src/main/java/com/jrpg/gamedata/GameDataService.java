@@ -91,6 +91,7 @@ public class GameDataService {
     public List<ClassData>      allClasses()           { return List.copyOf(classes.values()); }
 
     public Optional<WeaponType> findWeapon(String id)  { return Optional.ofNullable(weapons.get(id)); }
+    public List<WeaponType>    allWeapons()             { return List.copyOf(weapons.values()); }
 
     public Optional<EnemyData>  findEnemy(String id)   { return Optional.ofNullable(enemies.get(id)); }
 

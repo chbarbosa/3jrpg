@@ -33,7 +33,7 @@ public class PlayerService {
             new AvatarOption("warrior",  "Warrior"),
             new AvatarOption("ranger",   "Ranger"),
             new AvatarOption("mage",     "Mage"),
-            new AvatarOption("priest",   "Priest"),
+            new AvatarOption("cleric",   "Cleric"),
             new AvatarOption("goblin",   "Goblin"),
             new AvatarOption("dragon",   "Dragon"),
             new AvatarOption("robo",     "Robo"),

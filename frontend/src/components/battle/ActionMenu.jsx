@@ -3,6 +3,7 @@ import { theme } from '../../styles/theme';
 import { SPELL_LIST } from '../../data/spells';
 import { ITEM_LIST } from '../../data/items';
 import { playSound } from '../../services/sound';
+import Tooltip from '../Tooltip';
 
 const ALLY_TARGET_ITEMS = new Set(['reviveScroll']);
 
@@ -156,16 +157,23 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
               onClick={() => handleSkillSelect(sk)}
             />
           ))}
-          {spells.map((sp) => (
-            <SubMenuItem
-              key={sp.id}
-              label={sp.name}
-              cost={sp.enCost}
-              school={sp.school}
-              disabled={hero.en < sp.enCost}
-              onClick={() => handleSpellSelect(sp)}
-            />
-          ))}
+          {spells.map((sp) => {
+            const spellData = SPELL_LIST.find((s) => s.id === sp.id);
+            const tooltipText = spellData
+              ? `${spellData.description} | Cost: ${sp.enCost} EN | Target: ${spellData.targetType}`
+              : `Cost: ${sp.enCost} EN`;
+            return (
+              <Tooltip key={sp.id} text={tooltipText}>
+                <SubMenuItem
+                  label={sp.name}
+                  cost={sp.enCost}
+                  school={sp.school}
+                  disabled={hero.en < sp.enCost}
+                  onClick={() => handleSpellSelect(sp)}
+                />
+              </Tooltip>
+            );
+          })}
           {skills.length === 0 && spells.length === 0 && (
             <div className="action-menu-empty">No skills available</div>
           )}

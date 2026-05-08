@@ -137,7 +137,11 @@ public class BattleService {
         }
 
         gameLogicService.tickHeroStatuses(state);
-        gameLogicService.advanceTurn(state);
+        // ITEM actions handle their own turn-order repositioning in resolveItem;
+        // calling advanceTurn would skip the next actor that the postpone already set up.
+        if (req.actionType() != ActionType.ITEM) {
+            gameLogicService.advanceTurn(state);
+        }
         gameLogicService.resolveEnemyTurns(state);
 
         boolean defeated = false;
@@ -316,14 +320,17 @@ public class BattleService {
         HeroState hero = gameLogicService.findHero(state, req.recipientHeroId());
         LootItemDTO loot = state.getPendingLoot();
 
-        String itemId = gameDataService.allItemIds().stream()
-                .filter(id -> gameDataService.findItem(id)
-                        .map(i -> loot.name().toLowerCase().contains(i.name().toLowerCase()))
-                        .orElse(false))
-                .findFirst()
-                .orElse("healingPotion");
-
-        gameLogicService.addToInventory(hero, itemId, 1);
+        if ("CONSUMABLE".equals(loot.itemType())) {
+            String itemId = gameDataService.allItemIds().stream()
+                    .filter(id -> gameDataService.findItem(id)
+                            .map(i -> loot.name().toLowerCase().contains(i.name().toLowerCase()))
+                            .orElse(false))
+                    .findFirst()
+                    .orElse("healingPotion");
+            gameLogicService.addToInventory(hero, itemId, 1);
+        } else {
+            gameLogicService.addLootToInventory(hero, loot);
+        }
         state.setPendingLoot(null);
         saveState(run, state);
         runRepository.save(run);
@@ -357,9 +364,17 @@ public class BattleService {
                 gameLogicService.consumeItem(state, actor, req.targetHeroId(), req.itemId());
             }
             case SWAP_GEAR -> {
-                if (req.itemId() == null)
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemId (weapon) required");
-                swapWeapon(actor, req.itemId());
+                if (req.itemUuid() != null) {
+                    // Equip a loot item from inventory
+                    if (req.equipSlot() == null)
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "equipSlot required when equipping loot");
+                    gameLogicService.equipLootItemFromInventory(actor, req.itemUuid(), req.equipSlot());
+                } else {
+                    // Legacy: swap primary weapon by weaponId
+                    if (req.itemId() == null)
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemId (weapon) or itemUuid required");
+                    swapWeapon(actor, req.itemId());
+                }
             }
             case REVIVE -> {
                 if (req.targetHeroId() == null)

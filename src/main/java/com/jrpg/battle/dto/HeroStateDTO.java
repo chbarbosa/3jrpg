@@ -20,5 +20,12 @@ public record HeroStateDTO(
         List<SkillSummaryDTO> availableSkills,
         List<SpellSummaryDTO> availableSpells,
         List<ItemSummaryDTO> inventory,
-        String secondaryWeaponId
+        String secondaryWeaponId,
+        boolean isPostponed,
+        String equippedWeaponId,
+        String equippedArmorId,
+        String equippedLootWeaponUuid,
+        String equippedLootSecondaryUuid,
+        String equippedLootArmorUuid,
+        String equippedLootAccessoryUuid
 ) {}

@@ -8,10 +8,19 @@ import ActionMenu from '../components/battle/ActionMenu';
 import TurnOrderBar from '../components/battle/TurnOrderBar';
 import CombatLog from '../components/battle/CombatLog';
 import { CYCLE_POSITIONS } from '../data/gameConstants';
+import { SPELL_LIST } from '../data/spells';
 import { performAction, startPrep, giveUp, restart, getActiveRun } from '../services/api';
 import { playSound } from '../services/sound';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
+
+const MAGIC_SOUND_MAP = {
+  fire:     'magicFire',
+  ice:      'magicIce',
+  electric: 'magicElectric',
+  arcane:   'magicArcane',
+  light:    'magicLight',
+};
 
 export default function BattlePage() {
   const navigate = useNavigate();
@@ -30,6 +39,8 @@ export default function BattlePage() {
     (location.state?.runState?.combatLog ?? []).map(() => 'hero')
   );
   const [enemyTurnPending, setEnemyTurnPending] = useState(false);
+  const [attackingEnemyId, setAttackingEnemyId] = useState(null);
+  const [floatingDamage, setFloatingDamage] = useState([]); // [{id, targetId, value, color}]
 
   const prevVictoryRef = useRef(false);
   const enemyTurnScheduledRef = useRef(false);
@@ -119,20 +130,43 @@ export default function BattlePage() {
     setEnemyTurnPending(false);
   }
 
+  function showFloatDamage(targetId, value, color) {
+    const id = Date.now() + Math.random();
+    setFloatingDamage((prev) => [...prev, { id, targetId, value, color }]);
+    setTimeout(() => setFloatingDamage((prev) => prev.filter((d) => d.id !== id)), 700);
+  }
+
   async function submitAction({ actionType, actorId, targetId, skillId, spellId, itemId }) {
     setTargeting(null);
     setLoading(true);
     const prevState = battleState;
+
+    // Enemy attack animation
+    if (actionType === 'ENEMY_TURN' && actorId) {
+      setAttackingEnemyId(actorId);
+      setTimeout(() => setAttackingEnemyId(null), 350);
+    }
+
     try {
       const result = await performAction(
         battleState.runUuid, actionType, actorId,
         targetId ?? null, skillId ?? null, spellId ?? null, itemId ?? null,
       );
 
-      if (actionType === 'ATTACK' || actionType === 'CHANGE_WEAPON') playSound('hit');
-      else if (actionType === 'SKILL' || actionType === 'MAGIC') playSound('skill');
-      else if (actionType === 'ITEM') playSound('itemUse');
+      // Play sounds for hero actions
+      if (actionType === 'ATTACK' || actionType === 'CHANGE_WEAPON') {
+        playSound('hit');
+      } else if (actionType === 'SKILL') {
+        playSound('skill');
+      } else if (actionType === 'MAGIC' && spellId) {
+        const spellData = SPELL_LIST.find((s) => s.id === spellId);
+        const school = spellData?.school ?? 'arcane';
+        playSound(MAGIC_SOUND_MAP[school] ?? 'skill');
+      } else if (actionType === 'ITEM') {
+        playSound('itemUse');
+      }
 
+      // Death sounds
       result.enemies?.forEach((enemy) => {
         const prev = prevState.enemies?.find((e) => e.id === enemy.id);
         if (prev && prev.hp > 0 && enemy.hp <= 0) playSound('enemyDeath');
@@ -142,11 +176,25 @@ export default function BattlePage() {
         if (prev && !prev.isKnockedOut && hero.isKnockedOut) playSound('heroDeath');
       });
 
+      // Floating damage numbers — enemies hit by hero actions
+      if (actionType !== 'ENEMY_TURN') {
+        result.enemies?.forEach((enemy) => {
+          const prev = prevState.enemies?.find((e) => e.id === enemy.id);
+          if (prev && prev.hp > enemy.hp) {
+            showFloatDamage(enemy.id, prev.hp - enemy.hp, theme.colors.textHeader);
+          }
+        });
+      }
+
+      // Enemy turn: hit flash + float damage on heroes
       if (actionType === 'ENEMY_TURN') {
         const hitIds = new Set();
         result.heroes?.forEach((hero) => {
           const prev = prevState.heroes?.find((h) => h.id === hero.id);
-          if (prev && prev.hp > hero.hp) hitIds.add(hero.id);
+          if (prev && prev.hp > hero.hp) {
+            hitIds.add(hero.id);
+            showFloatDamage(hero.id, prev.hp - hero.hp, theme.colors.statusBleed);
+          }
         });
         if (hitIds.size > 0) {
           playSound('hit');
@@ -326,12 +374,25 @@ export default function BattlePage() {
       <div className="battle-enemy-area">
         <div className="battle-enemy-row">
           {enemies.map((enemy) => (
-            <EnemyPanel
+            <div
               key={enemy.id}
-              enemy={enemy}
-              isTargeted={targeting?.mode === 'enemy' && targeting !== null}
-              onClick={targeting?.mode === 'enemy' && enemy.hp > 0 ? () => handleEnemyClick(enemy) : null}
-            />
+              className={`enemy-float-wrapper${enemy.id === attackingEnemyId ? ' enemy-attacking' : ''}`}
+            >
+              <EnemyPanel
+                enemy={enemy}
+                isTargeted={targeting?.mode === 'enemy' && targeting !== null}
+                onClick={targeting?.mode === 'enemy' && enemy.hp > 0 ? () => handleEnemyClick(enemy) : null}
+              />
+              {floatingDamage.filter((d) => d.targetId === enemy.id).map((d) => (
+                <span
+                  key={d.id}
+                  className="float-damage"
+                  style={{ color: d.color }}
+                >
+                  {d.value}
+                </span>
+              ))}
+            </div>
           ))}
         </div>
       </div>
@@ -362,6 +423,7 @@ export default function BattlePage() {
                   onClick={canClickAlly ? () => handleHeroClick(hero) : undefined}
                   className={`battle-hero-wrapper${hitHeroIds.has(hero.id) ? ' hero-hit' : ''}`}
                   style={{
+                    position: 'relative',
                     cursor: canClickAlly ? 'pointer' : 'default',
                     outline: canClickAlly ? `2px solid ${theme.colors.highlight}` : 'none',
                   }}
@@ -370,6 +432,15 @@ export default function BattlePage() {
                     hero={hero}
                     isActive={hero.id === activeActorId && !fightOver}
                   />
+                  {floatingDamage.filter((d) => d.targetId === hero.id).map((d) => (
+                    <span
+                      key={d.id}
+                      className="float-damage"
+                      style={{ color: d.color }}
+                    >
+                      {d.value}
+                    </span>
+                  ))}
                 </div>
               );
             })}

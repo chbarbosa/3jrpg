@@ -51,6 +51,12 @@ export default function HeroPanel({ hero, isActive }) {
           ))}
         </div>
       )}
+
+      {hero.isPostponed && (
+        <div className="postponed-badge">
+          ⏳ POSTPONED
+        </div>
+      )}
     </div>
   );
 }

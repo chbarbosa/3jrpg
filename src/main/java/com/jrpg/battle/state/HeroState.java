@@ -48,4 +48,13 @@ public class HeroState {
     private int spdPotionBonus;
     private int regenHpPerTurn;
     private int regenEnPerTurn;
+
+    // Set true when hero uses an item (deferred to end of turn order this round)
+    private boolean postponed;
+
+    // Equipped loot item UUIDs — null means no loot equipped in that slot
+    private String equippedLootWeaponUuid;
+    private String equippedLootSecondaryUuid;
+    private String equippedLootArmorUuid;
+    private String equippedLootAccessoryUuid;
 }

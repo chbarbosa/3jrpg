@@ -98,6 +98,42 @@ const SYNTH = {
     [660, 880, 1100, 1320].forEach((f, i) =>
       tone(f, t + i * 0.07, 0.12, 'sine', 0.15));
   },
+
+  magicFire() {
+    const t = ctx().currentTime;
+    tone(220, t,        0.08, 'sawtooth', 0.2, 440);
+    tone(440, t + 0.06, 0.10, 'sawtooth', 0.18, 880);
+    tone(660, t + 0.14, 0.12, 'sine',     0.12);
+  },
+
+  magicIce() {
+    const t = ctx().currentTime;
+    tone(1200, t,        0.04, 'sine', 0.12, 900);
+    tone(900,  t + 0.04, 0.08, 'sine', 0.15, 1100);
+    tone(1100, t + 0.10, 0.12, 'sine', 0.10, 800);
+  },
+
+  magicElectric() {
+    const t = ctx().currentTime;
+    tone(800,  t,        0.03, 'square', 0.15);
+    tone(1600, t + 0.02, 0.03, 'square', 0.12);
+    tone(800,  t + 0.05, 0.03, 'square', 0.10);
+    tone(1200, t + 0.08, 0.08, 'sawtooth', 0.13);
+  },
+
+  magicArcane() {
+    const t = ctx().currentTime;
+    tone(300, t,        0.10, 'sine', 0.18, 600);
+    tone(600, t + 0.08, 0.12, 'sine', 0.15, 300);
+    tone(900, t + 0.16, 0.10, 'sine', 0.10);
+  },
+
+  magicLight() {
+    const t = ctx().currentTime;
+    [523, 659, 784].forEach((f, i) =>
+      tone(f, t + i * 0.07, 0.10, 'sine', 0.15));
+    tone(1047, t + 0.22, 0.14, 'sine', 0.12);
+  },
 };
 
 // Called on first user interaction to unlock AudioContext under browser autoplay rules.

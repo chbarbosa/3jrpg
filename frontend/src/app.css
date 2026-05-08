@@ -71,7 +71,7 @@
   --class-warrior: #C0392B;
   --class-ranger:  #27AE60;
   --class-mage:    #2980B9;
-  --class-priest:  #F39C12;
+  --class-cleric:  #F39C12;
 
   /* Enemy colors */
   --enemy-humanoid:   #8E44AD;
@@ -2037,6 +2037,68 @@ h1, h2, h3 {
   color: var(--color-text-muted);
 }
 
+.prep-slot--wide {
+  flex-direction: column;
+}
+
+.prep-swap-layout {
+  display: flex;
+  gap: var(--sp-sm);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.prep-loadout-panel {
+  flex: 1;
+  min-width: 140px;
+}
+
+.prep-loadout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: 3px 0;
+  border-bottom: 1px solid var(--color-border-brown);
+}
+
+.prep-loadout-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.prep-loadout-value {
+  font-size: var(--fs-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--fw-bold);
+  text-align: right;
+}
+
+.prep-inventory-panel {
+  flex: 2;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.prep-loot-item-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs);
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+}
+
+.prep-equip-msg {
+  font-size: var(--fs-xs);
+  color: var(--color-status-positive);
+  font-weight: var(--fw-bold);
+  padding: 2px 0;
+}
+
 /* ── Game Over Page ──────────────────────────────────────────────────────── */
 
 .gameover-page {
@@ -2996,4 +3058,50 @@ h1, h2, h3 {
   .lb-team-col {
     display: none !important;
   }
+}
+
+/* ── Battle Animations ───────────────────────────────────────────────────── */
+
+@keyframes enemyAttack {
+  0%   { transform: scale(1); filter: brightness(1); }
+  50%  { transform: scale(1.15); filter: brightness(1.4) sepia(0.6) hue-rotate(-20deg); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes floatDamage {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+.enemy-attacking .enemy-shape {
+  animation: enemyAttack 300ms ease;
+}
+
+.float-damage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-header);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-lg);
+  pointer-events: none;
+  animation: floatDamage 600ms ease forwards;
+  z-index: 50;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+}
+
+.postponed-badge {
+  display: inline-block;
+  background: #2980B9;
+  color: #F5EDD6;
+  font-size: var(--fs-xs);
+  border-radius: var(--r-pill);
+  padding: 1px var(--sp-sm);
+  margin-top: var(--sp-xs);
+  font-family: var(--font-body);
+}
+
+.enemy-float-wrapper {
+  position: relative;
 }

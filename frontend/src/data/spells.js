@@ -7,11 +7,13 @@ export const SPELL_LIST = [
   { id: 'frostbite',    label: 'Frostbite',     school: 'ice',      enCost: 2, targetType: 'single', description: 'Chills one target, applying frozen' },
   { id: 'iceShot',      label: 'Ice Shot',      school: 'ice',      enCost: 3, targetType: 'single', description: 'Launches a shard of ice at one target' },
   { id: 'blizzard',     label: 'Blizzard',      school: 'ice',      enCost: 7, targetType: 'single', description: 'Calls down a blizzard upon one target' },
+  { id: 'zero',         label: 'Zero',          school: 'ice',      enCost: 7, targetType: 'single', description: 'Absolute zero ice strike. Devastating single target damage.' },
   { id: 'icestorm',     label: 'Icestorm',      school: 'ice',      enCost: 6, targetType: 'all',    description: 'Blankets all enemies in freezing ice' },
 
   { id: 'staticCharge', label: 'Static Charge', school: 'electric', enCost: 2, targetType: 'single', description: 'Jolts one target, may stun' },
   { id: 'spark',        label: 'Spark',         school: 'electric', enCost: 3, targetType: 'single', description: 'Fires a bolt of electricity at one target' },
   { id: 'thunderbolt',  label: 'Thunderbolt',   school: 'electric', enCost: 5, targetType: 'single', description: 'Strikes one target with a mighty bolt' },
+  { id: 'zyx',          label: 'Zyx',           school: 'electric', enCost: 7, targetType: 'single', description: 'Maximum voltage discharge. Devastating single target damage.' },
   { id: 'thunderstorm', label: 'Thunderstorm',  school: 'electric', enCost: 6, targetType: 'all',    description: 'Calls lightning down on all enemies' },
 
   { id: 'mend',         label: 'Mend',          school: 'light',    enCost: 3, targetType: 'ally',   description: 'Restores a small amount of HP to one ally' },

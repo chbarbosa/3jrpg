@@ -16,7 +16,7 @@ export const WEAPON_LIST = [
   {
     id: 'mace',
     label: 'Mace',
-    equippableBy: ['warrior', 'priest'],
+    equippableBy: ['warrior', 'cleric'],
     skills: ['headBash', 'limbStrike'],
     passiveEffect: null,
   },
@@ -30,14 +30,14 @@ export const WEAPON_LIST = [
   {
     id: 'staff',
     label: 'Staff',
-    equippableBy: ['mage', 'priest'],
+    equippableBy: ['mage', 'cleric'],
     skills: ['arcaneBolt'],
     passiveEffect: 'Auto-triggers Arcane Bolt on attack',
   },
   {
     id: 'wand',
     label: 'Wand',
-    equippableBy: ['mage', 'priest'],
+    equippableBy: ['mage', 'cleric'],
     skills: ['elementalShot'],
     passiveEffect: 'Auto-triggers Elemental Shot on attack',
   },

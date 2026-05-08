@@ -2,6 +2,7 @@ package com.jrpg.battle;
 
 import com.jrpg.battle.dto.*;
 import com.jrpg.battle.state.*;
+import com.jrpg.battle.dto.LootItemDTO;
 import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.*;
 import lombok.RequiredArgsConstructor;
@@ -216,6 +217,12 @@ public class GameLogicService {
     // ═══════════════════════════════════════════════════════════════════════
 
     public String resolveAction(BattleState state, ActionRequest req) {
+        // Clear postponed flag when hero takes any action (including their deferred one)
+        if (req.actorId() != null && req.actorId().startsWith("hero_")) {
+            HeroState actor = state.getHeroes().stream()
+                    .filter(h -> h.getId().equals(req.actorId())).findFirst().orElse(null);
+            if (actor != null) actor.setPostponed(false);
+        }
         return switch (req.actionType()) {
             case ATTACK        -> resolveAttack(state, req.actorId(), req.targetId());
             case SKILL         -> resolveSkill(state, req.actorId(), req.targetId(), req.skillId());
@@ -264,7 +271,7 @@ public class GameLogicService {
         }
 
         applyDmgToEnemy(target, dmg, state);
-        String msg = hero.getClassId() + " attacks " + target.getName() + " for " + dmg + " damage.";
+        String msg = heroLabel(hero) + " attacks " + target.getName() + " for " + dmg + " damage.";
         addLog(state, msg);
         return msg;
     }
@@ -300,42 +307,40 @@ public class GameLogicService {
                 && !target.isInstantKillImmune()
                 && ThreadLocalRandom.current().nextDouble() < 0.20) {
             target.setHp(0);
-            String msg = hero.getClassId() + " dismembers " + target.getName() + " — instant kill!";
+            String msg = heroLabel(hero) + " dismembers " + target.getName() + " — instant kill!";
             addLog(state, msg);
             return msg;
         }
 
         applyDmgToEnemy(target, dmg, state);
 
-        StringBuilder msg = new StringBuilder(hero.getClassId() + " uses " + skill.name()
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " uses " + skill.name()
                 + " on " + target.getName() + " for " + dmg + " damage.");
 
         // SpeedBreak: reduce SPD by ~25%
         if ("speedBreak".equals(skillId)) {
             int reduction = Math.max(1, target.getSpd() / 4);
             target.setSpd(Math.max(1, target.getSpd() - reduction));
-            msg.append(" " + target.getName() + "'s SPD reduced!");
-            // needs to reorder after the end of the current turn.
+            msg.append(" ").append(target.getName()).append("'s SPD reduced!");
         }
 
         // HeadBash → Stunned (half SPD)
         if ("headBash".equals(skillId)) {
             applyStatusEnemy(target, "stun", 1, 0);
-            msg.append(" " + target.getName() + " is stunned!");
-            // needs to reorder after the end of the current turn.
+            msg.append(" ").append(target.getName()).append(" is stunned!");
         }
 
         // LimbStrike → Pain (-1 STR)
         if ("limbStrike".equals(skillId)) {
             applyStatusEnemy(target, "pain", 2, 1);
-            msg.append(" " + target.getName() + " is in pain!");
+            msg.append(" ").append(target.getName()).append(" is in pain!");
         }
 
         // Generic skill status from data
         if (skill.statusEffect() != null && !"stun".equals(skillId) && !"pain".equals(skillId)
                 && ThreadLocalRandom.current().nextDouble() < skill.statusChance()) {
             applyStatusEnemy(target, skill.statusEffect(), statusDuration(skill.statusEffect()), 1);
-            msg.append(" " + target.getName() + " is " + skill.statusEffect() + "!");
+            msg.append(" ").append(target.getName()).append(" is ").append(skill.statusEffect()).append("!");
         }
 
         String result = msg.toString();
@@ -357,14 +362,14 @@ public class GameLogicService {
         applyDmgToEnemy(t1, dmg, state);
         applyDmgToEnemy(t2, dmg, state);
 
-        String msg = hero.getClassId() + " fires Double Shot: " + t1.getName()
+        String msg = heroLabel(hero) + " fires Double Shot: " + t1.getName()
                 + " and " + t2.getName() + " each take " + dmg + " damage.";
         addLog(state, msg);
         return msg;
     }
 
     private String resolveCleave(BattleState state, HeroState hero) {
-        StringBuilder sb = new StringBuilder(hero.getClassId() + " cleaves:");
+        StringBuilder sb = new StringBuilder(heroLabel(hero) + " cleaves:");
         for (EnemyState e : state.getEnemies()) {
             if (e.getHp() <= 0) continue;
             int dmg = Math.max(1, hero.getStr() - enemyPhysDef(e));
@@ -420,12 +425,29 @@ public class GameLogicService {
         }
 
         applyDmgToEnemy(target, dmg, state);
-        StringBuilder msg = new StringBuilder(hero.getClassId() + " casts " + spell.name()
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " casts " + spell.name()
                 + " on " + target.getName() + " for " + dmg + " damage.");
 
         if (spell.statusEffect() != null) {
             applyStatusEnemy(target, spell.statusEffect(), statusDuration(spell.statusEffect()), 1);
             msg.append(" ").append(target.getName()).append(" is ").append(spell.statusEffect()).append("!");
+        }
+
+        // High-damage single-target spells (enCost 7) cause arcane splash on a random other enemy
+        if (spell.enCost() == 7 && "single".equalsIgnoreCase(spell.targetType())) {
+            List<EnemyState> others = state.getEnemies().stream()
+                    .filter(e -> e.getHp() > 0 && !e.getId().equals(target.getId()))
+                    .collect(Collectors.toList());
+            if (!others.isEmpty()) {
+                EnemyState splashTarget = others.get(ThreadLocalRandom.current().nextInt(others.size()));
+                int splashDmg = ThreadLocalRandom.current().nextInt(1, 4); // 1–3 raw, ignores MDEF
+                splashTarget.setHp(Math.max(0, splashTarget.getHp() - splashDmg));
+                if (splashTarget.getHp() == 0) splashTarget.getStatuses().clear();
+                addLog(state, msg.toString());
+                String splashMsg = "Arcane shockwave hits " + splashTarget.getName() + " for " + splashDmg + "!";
+                addLog(state, splashMsg);
+                return msg + " " + splashMsg;
+            }
         }
 
         String result = msg.toString();
@@ -440,14 +462,14 @@ public class GameLogicService {
             if (!target.isKnockedOut())
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target is not knocked out");
             reviveHero(target);
-            String msg = caster.getClassId() + " revives " + target.getClassId() + "!";
+            String msg = heroLabel(caster) + " revives " + heroLabel(target) + "!";
             addLog(state, msg);
             return msg;
         }
 
         if ("cure".equals(spell.id())) {
             target.getStatuses().clear();
-            String msg = caster.getClassId() + " cures " + target.getClassId() + " of all status effects.";
+            String msg = heroLabel(caster) + " cures " + heroLabel(target) + " of all status effects.";
             addLog(state, msg);
             return msg;
         }
@@ -459,7 +481,7 @@ public class GameLogicService {
             default -> 3;
         };
         target.setHp(Math.min(target.getHp() + healAmt, target.getMaxHp()));
-        String msg = caster.getClassId() + " casts " + spell.name() + " on " + target.getClassId()
+        String msg = heroLabel(caster) + " casts " + spell.name() + " on " + heroLabel(target)
                 + ", restoring " + healAmt + " HP.";
         addLog(state, msg);
         return msg;
@@ -468,7 +490,7 @@ public class GameLogicService {
     private String resolveAoeSpell(BattleState state, HeroState caster, SpellData spell) {
         String school = spell.school().toLowerCase();
         int dmg = Math.max(1, caster.getIntel() + spellDamageBonus(spell.enCost()));
-        StringBuilder sb = new StringBuilder(caster.getClassId() + " casts " + spell.name() + ":");
+        StringBuilder sb = new StringBuilder(heroLabel(caster) + " casts " + spell.name() + ":");
         for (EnemyState e : state.getEnemies()) {
             if (e.getHp() <= 0) continue;
             if (e.getElementalImmunity().contains(school)) {
@@ -488,7 +510,7 @@ public class GameLogicService {
         if (target.getHp() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target already dead");
         int dmg = Math.max(1, hero.getIntel());
         applyDmgToEnemy(target, dmg, state);
-        String msg = hero.getClassId() + " fires a magic bolt at " + target.getName() + " for " + dmg + " damage.";
+        String msg = heroLabel(hero) + " fires a magic bolt at " + target.getName() + " for " + dmg + " damage.";
         addLog(state, msg);
         return msg;
     }
@@ -497,7 +519,21 @@ public class GameLogicService {
         if (itemId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemId required");
         HeroState actor = findHero(state, actorId);
         consumeItem(state, actor, targetId, itemId);
-        String msg = actor.getClassId() + " uses " + itemId + ".";
+
+        // Postpone: remove actor from current turn position, append to end
+        List<String> order = state.getTurnOrder();
+        int idx = order.indexOf(actorId);
+        if (idx >= 0) {
+            order.remove(idx);
+            int nextIdx = order.isEmpty() ? 0 : idx % order.size();
+            order.add(actorId);
+            state.setCurrentTurnIndex(nextIdx);
+            actor.setPostponed(true);
+        }
+
+        ItemData itemData = gameDataService.findItem(itemId).orElse(null);
+        String itemName = itemData != null ? itemData.name() : itemId;
+        String msg = heroLabel(actor) + " uses " + itemName + " and will act last this round.";
         addLog(state, msg);
         return msg;
     }
@@ -559,7 +595,7 @@ public class GameLogicService {
                     cls.name() + " cannot equip " + newWeapon.name());
         }
         equipWeapon(hero, weaponId);
-        String msg = hero.getClassId() + " equips " + newWeapon.name() + ". (full turn used)";
+        String msg = heroLabel(hero) + " equips " + newWeapon.name() + ". (full turn used)";
         addLog(state, msg);
         return msg;
     }
@@ -632,7 +668,7 @@ public class GameLogicService {
         }
 
         applyDmgToHero(target, dmg, state);
-        String msg = enemy.getName() + " attacks " + target.getClassId() + " for " + dmg + " damage.";
+        String msg = enemy.getName() + " attacks " + heroLabel(target) + " for " + dmg + " damage.";
         addLog(state, msg);
         log.info("{}", msg);
     }
@@ -663,7 +699,7 @@ public class GameLogicService {
             // Per-battle regen from potions (no duration limit)
             if (h.getRegenHpPerTurn() > 0) {
                 h.setHp(Math.min(h.getHp() + h.getRegenHpPerTurn(), h.getMaxHp()));
-                addLog(state, h.getClassId() + " regenerates " + h.getRegenHpPerTurn() + " HP.");
+                addLog(state, heroLabel(h) + " regenerates " + h.getRegenHpPerTurn() + " HP.");
             }
             if (h.getRegenEnPerTurn() > 0) {
                 h.setEn(Math.min(h.getEn() + h.getRegenEnPerTurn(), h.getMaxEn()));
@@ -684,11 +720,11 @@ public class GameLogicService {
             case "bleed", "burn", "poison" -> {
                 int dmg = Math.max(1, s.getMagnitude());
                 applyDmgToHero(hero, dmg, state);
-                addLog(state, hero.getClassId() + " takes " + dmg + " " + s.getType() + " damage.");
+                addLog(state, heroLabel(hero) + " suffers " + dmg + " " + s.getType() + " damage.");
             }
             case "regen" -> {
                 hero.setHp(Math.min(hero.getHp() + s.getMagnitude(), hero.getMaxHp()));
-                addLog(state, hero.getClassId() + " regenerates " + s.getMagnitude() + " HP.");
+                addLog(state, heroLabel(hero) + " regenerates " + s.getMagnitude() + " HP.");
             }
         }
     }
@@ -781,7 +817,7 @@ public class GameLogicService {
         if (hero.getHp() == 0 && !hero.isKnockedOut()) {
             hero.setKnockedOut(true);
             hero.getStatuses().clear();
-            addLog(state, hero.getClassId() + " is knocked out!");
+            addLog(state, heroLabel(hero) + " is knocked out!");
         }
     }
 
@@ -830,15 +866,120 @@ public class GameLogicService {
     }
 
     public void addToInventory(HeroState hero, String itemId, int qty) {
-        hero.getInventory().stream().filter(i -> i.getItemId().equals(itemId)).findFirst()
+        hero.getInventory().stream()
+                .filter(i -> itemId.equals(i.getItemId()))
+                .findFirst()
                 .ifPresentOrElse(
                         i -> i.setQuantity(i.getQuantity() + qty),
-                        () -> hero.getInventory().add(new InventoryItem(itemId, qty)));
+                        () -> hero.getInventory().add(InventoryItem.consumable(itemId, qty)));
+    }
+
+    public void addLootToInventory(HeroState hero, LootItemDTO loot) {
+        hero.getInventory().add(InventoryItem.loot(
+                loot.itemUuid(), loot.itemType(), loot.name(),
+                loot.quality(), loot.modifiers(), loot.description()));
+    }
+
+    public void equipLootItemFromInventory(HeroState hero, String itemUuid, String equipSlot) {
+        InventoryItem lootItem = hero.getInventory().stream()
+                .filter(i -> itemUuid.equals(i.getItemUuid()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Item not found in inventory: " + itemUuid));
+
+        boolean valid = switch (equipSlot) {
+            case "WEAPON_PRIMARY", "WEAPON_SECONDARY" -> "WEAPON".equals(lootItem.getItemType());
+            case "ARMOR"     -> "ARMOR".equals(lootItem.getItemType());
+            case "ACCESSORY" -> "ACCESSORY".equals(lootItem.getItemType());
+            default -> false;
+        };
+        if (!valid) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Item type " + lootItem.getItemType() + " does not match slot " + equipSlot);
+
+        // Revert bonuses from the previously equipped loot in this slot
+        String prevUuid = getEquippedLootUuid(hero, equipSlot);
+        if (prevUuid != null && !prevUuid.equals(itemUuid)) {
+            hero.getInventory().stream()
+                    .filter(i -> prevUuid.equals(i.getItemUuid()))
+                    .findFirst()
+                    .ifPresent(prev -> revertModifierBonuses(hero, prev.getModifiers()));
+        }
+
+        if (!itemUuid.equals(prevUuid)) {
+            applyModifierBonuses(hero, lootItem.getModifiers());
+            setEquippedLootUuid(hero, equipSlot, itemUuid);
+        }
+    }
+
+    private String getEquippedLootUuid(HeroState hero, String slot) {
+        return switch (slot) {
+            case "WEAPON_PRIMARY"   -> hero.getEquippedLootWeaponUuid();
+            case "WEAPON_SECONDARY" -> hero.getEquippedLootSecondaryUuid();
+            case "ARMOR"            -> hero.getEquippedLootArmorUuid();
+            case "ACCESSORY"        -> hero.getEquippedLootAccessoryUuid();
+            default -> null;
+        };
+    }
+
+    private void setEquippedLootUuid(HeroState hero, String slot, String uuid) {
+        switch (slot) {
+            case "WEAPON_PRIMARY"   -> hero.setEquippedLootWeaponUuid(uuid);
+            case "WEAPON_SECONDARY" -> hero.setEquippedLootSecondaryUuid(uuid);
+            case "ARMOR"            -> hero.setEquippedLootArmorUuid(uuid);
+            case "ACCESSORY"        -> hero.setEquippedLootAccessoryUuid(uuid);
+        }
+    }
+
+    private void applyModifierBonuses(HeroState hero, List<String> modifiers) {
+        if (modifiers == null) return;
+        for (String mod : modifiers) {
+            switch (mod) {
+                case "Strong", "Sharp" -> hero.setStr(hero.getStr() + 1);
+                case "Swift"           -> hero.setDex(hero.getDex() + 1);
+                case "Wise"            -> hero.setIntel(hero.getIntel() + 1);
+                case "Quick"           -> hero.setSpd(hero.getSpd() + 1);
+                case "Tough"           -> {
+                    hero.setMaxHp(hero.getMaxHp() + 2);
+                    hero.setHp(Math.min(hero.getHp() + 2, hero.getMaxHp()));
+                }
+                case "Enduring"        -> {
+                    hero.setMaxEn(hero.getMaxEn() + 2);
+                    hero.setEn(Math.min(hero.getEn() + 2, hero.getMaxEn()));
+                }
+                case "Warded"          -> hero.setArmorDefBonus(hero.getArmorDefBonus() + 1);
+            }
+        }
+    }
+
+    private void revertModifierBonuses(HeroState hero, List<String> modifiers) {
+        if (modifiers == null) return;
+        for (String mod : modifiers) {
+            switch (mod) {
+                case "Strong", "Sharp" -> hero.setStr(Math.max(1, hero.getStr() - 1));
+                case "Swift"           -> hero.setDex(Math.max(1, hero.getDex() - 1));
+                case "Wise"            -> hero.setIntel(Math.max(1, hero.getIntel() - 1));
+                case "Quick"           -> hero.setSpd(Math.max(1, hero.getSpd() - 1));
+                case "Tough"           -> {
+                    hero.setMaxHp(Math.max(1, hero.getMaxHp() - 2));
+                    hero.setHp(Math.min(hero.getHp(), hero.getMaxHp()));
+                }
+                case "Enduring"        -> {
+                    hero.setMaxEn(Math.max(1, hero.getMaxEn() - 2));
+                    hero.setEn(Math.min(hero.getEn(), hero.getMaxEn()));
+                }
+                case "Warded"          -> hero.setArmorDefBonus(Math.max(0, hero.getArmorDefBonus() - 1));
+            }
+        }
     }
 
     private void addLog(BattleState state, String msg) {
         state.getCombatLog().add(msg);
         if (state.getCombatLog().size() > 30) state.getCombatLog().remove(0);
+    }
+
+    // Returns the hero's assigned name, falling back to classId
+    private String heroLabel(HeroState h) {
+        return (h.getName() != null && !h.getName().isEmpty()) ? h.getName() : h.getClassId();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -891,28 +1032,41 @@ public class GameLogicService {
             spells = availableSpells(h.getClassId());
         }
 
-        List<ItemSummaryDTO> inventory = h.getInventory().stream()
-                .flatMap(inv -> {
-                    ItemData item = gameDataService.findItem(inv.getItemId()).orElse(null);
-                    if (item == null) return java.util.stream.Stream.empty();
-                    return java.util.stream.Stream.generate(
-                                    () -> new ItemSummaryDTO(inv.getItemId(), item.name(), "consumable"))
-                            .limit(inv.getQuantity());
-                })
-                .collect(Collectors.toList());
+        List<ItemSummaryDTO> inventory = new ArrayList<>();
+        for (InventoryItem inv : h.getInventory()) {
+            if (inv.getItemUuid() != null) {
+                // Loot item — include directly
+                inventory.add(new ItemSummaryDTO(
+                        null, inv.getName(), inv.getItemType() != null ? inv.getItemType().toLowerCase() : "loot",
+                        inv.getItemUuid(), inv.getQuality(), inv.getModifiers(), inv.getDescription()));
+            } else if (inv.getItemId() != null) {
+                // Consumable stack — one entry per quantity
+                ItemData item = gameDataService.findItem(inv.getItemId()).orElse(null);
+                if (item != null) {
+                    for (int q = 0; q < inv.getQuantity(); q++) {
+                        inventory.add(new ItemSummaryDTO(
+                                inv.getItemId(), item.name(), "consumable",
+                                null, null, null, item.effect()));
+                    }
+                }
+            }
+        }
 
         return new HeroStateDTO(
                 h.getId(), heroName, name, h.getClassId(),
                 h.getHp(), h.getMaxHp(), h.getEn(), h.getMaxEn(),
                 h.getSpd(), h.getStr(), def, mdef,
                 statuses, h.isKnockedOut(), skills, spells, inventory,
-                h.getSecondaryWeaponId());
+                h.getSecondaryWeaponId(), h.isPostponed(),
+                h.getEquippedWeaponId(), h.getEquippedArmorId(),
+                h.getEquippedLootWeaponUuid(), h.getEquippedLootSecondaryUuid(),
+                h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid());
     }
 
     private List<SpellSummaryDTO> availableSpells(String classId) {
         Set<String> schools = switch (classId) {
             case "mage"   -> Set.of("fire", "ice", "electric", "arcane");
-            case "priest" -> Set.of("light");
+            case "cleric" -> Set.of("light");
             default       -> Set.of();
         };
         return gameDataService.allSpells().stream()

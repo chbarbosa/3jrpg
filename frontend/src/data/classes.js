@@ -21,10 +21,10 @@ export const CLASS_LIST = [
     colorKey: 'mage',
   },
   {
-    id: 'priest',
-    label: 'Priest',
+    id: 'cleric',
+    label: 'Cleric',
     type: 'magic',
     description: 'Healer and support. Light magic and holy power.',
-    colorKey: 'priest',
+    colorKey: 'cleric',
   },
 ];

@@ -54,8 +54,8 @@ export const startPrep = (runUuid) =>
 export const assignLoot = (runUuid, recipientHeroId) =>
   api.post('/api/run/prep/assign-loot', { runUuid, recipientHeroId }).then((r) => r.data);
 
-export const prepAction = (runUuid, heroId, actionType, itemId, targetHeroId) =>
-  api.post('/api/run/prep/action', { runUuid, heroId, actionType, itemId, targetHeroId }).then((r) => r.data);
+export const prepAction = (runUuid, heroId, actionType, itemId, targetHeroId, equipSlot = null, itemUuid = null) =>
+  api.post('/api/run/prep/action', { runUuid, heroId, actionType, itemId, targetHeroId, equipSlot, itemUuid }).then((r) => r.data);
 
 export const giveUp = (runUuid) =>
   api.post('/api/run/giveup', { runUuid }).then((r) => r.data);

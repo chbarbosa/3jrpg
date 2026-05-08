@@ -19,7 +19,7 @@
   },
   {
     "id": "magicCrystal", "name": "Magic Crystal",
-    "availableTo": ["mage", "priest"],
+    "availableTo": ["mage", "cleric"],
     "advantages": [
       {"id": "crystalInt", "name": "Arcane Amplification", "description": "Increases INT by 2"},
       {"id": "crystalEn",  "name": "Mana Reservoir",       "description": "Increases EN by 4"}
@@ -28,7 +28,7 @@
   },
   {
     "id": "ironFrame", "name": "Iron Frame",
-    "availableTo": ["warrior", "priest"],
+    "availableTo": ["warrior", "cleric"],
     "advantages": [
       {"id": "ironHp",  "name": "Fortified Hull",    "description": "Increases HP by 6"},
       {"id": "ironDef", "name": "Damage Absorption", "description": "Increases armor reduction by 1"}

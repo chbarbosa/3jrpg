@@ -7,11 +7,13 @@
   {"id": "frostbite",    "name": "Frostbite",     "school": "Ice",      "effect": "Chills one target, applying frozen",              "enCost": 2, "targetType": "single", "statusEffect": "frozen"},
   {"id": "iceShot",      "name": "Ice Shot",      "school": "Ice",      "effect": "Launches a shard of ice at one target",           "enCost": 3, "targetType": "single", "statusEffect": null},
   {"id": "blizzard",     "name": "Blizzard",      "school": "Ice",      "effect": "Calls down a blizzard upon one target",           "enCost": 7, "targetType": "single", "statusEffect": null},
+  {"id": "zero",         "name": "Zero",          "school": "Ice",      "effect": "Absolute zero ice strike. Devastating single target damage.", "enCost": 7, "targetType": "single", "statusEffect": null},
   {"id": "icestorm",     "name": "Icestorm",      "school": "Ice",      "effect": "Blankets all enemies in freezing ice",            "enCost": 6, "targetType": "all",    "statusEffect": null},
 
   {"id": "staticCharge", "name": "Static Charge", "school": "Electric", "effect": "Jolts one target, may stun",                     "enCost": 2, "targetType": "single", "statusEffect": "stun"},
   {"id": "spark",        "name": "Spark",          "school": "Electric", "effect": "Fires a bolt of electricity at one target",      "enCost": 3, "targetType": "single", "statusEffect": null},
   {"id": "thunderbolt",  "name": "Thunderbolt",    "school": "Electric", "effect": "Strikes one target with a mighty bolt",          "enCost": 5, "targetType": "single", "statusEffect": null},
+  {"id": "zyx",          "name": "Zyx",           "school": "Electric", "effect": "Maximum voltage discharge. Devastating single target damage.", "enCost": 7, "targetType": "single", "statusEffect": null},
   {"id": "thunderstorm", "name": "Thunderstorm",   "school": "Electric", "effect": "Calls lightning down on all enemies",            "enCost": 6, "targetType": "all",    "statusEffect": null},
 
   {"id": "mend",         "name": "Mend",          "school": "Light",    "effect": "Restores a small amount of HP to one ally",       "enCost": 3, "targetType": "ally",   "statusEffect": null},
