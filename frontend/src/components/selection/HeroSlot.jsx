@@ -104,6 +104,7 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
       primaryWeaponId: null,
       secondaryWeaponId: null,
       armorTier: CLASS_ARMOR[classId] ?? 'light',
+      accessoryId: null,
       items: {},
     });
     setViewStepId(null);
@@ -200,6 +201,7 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
             augmentationType={hero.augmentationType}
             primaryWeaponId={hero.primaryWeaponId}
             secondaryWeaponId={hero.secondaryWeaponId}
+            accessoryId={hero.accessoryId}
             onUpdate={handleLoadoutUpdate}
           />
         )}

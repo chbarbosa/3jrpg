@@ -83,7 +83,7 @@ export default function BattlePage() {
       enemyTurnScheduledRef.current = false;
       setEnemyTurnPending(false);
       submitAction({ actionType: 'ENEMY_TURN', actorId });
-    }, 2000);
+    }, 1000);
     enemyTurnTimerRef.current = timerId;
     return () => {
       clearTimeout(timerId);
@@ -421,6 +421,7 @@ export default function BattlePage() {
             {heroes.map((hero) => {
               const isAllyTarget = targeting && (targeting.mode === 'ally' || targeting.mode === 'ally-ko');
               const canClickAlly = isAllyTarget && (targeting.mode === 'ally' ? !hero.isKnockedOut : hero.isKnockedOut);
+              const isInvalidAllyTarget = isAllyTarget && !canClickAlly;
               return (
                 <div
                   key={hero.id}
@@ -430,6 +431,7 @@ export default function BattlePage() {
                     position: 'relative',
                     cursor: canClickAlly ? 'pointer' : 'default',
                     outline: canClickAlly ? `2px solid ${theme.colors.highlight}` : 'none',
+                    opacity: isInvalidAllyTarget ? 0.4 : 1,
                   }}
                 >
                   <HeroPanel

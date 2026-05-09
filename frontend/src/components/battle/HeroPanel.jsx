@@ -57,6 +57,20 @@ export default function HeroPanel({ hero, isActive }) {
           ⏳ POSTPONED
         </div>
       )}
+
+      {hero.equippedStartingAccessoryId === 'barrierRing' && (
+        <div className="accessory-badge accessory-badge--barrier">
+          🛡 Barrier
+        </div>
+      )}
+
+      {hero.equippedLootAccessoryUuid && (hero.inventory ?? []).some(
+        (i) => i.uuid === hero.equippedLootAccessoryUuid && i.name?.includes('Rebirth')
+      ) && (
+        <div className="accessory-badge accessory-badge--rebirth">
+          ✨ Rebirth
+        </div>
+      )}
     </div>
   );
 }

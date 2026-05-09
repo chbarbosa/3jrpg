@@ -72,7 +72,8 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
       onAction({ actionType: 'MAGIC', actorId, spellId: spell.id });
       setSubmenu(null);
     } else if (targetType === 'ally') {
-      onBeginTarget({ mode: 'ally', actionType: 'MAGIC', actorId, spellId: spell.id });
+      const mode = spell.id === 'revive' ? 'ally-ko' : 'ally';
+      onBeginTarget({ mode, actionType: 'MAGIC', actorId, spellId: spell.id });
       setSubmenu(null);
     } else {
       onBeginTarget({ mode: 'enemy', actionType: 'MAGIC', actorId, spellId: spell.id });

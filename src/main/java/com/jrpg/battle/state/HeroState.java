@@ -53,6 +53,9 @@ public class HeroState {
     // Set true when hero uses an item (deferred to end of turn order this round)
     private boolean postponed;
 
+    // Starting accessory equipped at run start (not a loot UUID — tracked separately)
+    private String equippedStartingAccessoryId;
+
     // Equipped loot item UUIDs — null means no loot equipped in that slot
     private String equippedLootWeaponUuid;
     private String equippedLootSecondaryUuid;

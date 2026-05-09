@@ -3102,6 +3102,25 @@ h1, h2, h3 {
   font-family: var(--font-body);
 }
 
+.accessory-badge {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  border-radius: var(--r-pill);
+  padding: 1px var(--sp-sm);
+  margin-top: var(--sp-xs);
+  font-family: var(--font-body);
+}
+
+.accessory-badge--barrier {
+  background: #2C4A6E;
+  color: #A8D4F5;
+}
+
+.accessory-badge--rebirth {
+  background: #4A2C6E;
+  color: #D4A8F5;
+}
+
 /* Pulsing dots animation for "Enemy is acting" indicator */
 @keyframes dotPulse {
   0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }

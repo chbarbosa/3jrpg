@@ -14,7 +14,7 @@ function emptyHero() {
     primaryWeaponId: null,
     secondaryWeaponId: null,
     armorTier: null,
-    accessory: false,
+    accessoryId: null,
     items: {},
   };
 }
@@ -44,7 +44,7 @@ export default function SelectionPage() {
       primaryWeaponId: hero.primaryWeaponId,
       secondaryWeaponId: hero.secondaryWeaponId ?? null,
       armorId: null,
-      accessoryId: null,
+      accessoryId: hero.accessoryId ?? null,
       items: Object.keys(hero.items ?? {}).length > 0 ? hero.items : null,
     }));
   }

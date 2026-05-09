@@ -131,7 +131,25 @@ public class GameLogicService {
             });
         }
 
+        if (cfg.accessoryId() != null) {
+            h.setEquippedStartingAccessoryId(cfg.accessoryId());
+            applyStartingAccessoryBonus(h, cfg.accessoryId());
+        }
+
         return h;
+    }
+
+    private void applyStartingAccessoryBonus(HeroState hero, String accessoryId) {
+        switch (accessoryId) {
+            case "commonStr"   -> hero.setStr(hero.getStr() + 1);
+            case "commonDex"   -> hero.setDex(hero.getDex() + 1);
+            case "commonInt"   -> hero.setIntel(hero.getIntel() + 1);
+            case "commonHp"    -> { hero.setMaxHp(hero.getMaxHp() + 2); hero.setHp(hero.getMaxHp()); }
+            case "commonEn"    -> { hero.setMaxEn(hero.getMaxEn() + 2); hero.setEn(hero.getMaxEn()); }
+            case "commonHpEn"  -> { hero.setMaxHp(hero.getMaxHp() + 1); hero.setHp(hero.getMaxHp());
+                                    hero.setMaxEn(hero.getMaxEn() + 1); hero.setEn(hero.getMaxEn()); }
+            case "barrierRing" -> {} // effect handled in applyDmgToHero
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -975,12 +993,40 @@ public class GameLogicService {
     }
 
     private void applyDmgToHero(HeroState hero, int dmg, BattleState state) {
-        hero.setHp(Math.max(0, hero.getHp() - dmg));
-        if (hero.getHp() == 0 && !hero.isKnockedOut()) {
+        // Barrier Ring: absorbs this entire attack (starting accessory)
+        if ("barrierRing".equals(hero.getEquippedStartingAccessoryId())) {
+            hero.setEquippedStartingAccessoryId(null);
+            addLog(state, heroLabel(hero) + "'s Common Barrier Ring absorbs the attack and shatters!");
+            return;
+        }
+
+        int newHp = Math.max(0, hero.getHp() - dmg);
+        hero.setHp(newHp);
+
+        if (newHp <= 0 && !hero.isKnockedOut()) {
+            // Rebirth Ring: triggers on fatal blow — restore full HP/EN, destroy ring
+            InventoryItem rebirthRing = findEquippedEffectAccessory(hero, "rebirth");
+            if (rebirthRing != null) {
+                hero.setHp(hero.getMaxHp());
+                hero.setEn(hero.getMaxEn());
+                hero.getInventory().remove(rebirthRing);
+                hero.setEquippedLootAccessoryUuid(null);
+                addLog(state, heroLabel(hero) + "'s Magic Rebirth Ring shatters! "
+                        + heroLabel(hero) + " is fully restored!");
+                return; // no knockout
+            }
             hero.setKnockedOut(true);
             hero.getStatuses().clear();
             addLog(state, heroLabel(hero) + " is knocked out!");
         }
+    }
+
+    private InventoryItem findEquippedEffectAccessory(HeroState hero, String effectId) {
+        String uuid = hero.getEquippedLootAccessoryUuid();
+        if (uuid == null) return null;
+        return hero.getInventory().stream()
+                .filter(i -> uuid.equals(i.getItemUuid()) && effectId.equals(i.getEffectId()))
+                .findFirst().orElse(null);
     }
 
     private void applyDmgToEnemy(EnemyState enemy, int dmg, BattleState state) {
@@ -1044,8 +1090,21 @@ public class GameLogicService {
 
     public void addLootToInventory(HeroState hero, LootItemDTO loot) {
         if ("CONSUMABLE".equals(loot.itemType()) && loot.itemId() != null) {
-            // Consumable loot merges into the hero's regular consumable stack
             addToInventory(hero, loot.itemId(), 1);
+            return;
+        }
+        if ("WEAPON".equals(loot.itemType()) && loot.weaponTypeId() != null) {
+            hero.getInventory().add(InventoryItem.weaponLoot(
+                    loot.itemUuid(), loot.weaponTypeId(), loot.name(),
+                    loot.quality(), loot.modifiers(), loot.description()));
+            return;
+        }
+        // Check for named special accessories (e.g. Rebirth Ring)
+        if ("ACCESSORY".equals(loot.itemType()) && loot.name() != null
+                && loot.name().contains("Rebirth Ring")) {
+            hero.getInventory().add(InventoryItem.specialAccessoryLoot(
+                    loot.itemUuid(), "rebirth", loot.name(), loot.quality(),
+                    loot.description() != null ? loot.description() : "Restores full HP and EN once on defeat."));
             return;
         }
         hero.getInventory().add(InventoryItem.loot(
@@ -1082,6 +1141,12 @@ public class GameLogicService {
             applyModifierBonuses(hero, lootItem.getModifiers());
             setEquippedLootUuid(hero, equipSlot, itemUuid);
         }
+        int logDef  = physArmorReductionBase(hero.getEquippedArmorId()) + hero.getArmorDefBonus();
+        int logMdef = magicArmorReduction(hero.getEquippedArmorId());
+        log.info("Hero {} equipped {}. New stats: STR={} DEX={} INT={} DEF={} MDEF={} HP={} EN={}",
+                hero.getName() != null ? hero.getName() : hero.getClassId(),
+                lootItem.getName(), hero.getStr(), hero.getDex(), hero.getIntel(),
+                logDef, logMdef, hero.getHp(), hero.getEn());
     }
 
     private String getEquippedLootUuid(HeroState hero, String slot) {
@@ -1190,9 +1255,19 @@ public class GameLogicService {
         int def = physArmorReductionBase(h.getEquippedArmorId()) + h.getArmorDefBonus();
         int mdef = magicArmorReduction(h.getEquippedArmorId());
 
+        // Derive effective weapon: loot weapon overrides base weapon for skill list
+        String effectiveWeaponId = h.getEquippedWeaponId();
+        if (h.getEquippedLootWeaponUuid() != null) {
+            String lootWepType = h.getInventory().stream()
+                    .filter(i -> h.getEquippedLootWeaponUuid().equals(i.getItemUuid())
+                            && i.getWeaponTypeId() != null)
+                    .map(InventoryItem::getWeaponTypeId)
+                    .findFirst().orElse(null);
+            if (lootWepType != null) effectiveWeaponId = lootWepType;
+        }
         List<SkillSummaryDTO> skills = List.of();
-        if (h.getEquippedWeaponId() != null) {
-            WeaponType weapon = gameDataService.findWeapon(h.getEquippedWeaponId()).orElse(null);
+        if (effectiveWeaponId != null) {
+            WeaponType weapon = gameDataService.findWeapon(effectiveWeaponId).orElse(null);
             if (weapon != null && weapon.skills() != null) {
                 skills = weapon.skills().stream()
                         .map(s -> new SkillSummaryDTO(s.id(), s.name(), s.enCost()))
@@ -1233,7 +1308,8 @@ public class GameLogicService {
                 h.getSecondaryWeaponId(), h.isPostponed(),
                 h.getEquippedWeaponId(), h.getEquippedArmorId(),
                 h.getEquippedLootWeaponUuid(), h.getEquippedLootSecondaryUuid(),
-                h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid());
+                h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid(),
+                h.getEquippedStartingAccessoryId());
     }
 
     private List<SpellSummaryDTO> availableSpells(String classId) {

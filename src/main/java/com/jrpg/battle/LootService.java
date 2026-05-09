@@ -92,6 +92,13 @@ public class LootService {
         if ("COMMON".equals(quality)) {
             quality = ThreadLocalRandom.current().nextDouble() < 0.70 ? "MAGIC" : "RARE";
         }
+        // 5% chance for special Rebirth Ring (MAGIC quality)
+        if (ThreadLocalRandom.current().nextDouble() < 0.05) {
+            String desc = "A legendary ring that shatters to restore the wearer to full HP and EN upon defeat.";
+            log.info("Accessory loot generated: MAGIC Magic Rebirth Ring (special)");
+            return new LootItemDTO("Magic Rebirth Ring", "MAGIC", desc, List.of(), itemUuid,
+                    "ACCESSORY", "ACCESSORY", null, "ring", null, null);
+        }
         String type = ACCESSORY_TYPES[ThreadLocalRandom.current().nextInt(ACCESSORY_TYPES.length)];
         List<String> modifiers = pickModifiers(quality, WEAPON_MODIFIERS);
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
