@@ -83,7 +83,7 @@ export default function BattlePage() {
       enemyTurnScheduledRef.current = false;
       setEnemyTurnPending(false);
       submitAction({ actionType: 'ENEMY_TURN', actorId });
-    }, 500);
+    }, 2000);
     enemyTurnTimerRef.current = timerId;
     return () => {
       clearTimeout(timerId);
@@ -357,20 +357,16 @@ export default function BattlePage() {
         <div className="battle-top-btns">
           <button
             onClick={promptGiveUp}
-            disabled={enemyTurnPending}
             className="btn-danger"
-            style={{ opacity: enemyTurnPending ? 0.5 : 1 }}
-            onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = '#6B0000'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#6B0000'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.statusBleed; }}
           >
             Give Up
           </button>
           <button
             onClick={promptRestart}
-            disabled={enemyTurnPending}
             className="btn-restart"
-            style={{ opacity: enemyTurnPending ? 0.5 : 1 }}
-            onMouseEnter={(e) => { if (!enemyTurnPending) e.currentTarget.style.background = theme.colors.borderBrown; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.colors.borderBrown; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.colors.bgPanelDark; }}
           >
             Restart

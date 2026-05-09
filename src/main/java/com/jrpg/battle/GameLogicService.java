@@ -144,8 +144,13 @@ public class GameLogicService {
                 h.setSpd(Math.max(1, h.getSpd() - h.getSpdPotionBonus()));
                 h.setSpdPotionBonus(0);
             }
+            if (h.getBowSpdDebuff() > 0) {
+                h.setSpd(Math.min(h.getSpd() + h.getBowSpdDebuff(), h.getBaseSpd()));
+                h.setBowSpdDebuff(0);
+            }
             h.setRegenHpPerTurn(0);
             h.setRegenEnPerTurn(0);
+            h.setPostponed(false);
         }
     }
 
@@ -451,6 +456,7 @@ public class GameLogicService {
     private void applyBowSpdDebuff(BattleState state, HeroState hero) {
         if (hero.getSpd() > 1) {
             hero.setSpd(hero.getSpd() - 1);
+            hero.setBowSpdDebuff(hero.getBowSpdDebuff() + 1);
             addLog(state, hero.getName() + "'s SPD reduced by 1 from bow strain.");
         }
     }
@@ -682,9 +688,9 @@ public class GameLogicService {
 
     public void consumeItem(BattleState state, HeroState actor, String targetId, String itemId) {
         InventoryItem inv = actor.getInventory().stream()
-                .filter(i -> i.getItemId().equals(itemId)).findFirst()
+                .filter(i -> i.getItemId() != null && i.getItemId().equals(itemId)).findFirst()
                 .orElseThrow(() -> {
-                    log.warn("Hero {} does not have item {}", actor.getId(), itemId);
+                    log.warn("Hero {} does not have item {} (inventory size: {})", actor.getId(), itemId, actor.getInventory().size());
                     return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item not in inventory: " + itemId);
                 });
 
@@ -707,10 +713,6 @@ public class GameLogicService {
                 if (!kd.isKnockedOut())
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target is not knocked out");
                 reviveHero(kd);
-            }
-            case "magicSicknessPotion" -> {
-                targetHero.getStatuses().removeIf(s ->
-                        List.of("burn", "poison", "frozen", "silence", "blind").contains(s.getType()));
             }
             case "speedPotion" -> {
                 int bonus = 2;

@@ -103,11 +103,16 @@ public class BattleService {
         int enBefore = req.actorId().startsWith("hero_")
                 ? gameLogicService.findHero(state, req.actorId()).getEn() : 0;
 
-        // ENEMY_TURN: frontend-triggered enemy action (e.g. when enemy acts first in a fight)
+        // ENEMY_TURN: frontend-triggered enemy action (shown one at a time with 2s delay)
         if (req.actionType() == ActionType.ENEMY_TURN) {
             String description = gameLogicService.resolveOneEnemyTurn(state);
             boolean defeated = false;
-            if (gameLogicService.checkAllHeroesDead(state)) {
+            if (gameLogicService.checkAllEnemiesDead(state)) {
+                state.setFightOver(true);
+                state.setVictory(true);
+                state.getCombatLog().add("Victory! All enemies defeated.");
+                log.info("Fight {} won via enemy status tick — run {}", state.getFightNumber(), run.getUuid());
+            } else if (gameLogicService.checkAllHeroesDead(state)) {
                 state.setFightOver(true);
                 state.setVictory(false);
                 state.getCombatLog().add("Defeat! All heroes have fallen.");
@@ -142,7 +147,8 @@ public class BattleService {
         if (req.actionType() != ActionType.ITEM) {
             gameLogicService.advanceTurn(state);
         }
-        gameLogicService.resolveEnemyTurns(state);
+        // Enemy turns are resolved one-at-a-time by the frontend (ENEMY_TURN requests)
+        // so we do NOT batch them here after hero actions.
 
         boolean defeated = false;
         if (gameLogicService.checkAllEnemiesDead(state)) {
@@ -213,6 +219,9 @@ public class BattleService {
         state.setCyclePosition(GameData.cycleModifier(nextFight));
         state.setEnemies(monsterCapService.generateEnemyGroup(nextFight));
         gameLogicService.resetPerBattleBuffs(state.getHeroes());
+        log.info("Hero states reset for new fight {} — heroes: {}", nextFight,
+                state.getHeroes().stream().map(h -> h.getName() != null ? h.getName() : h.getClassId())
+                        .collect(Collectors.joining(", ")));
         state.setTurnOrder(gameLogicService.buildTurnOrder(state));
         state.setCurrentTurnIndex(0);
         state.setFightOver(false);

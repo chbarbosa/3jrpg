@@ -21,13 +21,6 @@ export const ITEM_LIST = [
     classRestriction: null,
   },
   {
-    id: 'magicSicknessPotion',
-    label: 'Magic Sickness Potion',
-    description: 'Inflicts poison on one enemy',
-    usableIn: ['battle'],
-    classRestriction: null,
-  },
-  {
     id: 'speedPotion',
     label: 'Speed Potion',
     description: 'Increases one ally SPD by 4 until end of battle',

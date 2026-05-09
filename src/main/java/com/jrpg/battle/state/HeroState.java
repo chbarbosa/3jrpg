@@ -46,6 +46,7 @@ public class HeroState {
 
     // Per-battle buff tracking (reset on nextFight)
     private int spdPotionBonus;
+    private int bowSpdDebuff;   // cumulative -1 SPD per bow shot this battle
     private int regenHpPerTurn;
     private int regenEnPerTurn;
 

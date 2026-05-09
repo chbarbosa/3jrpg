@@ -71,6 +71,10 @@ public class LootService {
     }
 
     private LootItemDTO generateArmorLoot(String quality, String itemUuid) {
+        // Common armor has no modifiers and is no better than starting gear — minimum MAGIC
+        if ("COMMON".equals(quality)) {
+            quality = ThreadLocalRandom.current().nextDouble() < 0.65 ? "MAGIC" : "RARE";
+        }
         int idx = ThreadLocalRandom.current().nextInt(ARMOR_TIER_IDS.length);
         String tierName = ARMOR_TIER_NAMES[idx];
         String tierDesc = ARMOR_TIER_DESCS[idx];
@@ -78,19 +82,23 @@ public class LootService {
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
         String name = prefix + tierName;
         String desc = tierDesc + (modifiers.isEmpty() ? "" : " Enhanced with " + String.join(" and ", modifiers) + ".");
+        log.info("Armor loot generated: {} {} {}", quality, ARMOR_TIER_IDS[idx], name);
         return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
                 "ARMOR", "ARMOR", null, null, ARMOR_TIER_IDS[idx], null);
     }
 
     private LootItemDTO generateAccessoryLoot(String quality, String itemUuid) {
-        // No rare accessories — cap at MAGIC
-        if ("RARE".equals(quality)) quality = "MAGIC";
+        // Common accessories have no modifiers and no practical value — minimum MAGIC (70/30 split)
+        if ("COMMON".equals(quality)) {
+            quality = ThreadLocalRandom.current().nextDouble() < 0.70 ? "MAGIC" : "RARE";
+        }
         String type = ACCESSORY_TYPES[ThreadLocalRandom.current().nextInt(ACCESSORY_TYPES.length)];
         List<String> modifiers = pickModifiers(quality, WEAPON_MODIFIERS);
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
         String name = prefix + type;
         String desc = "A " + quality.toLowerCase() + " accessory"
                 + (modifiers.isEmpty() ? "." : " enhanced with " + modifiers.get(0) + ".");
+        log.info("Accessory loot generated: {} {}", quality, name);
         return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
                 "ACCESSORY", "ACCESSORY", null, type.toLowerCase(), null, null);
     }
