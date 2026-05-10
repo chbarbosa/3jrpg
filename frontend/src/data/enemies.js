@@ -19,3 +19,7 @@ export const AI_TIER_LABELS = {
   average: 'Average',
   high:    'High',
 };
+
+export const ENEMY_TYPE_NOTES = {
+  elemental: '½ physical dmg',
+};

@@ -37,7 +37,7 @@ export default function Tooltip({ text, children }) {
             color: theme.colors.textPrimary,
             padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
             maxWidth: '200px',
-            zIndex: 100,
+            zIndex: 150,
             pointerEvents: 'none',
             opacity: 1,
             transition: theme.transitions.fast,

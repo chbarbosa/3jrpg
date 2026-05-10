@@ -28,5 +28,7 @@ public record HeroStateDTO(
         String equippedLootSecondaryUuid,
         String equippedLootArmorUuid,
         String equippedLootAccessoryUuid,
-        String equippedStartingAccessoryId
+        String equippedStartingAccessoryId,
+        String augmentationId,
+        String advantageId
 ) {}

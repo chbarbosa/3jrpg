@@ -3,21 +3,21 @@ export const WEAPON_LIST = [
     id: 'sword',
     label: 'Sword',
     equippableBy: ['warrior', 'ranger'],
-    skills: ['stab', 'cut'],
+    skills: ['stab', 'cut', 'doubleHit', 'perfectDoubleCut'],
     passiveEffect: null,
   },
   {
     id: 'axe',
     label: 'Axe',
     equippableBy: ['warrior'],
-    skills: ['speedBreak', 'dismember'],
+    skills: ['speedBreak', 'dismember', 'execution'],
     passiveEffect: null,
   },
   {
     id: 'mace',
     label: 'Mace',
     equippableBy: ['warrior', 'cleric'],
-    skills: ['headBash', 'limbStrike'],
+    skills: ['headBash', 'limbStrike', 'doubleHit', 'smash'],
     passiveEffect: null,
   },
   {
@@ -45,7 +45,7 @@ export const WEAPON_LIST = [
     id: 'greatsword',
     label: 'Greatsword',
     equippableBy: ['warrior'],
-    skills: ['stab', 'cut', 'cleave', 'heavyStrike'],
+    skills: ['stab', 'cut', 'cleave', 'heavyStrike', 'largeHit'],
     passiveEffect: '-1 DEX while equipped. Bonus damage vs large enemies.',
   },
   {
@@ -84,7 +84,12 @@ export const SKILL_LABELS = {
   destroyArmor: 'Destroy Armor',
   breakSkill:   'Break',
   disarm:       'Disarm',
-  deathDance:   'Death Dance',
+  deathDance:       'Death Dance',
+  doubleHit:        'Double Hit',
+  perfectDoubleCut: 'Perfect Double Cut',
+  smash:            'Smash',
+  execution:        'Execution',
+  largeHit:         'Large Hit',
 };
 
 export const SKILL_DESCRIPTIONS = {
@@ -106,6 +111,11 @@ export const SKILL_DESCRIPTIONS = {
   breakSkill:   'Physical hit. Target is pushed to last in turn order for the entire battle.',
   disarm:       'Physical hit. Target deals half damage for the entire battle.',
   deathDance:   '3 rapid hits. High EN cost (11 EN).',
-  cleave:       'Wide swing hitting all enemies for STR−DEF.',
-  heavyStrike:  'Powerful blow with +4 bonus damage.',
+  cleave:           'Wide swing hitting all enemies for STR−DEF.',
+  heavyStrike:      'Powerful blow with +4 bonus damage.',
+  doubleHit:        'Two hits on same target. Second hit at half damage. Sword: each hit rolls 50% Bleed and 30% Trauma independently. (4 EN)',
+  perfectDoubleCut: 'Two full hits. Both apply Bleeding. 30% Trauma each. (7 EN)',
+  smash:            'Normal damage. Applies Stunned and Trauma simultaneously. (8 EN)',
+  execution:        'Instantly kills any enemy regardless of type. (10 EN)',
+  largeHit:         'Normal damage to target + half damage to one random other enemy. (6 EN)',
 };

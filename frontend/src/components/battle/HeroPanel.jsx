@@ -2,10 +2,16 @@ import { theme } from '../../styles/theme';
 import HPBar from './HPBar';
 import ENBar from './ENBar';
 import StatusBadge from './StatusBadge';
+import { AUGMENTATION_LIST } from '../../data/augmentations';
 
 export default function HeroPanel({ hero, isActive }) {
   const ko = hero.isKnockedOut;
   const classColor = theme.classColors[hero.className?.toLowerCase()] ?? theme.colors.textMuted;
+
+  const augData = hero.augmentationId && hero.augmentationId !== 'natural'
+    ? AUGMENTATION_LIST.find((a) => a.id === hero.augmentationId) ?? null
+    : null;
+  const advLabel = augData?.advantages?.find((a) => a.id === hero.advantageId)?.label ?? null;
 
   return (
     <div
@@ -43,6 +49,20 @@ export default function HeroPanel({ hero, isActive }) {
         <div className="hero-stat-label">EN</div>
         <ENBar current={hero.en} max={hero.maxEn} showValues />
       </div>
+
+      {augData && (
+        <div
+          style={{
+            fontFamily: theme.fonts.body,
+            fontSize: 'var(--fs-xs)',
+            color: theme.colors.textMuted,
+            textAlign: 'center',
+            lineHeight: 1.2,
+          }}
+        >
+          {augData.label}{advLabel ? ` · ${advLabel}` : ''}
+        </div>
+      )}
 
       {hero.statuses.length > 0 && (
         <div className="hero-statuses">

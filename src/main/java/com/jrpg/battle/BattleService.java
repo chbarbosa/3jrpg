@@ -141,11 +141,15 @@ public class BattleService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Game state error");
         }
 
-        gameLogicService.tickHeroStatuses(state);
         // ITEM actions handle their own turn-order repositioning in resolveItem;
         // calling advanceTurn would skip the next actor that the postpone already set up.
         if (req.actionType() != ActionType.ITEM) {
             gameLogicService.advanceTurn(state);
+            // Tick regen/statuses/recover once per full round: when the index wraps back to 0
+            // (all actors have taken their turn).
+            if (state.getCurrentTurnIndex() == 0) {
+                gameLogicService.tickHeroStatuses(state);
+            }
         }
         // Enemy turns are resolved one-at-a-time by the frontend (ENEMY_TURN requests)
         // so we do NOT batch them here after hero actions.

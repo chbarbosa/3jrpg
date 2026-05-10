@@ -1,5 +1,5 @@
 import { theme } from '../../styles/theme';
-import { ENEMY_TYPE_LABELS } from '../../data/enemies';
+import { ENEMY_TYPE_LABELS, ENEMY_TYPE_NOTES } from '../../data/enemies';
 import HPBar from './HPBar';
 import StatusBadge from './StatusBadge';
 
@@ -60,6 +60,19 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
         >
           {ENEMY_TYPE_LABELS[enemy.enemyType] ?? enemy.enemyType ?? ''}
         </span>
+        {ENEMY_TYPE_NOTES[enemy.enemyType] && (
+          <span
+            style={{
+              fontFamily: theme.fonts.body,
+              fontSize: '0.6rem',
+              color: theme.colors.textMuted,
+              opacity: 0.75,
+              lineHeight: 1,
+            }}
+          >
+            {ENEMY_TYPE_NOTES[enemy.enemyType]}
+          </span>
+        )}
       </div>
 
       <div

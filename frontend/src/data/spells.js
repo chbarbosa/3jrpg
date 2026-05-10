@@ -1,19 +1,19 @@
 export const SPELL_LIST = [
   { id: 'ember',        label: 'Ember',         school: 'fire',     enCost: 2, targetType: 'single', description: 'Inflicts burn on one target' },
-  { id: 'fireball',     label: 'Fireball',      school: 'fire',     enCost: 3, targetType: 'single', description: 'Hurls a ball of fire at one target' },
-  { id: 'inferno',      label: 'Inferno',       school: 'fire',     enCost: 7, targetType: 'single', description: 'Engulfs one target in intense flames' },
+  { id: 'fireball',     label: 'Fireball',      school: 'fire',     enCost: 3, targetType: 'single', description: 'Hurls a ball of fire at one target. 50% chance to inflict Burn.' },
+  { id: 'inferno',      label: 'Inferno',       school: 'fire',     enCost: 7, targetType: 'single', description: 'Engulfs one target in intense flames. 50% chance to inflict Burn.' },
   { id: 'flamestorm',   label: 'Flamestorm',    school: 'fire',     enCost: 6, targetType: 'all',    description: 'Erupts fire across all enemies' },
 
   { id: 'frostbite',    label: 'Frostbite',     school: 'ice',      enCost: 2, targetType: 'single', description: 'Chills one target, applying frozen' },
-  { id: 'iceShot',      label: 'Ice Shot',      school: 'ice',      enCost: 3, targetType: 'single', description: 'Launches a shard of ice at one target' },
-  { id: 'blizzard',     label: 'Blizzard',      school: 'ice',      enCost: 7, targetType: 'single', description: 'Calls down a blizzard upon one target' },
-  { id: 'zero',         label: 'Zero',          school: 'ice',      enCost: 7, targetType: 'single', description: 'Absolute zero ice strike. Devastating single target damage.' },
+  { id: 'iceShot',      label: 'Ice Shot',      school: 'ice',      enCost: 3, targetType: 'single', description: 'Launches a shard of ice at one target. 50% chance to inflict Frozen.' },
+  { id: 'blizzard',     label: 'Blizzard',      school: 'ice',      enCost: 7, targetType: 'single', description: 'Calls down a blizzard upon one target. 50% chance to inflict Frozen.' },
+  { id: 'zero',         label: 'Zero',          school: 'ice',      enCost: 7, targetType: 'single', description: 'Absolute zero ice strike. Devastating single target damage. 50% chance to inflict Frozen.' },
   { id: 'icestorm',     label: 'Icestorm',      school: 'ice',      enCost: 6, targetType: 'all',    description: 'Blankets all enemies in freezing ice' },
 
-  { id: 'staticCharge', label: 'Static Charge', school: 'electric', enCost: 2, targetType: 'single', description: 'Jolts one target, may stun' },
-  { id: 'spark',        label: 'Spark',         school: 'electric', enCost: 3, targetType: 'single', description: 'Fires a bolt of electricity at one target' },
-  { id: 'thunderbolt',  label: 'Thunderbolt',   school: 'electric', enCost: 5, targetType: 'single', description: 'Strikes one target with a mighty bolt' },
-  { id: 'zyx',          label: 'Zyx',           school: 'electric', enCost: 7, targetType: 'single', description: 'Maximum voltage discharge. Devastating single target damage.' },
+  { id: 'staticCharge', label: 'Static Charge', school: 'electric', enCost: 2, targetType: 'single', description: 'Jolts one target, applies Stun. 50% chance to inflict Dizzle.' },
+  { id: 'spark',        label: 'Spark',         school: 'electric', enCost: 3, targetType: 'single', description: 'Fires a bolt of electricity at one target. 50% chance to inflict Dizzle.' },
+  { id: 'thunderbolt',  label: 'Thunderbolt',   school: 'electric', enCost: 5, targetType: 'single', description: 'Strikes one target with a mighty bolt. 50% chance to inflict Dizzle.' },
+  { id: 'zyx',          label: 'Zyx',           school: 'electric', enCost: 7, targetType: 'single', description: 'Maximum voltage discharge. Devastating single target damage. 50% chance to inflict Dizzle.' },
   { id: 'thunderstorm', label: 'Thunderstorm',  school: 'electric', enCost: 6, targetType: 'all',    description: 'Calls lightning down on all enemies' },
 
   { id: 'mend',         label: 'Mend',          school: 'light',    enCost: 3, targetType: 'ally',   description: 'Restores a small amount of HP to one ally' },
@@ -38,8 +38,7 @@ export const SCHOOL_COLORS = {
 };
 
 export const MAGE_SPECIALIZATIONS = [
-  { id: 'fireMage',     label: 'Fire Mage',     school: 'fire',     description: 'Harnesses the destructive power of fire.' },
-  { id: 'iceMage',      label: 'Ice Mage',      school: 'ice',      description: 'Masters frost and ice, controlling the battlefield.' },
-  { id: 'stormMage',    label: 'Storm Mage',    school: 'electric', description: 'Commands lightning and electrical energy.' },
-  { id: 'arcaneMage',   label: 'Arcane Mage',   school: 'arcane',   description: 'Wields raw arcane energy and void magic.' },
+  { id: 'fireMage',  label: 'Fire Mage',   school: 'fire',     description: 'All Fire spells plus 3 random Arcane spells.' },
+  { id: 'iceMage',   label: 'Ice Mage',    school: 'ice',      description: 'All Ice spells plus 3 random Arcane spells.' },
+  { id: 'stormMage', label: 'Storm Mage',  school: 'electric', description: 'All Electric spells plus 3 random Arcane spells.' },
 ];

@@ -44,11 +44,20 @@ public class HeroState {
     // Armor DEF bonus from ironFrame ironDef augmentation
     private int armorDefBonus;
 
-    // Per-battle buff tracking (reset on nextFight)
-    private int spdPotionBonus;
-    private int bowSpdDebuff;   // cumulative -1 SPD per bow shot this battle
-    private int regenHpPerTurn;
-    private int regenEnPerTurn;
+    // Cyber augmentation bonuses (assigned once at run start)
+    private int cyberPrecisionBonus;  // precision: +1 or +2 extra damage per physical hit
+    private int cyberArmorSkinBonus;  // armorSkin: max reduction 1 or 2 per incoming physical hit
+    private int cyberReflexDexBonus;  // reflexBooster: +2 or +3 DEX (already applied to dex/spd)
+
+    // Per-battle buff tracking (bowSpdDebuff resets on nextFight; regen and speedPotion are permanent)
+    private int bowSpdDebuff;          // cumulative -1 SPD per bow shot this battle
+    private int regenHpPerTurn;        // permanent: stacks across fights
+    private int regenEnPerTurn;        // permanent: stacks across fights
+    private int speedPotionDexBonus;   // permanent: +1 DEX per potion, stacks across fights
+
+    // Mage specialization spell pool (assigned at run start)
+    private String mageSpecId;
+    private List<String> mageSpellPool = new ArrayList<>();
 
     // Set true when hero uses an item (deferred to end of turn order this round)
     private boolean postponed;

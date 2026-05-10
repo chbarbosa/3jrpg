@@ -3,8 +3,10 @@
     "id": "sword", "name": "Sword",
     "equippableBy": ["warrior", "ranger"],
     "skills": [
-      {"id": "stab",        "name": "Stab",          "effect": "Thrusting attack dealing STR−DEF damage",              "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
-      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack dealing STR−DEF damage",               "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+      {"id": "stab",            "name": "Stab",             "effect": "Thrusting attack; always applies Bleeding.",                     "enCost": 2,  "statusEffect": "bleed",   "statusChance": 1.0},
+      {"id": "cut",             "name": "Cut",              "effect": "Slashing attack; 30% Trauma chance.",                            "enCost": 2,  "statusEffect": "trauma",  "statusChance": 0.3},
+      {"id": "doubleHit",       "name": "Double Hit",       "effect": "Two hits on same target. Second hit at half damage. Each hit rolls Bleed and Trauma independently.", "enCost": 4, "statusEffect": null, "statusChance": 0.0},
+      {"id": "perfectDoubleCut","name": "Perfect Double Cut","effect": "Two full hits. Both apply Bleeding. 30% Trauma each.",           "enCost": 7,  "statusEffect": null,      "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false
   },
@@ -12,8 +14,9 @@
     "id": "axe", "name": "Axe",
     "equippableBy": ["warrior"],
     "skills": [
-      {"id": "speedBreak",  "name": "Speed Break",   "effect": "Attack that reduces target SPD by 2 tiers",            "enCost": 2, "statusEffect": "slow",  "statusChance": 0.8},
-      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids",       "enCost": 2, "statusEffect": "bleed", "statusChance": 0.9}
+      {"id": "speedBreak",  "name": "Speed Break",   "effect": "Attack that reduces target SPD by 2 tiers",            "enCost": 2,  "statusEffect": "slow",  "statusChance": 0.8},
+      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids",       "enCost": 2,  "statusEffect": "bleed", "statusChance": 0.9},
+      {"id": "execution",   "name": "Execution",     "effect": "Instantly kills any enemy regardless of type.",        "enCost": 10, "statusEffect": null,    "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false
   },
@@ -22,7 +25,9 @@
     "equippableBy": ["warrior", "cleric"],
     "skills": [
       {"id": "headBash",    "name": "Head Bash",     "effect": "Crushing blow that may stun the target",               "enCost": 2, "statusEffect": "stun",  "statusChance": 0.6},
-      {"id": "limbStrike",  "name": "Limb Strike",   "effect": "Targets limbs, applying pain (slow)",                  "enCost": 2, "statusEffect": "slow",  "statusChance": 0.7}
+      {"id": "limbStrike",  "name": "Limb Strike",   "effect": "Targets limbs, applying pain (slow)",                  "enCost": 2, "statusEffect": "slow",  "statusChance": 0.7},
+      {"id": "doubleHit",   "name": "Double Hit",    "effect": "Two hits on same target. Second hit at half damage.",   "enCost": 4, "statusEffect": null,    "statusChance": 0.0},
+      {"id": "smash",       "name": "Smash",         "effect": "Normal damage. Applies Stunned AND Trauma simultaneously.", "enCost": 8, "statusEffect": null, "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false
   },
@@ -43,7 +48,7 @@
     "id": "staff", "name": "Staff",
     "equippableBy": ["mage"],
     "skills": [
-      {"id": "arcaneBolt",  "name": "Arcane Bolt",   "effect": "Magic bolt dealing INT−MDEF; auto-triggers on attack", "enCost": 0, "statusEffect": null,    "statusChance": 0.0}
+      {"id": "arcaneBolt",  "name": "Arcane Bolt",   "effect": "Magic bolt dealing INT−MDEF; auto-triggers on attack", "enCost": 0, "statusEffect": null, "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false
   },
@@ -51,7 +56,7 @@
     "id": "wand", "name": "Wand",
     "equippableBy": ["mage"],
     "skills": [
-      {"id": "elementalShot","name": "Elemental Shot","effect": "Elemental projectile dealing INT−MDEF; auto-triggers","enCost": 0, "statusEffect": null,    "statusChance": 0.0}
+      {"id": "elementalShot","name": "Elemental Shot","effect": "Elemental projectile dealing INT−MDEF; auto-triggers","enCost": 0, "statusEffect": null, "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false
   },
@@ -59,10 +64,11 @@
     "id": "greatsword", "name": "Greatsword",
     "equippableBy": ["warrior"],
     "skills": [
-      {"id": "stab",        "name": "Stab",          "effect": "Thrusting attack dealing STR−DEF damage",              "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
-      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack dealing STR−DEF damage",               "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
-      {"id": "cleave",      "name": "Cleave",        "effect": "Wide swing hitting all enemies for STR−DEF",           "enCost": 2, "statusEffect": null,    "statusChance": 0.0},
-      {"id": "heavyStrike", "name": "Heavy Strike",  "effect": "Powerful blow; +4 bonus damage",                       "enCost": 2, "statusEffect": null,    "statusChance": 0.0}
+      {"id": "stab",        "name": "Stab",          "effect": "Thrusting attack; always applies Bleeding.",                     "enCost": 2, "statusEffect": "bleed",  "statusChance": 1.0},
+      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack; 30% Trauma chance.",                            "enCost": 2, "statusEffect": "trauma", "statusChance": 0.3},
+      {"id": "cleave",      "name": "Cleave",        "effect": "Wide swing hitting all enemies for STR−DEF",                     "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "heavyStrike", "name": "Heavy Strike",  "effect": "Powerful blow; +4 bonus damage",                                 "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
+      {"id": "largeHit",    "name": "Large Hit",     "effect": "Normal damage to target + half damage to one random other enemy.","enCost": 6, "statusEffect": null,     "statusChance": 0.0}
     ],
     "passiveEffect": "Passive: −1 DEX to wielder", "bonusVsLarge": true
   },
@@ -80,8 +86,8 @@
     "id": "scythe", "name": "Scythe",
     "equippableBy": ["cleric"],
     "skills": [
-      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack; 30% Trauma chance (reduces STR or DEX).", "enCost": 2, "statusEffect": "trauma", "statusChance": 0.3},
-      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids.",          "enCost": 2, "statusEffect": "bleed",  "statusChance": 0.9},
+      {"id": "cut",         "name": "Cut",           "effect": "Slashing attack; 30% Trauma chance (reduces STR or DEX).", "enCost": 2,  "statusEffect": "trauma", "statusChance": 0.3},
+      {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids.",          "enCost": 2,  "statusEffect": "bleed",  "statusChance": 0.9},
       {"id": "deathDance",  "name": "Death Dance",   "effect": "3 rapid hits on a single target. Each calculated separately.", "enCost": 11, "statusEffect": null, "statusChance": 0.0}
     ],
     "passiveEffect": null, "bonusVsLarge": false

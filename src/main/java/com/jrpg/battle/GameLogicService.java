@@ -80,7 +80,7 @@ public class GameLogicService {
         int str = cls.str(), dex = cls.dex(), intel = cls.intel();
         int maxHp = cls.hp(), maxEn = cls.en(), spd = cls.spd();
 
-        if (cfg.augmentationType() != null && cfg.augmentationAdvantageId() != null) {
+        if (cfg.augmentationType() != null) {
             switch (cfg.augmentationType()) {
                 case "powerCore" -> {
                     dex -= 1;
@@ -105,9 +105,40 @@ public class GameLogicService {
                 case "enhanced" -> {
                     String[] elements = {"fire", "electric", "ice", "arcane"};
                     h.setElementalWeakness(elements[ThreadLocalRandom.current().nextInt(elements.length)]);
+                    if ("bonusHp".equals(cfg.augmentationAdvantageId())) maxHp += 5;
+                    else if ("bonusEn".equals(cfg.augmentationAdvantageId())) maxEn += 5;
+                    // "recover" advantage fires after each turn (handled in resolveAction)
                 }
-                // "cyber" — no stat tradeoff; vulnerability to Electric handled in damage resolution
+                case "cyber" -> {
+                    // No stat tradeoff; vulnerability to Electric handled in damage resolution
+                    switch (cfg.augmentationAdvantageId() != null ? cfg.augmentationAdvantageId() : "") {
+                        case "precision" -> {
+                            int bonus = 1 + ThreadLocalRandom.current().nextInt(2); // 1 or 2
+                            h.setCyberPrecisionBonus(bonus);
+                        }
+                        case "reflexBooster" -> {
+                            int dexBonus = 2 + ThreadLocalRandom.current().nextInt(2); // 2 or 3
+                            dex += dexBonus;
+                            spd += dexBonus * 2;
+                            h.setCyberReflexDexBonus(dexBonus);
+                        }
+                        case "armorSkin" -> {
+                            int bonus = 1 + ThreadLocalRandom.current().nextInt(2); // 1 or 2
+                            h.setCyberArmorSkinBonus(bonus);
+                        }
+                    }
+                }
             }
+        }
+
+        // Mage specialization: store specId and randomly assign 3 Arcane spells
+        if ("mage".equals(cfg.classId()) && cfg.mageSpecializationId() != null) {
+            h.setMageSpecId(cfg.mageSpecializationId());
+            List<SpellData> arcanePool = new ArrayList<>(gameDataService.allSpells().stream()
+                    .filter(s -> "arcane".equalsIgnoreCase(s.school()))
+                    .collect(Collectors.toList()));
+            Collections.shuffle(arcanePool, ThreadLocalRandom.current());
+            h.setMageSpellPool(arcanePool.stream().limit(3).map(SpellData::id).collect(Collectors.toList()));
         }
 
         h.setBaseStr(str); h.setBaseDex(dex); h.setBaseIntel(intel);
@@ -158,16 +189,10 @@ public class GameLogicService {
 
     public void resetPerBattleBuffs(List<HeroState> heroes) {
         for (HeroState h : heroes) {
-            if (h.getSpdPotionBonus() > 0) {
-                h.setSpd(Math.max(1, h.getSpd() - h.getSpdPotionBonus()));
-                h.setSpdPotionBonus(0);
-            }
             if (h.getBowSpdDebuff() > 0) {
                 h.setSpd(Math.min(h.getSpd() + h.getBowSpdDebuff(), h.getBaseSpd()));
                 h.setBowSpdDebuff(0);
             }
-            h.setRegenHpPerTurn(0);
-            h.setRegenEnPerTurn(0);
             h.setPostponed(false);
         }
     }
@@ -271,12 +296,13 @@ public class GameLogicService {
 
     public String resolveAction(BattleState state, ActionRequest req) {
         // Clear postponed flag when hero takes any action (including their deferred one)
+        HeroState actor = null;
         if (req.actorId() != null && req.actorId().startsWith("hero_")) {
-            HeroState actor = state.getHeroes().stream()
+            actor = state.getHeroes().stream()
                     .filter(h -> h.getId().equals(req.actorId())).findFirst().orElse(null);
             if (actor != null) actor.setPostponed(false);
         }
-        return switch (req.actionType()) {
+        String result = switch (req.actionType()) {
             case ATTACK        -> resolveAttack(state, req.actorId(), req.targetId());
             case SKILL         -> resolveSkill(state, req.actorId(), req.targetId(), req.skillId());
             case MAGIC         -> resolveMagic(state, req.actorId(), req.targetId(), req.spellId());
@@ -284,6 +310,7 @@ public class GameLogicService {
             case CHANGE_WEAPON -> changeWeapon(state, req.actorId(), req.itemId());
             case ENEMY_TURN    -> resolveOneEnemyTurn(state);
         };
+        return result;
     }
 
     private String resolveAttack(BattleState state, String actorId, String targetId) {
@@ -310,6 +337,9 @@ public class GameLogicService {
 
         // Greatsword bonus vs beast
         if ("greatsword".equals(weapon.id()) && "beast".equals(target.getType())) dmg += 2;
+
+        dmg += hero.getCyberPrecisionBonus();
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
 
         applyDmgToEnemy(target, dmg, state);
         String msg = heroLabel(hero) + " attacks " + target.getName() + " for " + dmg + " damage.";
@@ -354,14 +384,19 @@ public class GameLogicService {
         }
         if (skill.enCost() > 0) hero.setEn(hero.getEn() - skill.enCost());
 
-        if ("doubleShot".equals(skillId))   return resolveDoubleShot(state, hero, targetId);
-        if ("cleave".equals(skillId))        return resolveCleave(state, hero);
-        if ("normalAttack".equals(skillId))  return resolveAttack(state, actorId, targetId);
-        if ("deathDance".equals(skillId))    return resolveDeathDance(state, hero, target);
-        if ("fatalShot".equals(skillId))     return resolveFatalShot(state, hero, target);
-        if ("piercingShot".equals(skillId))  return resolvePiercingShot(state, hero, target);
-        if ("poisonShot".equals(skillId))    return resolvePoisonShot(state, hero, target);
-        if ("fireShot".equals(skillId))      return resolveFireShot(state, hero, target);
+        if ("doubleShot".equals(skillId))        return resolveDoubleShot(state, hero, targetId);
+        if ("cleave".equals(skillId))             return resolveCleave(state, hero);
+        if ("normalAttack".equals(skillId))       return resolveAttack(state, actorId, targetId);
+        if ("deathDance".equals(skillId))         return resolveDeathDance(state, hero, target);
+        if ("fatalShot".equals(skillId))          return resolveFatalShot(state, hero, target);
+        if ("piercingShot".equals(skillId))       return resolvePiercingShot(state, hero, target);
+        if ("poisonShot".equals(skillId))         return resolvePoisonShot(state, hero, target);
+        if ("fireShot".equals(skillId))           return resolveFireShot(state, hero, target);
+        if ("doubleHit".equals(skillId))          return resolveDoubleHit(state, hero, target);
+        if ("perfectDoubleCut".equals(skillId))   return resolvePerfectDoubleCut(state, hero, target);
+        if ("smash".equals(skillId))              return resolveSmash(state, hero, target);
+        if ("execution".equals(skillId))          return resolveExecution(state, hero, target);
+        if ("largeHit".equals(skillId))           return resolveLargeHit(state, hero, target);
 
         int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
 
@@ -369,6 +404,8 @@ public class GameLogicService {
         if ("greatsword".equals(hero.getEquippedWeaponId()) && "beast".equals(target.getType())) dmg += 2;
 
         if ("heavyStrike".equals(skillId)) dmg += 4;
+        dmg += hero.getCyberPrecisionBonus();
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
 
         // Dismember: 20% instant kill vs humanoids only (undead/mechanical immune)
         if ("dismember".equals(skillId)
@@ -446,14 +483,17 @@ public class GameLogicService {
                 ? living.stream().filter(e -> !e.getId().equals(targetId)).findFirst().orElse(t1)
                 : t1;
 
-        int dmg = Math.max(1, (hero.getStr() - enemyPhysDef(t1)) / 2);
-        applyDmgToEnemy(t1, dmg, state);
+        int dmg1 = Math.max(1, (hero.getStr() - enemyPhysDef(t1) + hero.getCyberPrecisionBonus()) / 2);
+        if ("elemental".equals(t1.getType())) dmg1 = Math.max(1, dmg1 / 2);
+        int dmg2 = Math.max(1, (hero.getStr() - enemyPhysDef(t2) + hero.getCyberPrecisionBonus()) / 2);
+        if ("elemental".equals(t2.getType())) dmg2 = Math.max(1, dmg2 / 2);
+        applyDmgToEnemy(t1, dmg1, state);
         applyBowSpdDebuff(state, hero); // shot 1
-        applyDmgToEnemy(t2, dmg, state);
+        applyDmgToEnemy(t2, dmg2, state);
         applyBowSpdDebuff(state, hero); // shot 2
 
         String msg = heroLabel(hero) + " fires Double Shot: " + t1.getName()
-                + " and " + t2.getName() + " each take " + dmg + " damage.";
+                + " takes " + dmg1 + " and " + t2.getName() + " takes " + dmg2 + " damage.";
         addLog(state, msg);
         return msg;
     }
@@ -462,7 +502,8 @@ public class GameLogicService {
         StringBuilder sb = new StringBuilder(heroLabel(hero) + " cleaves:");
         for (EnemyState e : state.getEnemies()) {
             if (e.getHp() <= 0) continue;
-            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(e));
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(e) + hero.getCyberPrecisionBonus());
+            if ("elemental".equals(e.getType())) dmg = Math.max(1, dmg / 2);
             applyDmgToEnemy(e, dmg, state);
             sb.append(" ").append(e.getName()).append(" -").append(dmg).append("HP;");
         }
@@ -483,7 +524,8 @@ public class GameLogicService {
         String intro = heroLabel(hero) + " performs Death Dance on " + target.getName() + "!";
         addLog(state, intro);
         for (int hit = 1; hit <= 3 && target.getHp() > 0; hit++) {
-            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+            if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
             applyDmgToEnemy(target, dmg, state);
             addLog(state, "  Hit " + hit + ": " + dmg + " damage.");
         }
@@ -494,7 +536,8 @@ public class GameLogicService {
         applyBowSpdDebuff(state, hero);
         String msg;
         if (ThreadLocalRandom.current().nextDouble() < 0.5) {
-            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target)) * 2;
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus()) * 2;
+            if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
             applyDmgToEnemy(target, dmg, state);
             msg = heroLabel(hero) + " lands a Fatal Shot on " + target.getName() + " for " + dmg + " damage!";
         } else {
@@ -509,7 +552,8 @@ public class GameLogicService {
 
     private String resolvePiercingShot(BattleState state, HeroState hero, EnemyState target) {
         applyBowSpdDebuff(state, hero);
-        int baseDmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        int baseDmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) baseDmg = Math.max(1, baseDmg / 2);
         int extra = enemyPhysDef(target) > 0 ? ThreadLocalRandom.current().nextInt(1, 3) : 0;
         int dmg = baseDmg + extra;
         applyDmgToEnemy(target, dmg, state);
@@ -521,7 +565,8 @@ public class GameLogicService {
 
     private String resolvePoisonShot(BattleState state, HeroState hero, EnemyState target) {
         applyBowSpdDebuff(state, hero);
-        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
         applyDmgToEnemy(target, dmg, state);
         StringBuilder msg = new StringBuilder(heroLabel(hero) + " fires Poison Shot at " + target.getName() + " for " + dmg + " damage.");
         if (target.getHp() > 0) {
@@ -535,12 +580,123 @@ public class GameLogicService {
 
     private String resolveFireShot(BattleState state, HeroState hero, EnemyState target) {
         applyBowSpdDebuff(state, hero);
-        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target));
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
         applyDmgToEnemy(target, dmg, state);
         StringBuilder msg = new StringBuilder(heroLabel(hero) + " fires Fire Shot at " + target.getName() + " for " + dmg + " damage.");
         if (target.getHp() > 0) {
             applyStatusEnemy(target, "burn", statusDuration("burn"), 1);
             msg.append(" ").append(target.getName()).append(" is burning!");
+        }
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
+    }
+
+    private String resolveDoubleHit(BattleState state, HeroState hero, EnemyState target) {
+        String weaponId = hero.getEquippedWeaponId();
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " uses Double Hit on " + target.getName() + "!");
+
+        int dmg1 = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) dmg1 = Math.max(1, dmg1 / 2);
+        applyDmgToEnemy(target, dmg1, state);
+        msg.append(" Hit 1: ").append(dmg1).append(" dmg.");
+
+        if (target.getHp() > 0 && "sword".equals(weaponId)) {
+            if (ThreadLocalRandom.current().nextDouble() < 0.5) {
+                applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
+                msg.append(" Bleed!");
+            }
+            if (ThreadLocalRandom.current().nextDouble() < 0.30) {
+                applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
+                msg.append(" Trauma!");
+            }
+        }
+
+        if (target.getHp() > 0) {
+            int dmg2 = Math.max(1, (hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus()) / 2);
+            if ("elemental".equals(target.getType())) dmg2 = Math.max(1, dmg2 / 2);
+            applyDmgToEnemy(target, dmg2, state);
+            msg.append(" Hit 2: ").append(dmg2).append(" dmg.");
+
+            if (target.getHp() > 0 && "sword".equals(weaponId)) {
+                if (ThreadLocalRandom.current().nextDouble() < 0.5) {
+                    applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
+                    msg.append(" Bleed!");
+                }
+                if (ThreadLocalRandom.current().nextDouble() < 0.30) {
+                    applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
+                    msg.append(" Trauma!");
+                }
+            }
+        }
+
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
+    }
+
+    private String resolvePerfectDoubleCut(BattleState state, HeroState hero, EnemyState target) {
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " performs Perfect Double Cut on " + target.getName() + "!");
+        for (int hit = 1; hit <= 2; hit++) {
+            if (target.getHp() <= 0) break;
+            int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+            if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
+            applyDmgToEnemy(target, dmg, state);
+            msg.append(" Hit ").append(hit).append(": ").append(dmg).append(" dmg.");
+            if (target.getHp() > 0) {
+                applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
+                msg.append(" Bleed!");
+                if (ThreadLocalRandom.current().nextDouble() < 0.30) {
+                    applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
+                    msg.append(" Trauma!");
+                }
+            }
+        }
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
+    }
+
+    private String resolveSmash(BattleState state, HeroState hero, EnemyState target) {
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
+        applyDmgToEnemy(target, dmg, state);
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " smashes " + target.getName() + " for " + dmg + " damage!");
+        if (target.getHp() > 0) {
+            applyStatusEnemy(target, "stun", statusDuration("stun"), 0);
+            msg.append(" ").append(target.getName()).append(" is stunned!");
+            applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
+            msg.append(" Trauma!");
+        }
+        String result = msg.toString();
+        addLog(state, result);
+        return result;
+    }
+
+    private String resolveExecution(BattleState state, HeroState hero, EnemyState target) {
+        target.setHp(0);
+        target.getStatuses().clear();
+        String msg = heroLabel(hero) + " executes " + target.getName() + " — instant kill!";
+        addLog(state, msg);
+        addLog(state, target.getName() + " is defeated!");
+        return msg;
+    }
+
+    private String resolveLargeHit(BattleState state, HeroState hero, EnemyState target) {
+        int dmg = Math.max(1, hero.getStr() - enemyPhysDef(target) + hero.getCyberPrecisionBonus());
+        if ("elemental".equals(target.getType())) dmg = Math.max(1, dmg / 2);
+        applyDmgToEnemy(target, dmg, state);
+        StringBuilder msg = new StringBuilder(heroLabel(hero) + " uses Large Hit on " + target.getName() + " for " + dmg + " damage!");
+        List<EnemyState> others = state.getEnemies().stream()
+                .filter(e -> e.getHp() > 0 && !e.getId().equals(target.getId()))
+                .collect(Collectors.toList());
+        if (!others.isEmpty()) {
+            EnemyState splash = others.get(ThreadLocalRandom.current().nextInt(others.size()));
+            int splashDmg = Math.max(1, (hero.getStr() - enemyPhysDef(splash) + hero.getCyberPrecisionBonus()) / 2);
+            if ("elemental".equals(splash.getType())) splashDmg = Math.max(1, splashDmg / 2);
+            applyDmgToEnemy(splash, splashDmg, state);
+            msg.append(" ").append(splash.getName()).append(" takes ").append(splashDmg).append(" splash damage.");
         }
         String result = msg.toString();
         addLog(state, result);
@@ -597,6 +753,20 @@ public class GameLogicService {
         if (spell.statusEffect() != null) {
             applyStatusEnemy(target, spell.statusEffect(), statusDuration(spell.statusEffect()), 1);
             msg.append(" ").append(target.getName()).append(" is ").append(spell.statusEffect()).append("!");
+        }
+
+        // Elemental schools have 50% chance to inflict their school status
+        if (target.getHp() > 0) {
+            String schoolStatus = switch (school) {
+                case "fire"     -> "burn";
+                case "ice"      -> "frozen";
+                case "electric" -> "dizzle";
+                default         -> null;
+            };
+            if (schoolStatus != null && ThreadLocalRandom.current().nextDouble() < 0.5) {
+                applyStatusEnemy(target, schoolStatus, statusDuration(schoolStatus), 0);
+                msg.append(" ").append(target.getName()).append(" is ").append(schoolStatus).append("!");
+            }
         }
 
         // High-damage single-target spells (enCost 7) cause arcane splash on a random other enemy
@@ -733,9 +903,10 @@ public class GameLogicService {
                 reviveHero(kd);
             }
             case "speedPotion" -> {
-                int bonus = 2;
-                targetHero.setSpd(targetHero.getSpd() + bonus);
-                targetHero.setSpdPotionBonus(targetHero.getSpdPotionBonus() + bonus);
+                targetHero.setDex(targetHero.getDex() + 1);
+                targetHero.setSpd(targetHero.getSpd() + 2);
+                targetHero.setBaseSpd(targetHero.getBaseSpd() + 2);
+                targetHero.setSpeedPotionDexBonus(targetHero.getSpeedPotionDexBonus() + 1);
             }
             case "regenLifePotion"   -> targetHero.setRegenHpPerTurn(targetHero.getRegenHpPerTurn() + 1);
             case "regenEnergyPotion" -> targetHero.setRegenEnPerTurn(targetHero.getRegenEnPerTurn() + 1);
@@ -833,6 +1004,11 @@ public class GameLogicService {
             dmg = Math.max(1, dmg / 2);
         }
 
+        if (target.getCyberArmorSkinBonus() > 0) {
+            int skinReduction = ThreadLocalRandom.current().nextInt(target.getCyberArmorSkinBonus()) + 1;
+            dmg = Math.max(1, dmg - skinReduction);
+        }
+
         applyDmgToHero(target, dmg, state);
         String msg = enemy.getName() + " attacks " + heroLabel(target) + " for " + dmg + " damage.";
         addLog(state, msg);
@@ -869,6 +1045,21 @@ public class GameLogicService {
             }
             if (h.getRegenEnPerTurn() > 0) {
                 h.setEn(Math.min(h.getEn() + h.getRegenEnPerTurn(), h.getMaxEn()));
+            }
+
+            // Enhanced "recover" advantage: +1 HP or EN per turn
+            if ("enhanced".equals(h.getAugmentationId()) && "recover".equals(h.getAdvantageId())) {
+                if (ThreadLocalRandom.current().nextBoolean()) {
+                    if (h.getHp() < h.getMaxHp()) {
+                        h.setHp(h.getHp() + 1);
+                        addLog(state, heroLabel(h) + " recovers 1 HP (Recover).");
+                    }
+                } else {
+                    if (h.getEn() < h.getMaxEn()) {
+                        h.setEn(h.getEn() + 1);
+                        addLog(state, heroLabel(h) + " recovers 1 EN (Recover).");
+                    }
+                }
             }
 
             Iterator<ActiveStatus> it = h.getStatuses().iterator();
@@ -916,6 +1107,9 @@ public class GameLogicService {
                     if (s.getMagnitude() == 1) enemy.setStr(enemy.getStr() + 1);
                     else                       enemy.setDex(enemy.getDex() + 1);
                 }
+                if ("frozen".equals(s.getType())) {
+                    enemy.setDex(enemy.getDex() + 2);
+                }
                 it.remove();
             }
         }
@@ -926,6 +1120,11 @@ public class GameLogicService {
         enemy.getStatuses().add(new ActiveStatus(type, duration, magnitude));
         switch (type) {
             case "stun", "slow" -> enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
+            case "frozen" -> {
+                enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
+                enemy.setDex(Math.max(1, enemy.getDex() - 2));
+            }
+            case "dizzle" -> {} // effect applied in enemyPhysDef; no immediate stat change
             case "pain"         -> enemy.setStr(Math.max(1, enemy.getStr() - magnitude));
             case "trauma" -> {
                 // magnitude: 1 = reduce STR, 2 = reduce DEX (determined randomly at application)
@@ -969,7 +1168,11 @@ public class GameLogicService {
     }
 
     private int enemyPhysDef(EnemyState enemy) {
-        return "mechanical".equals(enemy.getType()) ? 1 : 0;
+        int base = "mechanical".equals(enemy.getType()) ? 1 : 0;
+        if (enemy.getStatuses().stream().anyMatch(s -> "dizzle".equals(s.getType()))) {
+            base = Math.max(0, base - 1);
+        }
+        return base;
     }
 
     private int spellDamageBonus(int enCost) {
@@ -988,6 +1191,7 @@ public class GameLogicService {
             case "stun", "frozen" -> 1;
             case "bleed"          -> 4;
             case "burn", "poison", "regen" -> 3;
+            case "dizzle"         -> 2;
             default               -> 2;
         };
     }
@@ -1277,7 +1481,7 @@ public class GameLogicService {
 
         List<SpellSummaryDTO> spells = null;
         if (cls != null && "MAGIC".equals(cls.type())) {
-            spells = availableSpells(h.getClassId());
+            spells = availableSpells(h);
         }
 
         List<ItemSummaryDTO> inventory = new ArrayList<>();
@@ -1309,19 +1513,37 @@ public class GameLogicService {
                 h.getEquippedWeaponId(), h.getEquippedArmorId(),
                 h.getEquippedLootWeaponUuid(), h.getEquippedLootSecondaryUuid(),
                 h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid(),
-                h.getEquippedStartingAccessoryId());
+                h.getEquippedStartingAccessoryId(),
+                h.getAugmentationId(), h.getAdvantageId());
     }
 
-    private List<SpellSummaryDTO> availableSpells(String classId) {
-        Set<String> schools = switch (classId) {
-            case "mage"   -> Set.of("fire", "ice", "electric", "arcane");
-            case "cleric" -> Set.of("light");
-            default       -> Set.of();
-        };
-        return gameDataService.allSpells().stream()
-                .filter(s -> schools.contains(s.school().toLowerCase()))
-                .map(s -> new SpellSummaryDTO(s.id(), s.name(), s.school(), s.enCost()))
-                .collect(Collectors.toList());
+    private List<SpellSummaryDTO> availableSpells(HeroState hero) {
+        if ("cleric".equals(hero.getClassId())) {
+            return gameDataService.allSpells().stream()
+                    .filter(s -> "light".equalsIgnoreCase(s.school()))
+                    .map(s -> new SpellSummaryDTO(s.id(), s.name(), s.school(), s.enCost()))
+                    .collect(Collectors.toList());
+        }
+        if ("mage".equals(hero.getClassId())) {
+            String specId = hero.getMageSpecId();
+            String specSchool = specId != null ? switch (specId) {
+                case "fireMage"  -> "fire";
+                case "iceMage"   -> "ice";
+                case "stormMage" -> "electric";
+                default          -> null;
+            } : null;
+            Set<String> arcanePool = new HashSet<>(
+                    hero.getMageSpellPool() != null ? hero.getMageSpellPool() : List.of());
+            return gameDataService.allSpells().stream()
+                    .filter(s -> {
+                        String school = s.school().toLowerCase();
+                        if (specSchool != null && school.equals(specSchool)) return true;
+                        return "arcane".equals(school) && arcanePool.contains(s.id());
+                    })
+                    .map(s -> new SpellSummaryDTO(s.id(), s.name(), s.school(), s.enCost()))
+                    .collect(Collectors.toList());
+        }
+        return List.of();
     }
 
     private EnemyStateDTO toEnemyDTO(EnemyState e) {

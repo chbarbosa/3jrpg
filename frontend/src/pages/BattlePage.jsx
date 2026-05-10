@@ -46,6 +46,10 @@ export default function BattlePage() {
   const prevVictoryRef = useRef(false);
   const enemyTurnScheduledRef = useRef(false);
   const enemyTurnTimerRef = useRef(null);
+  const prevBattleStateRef = useRef(battleState);
+
+  // Keep a ref that always holds the latest battleState so submitAction's prevState is never stale
+  useEffect(() => { prevBattleStateRef.current = battleState; });
 
   // Restore active run on page load if no state passed
   useEffect(() => {
@@ -140,12 +144,15 @@ export default function BattlePage() {
   async function submitAction({ actionType, actorId, targetId, skillId, spellId, itemId }) {
     setTargeting(null);
     setLoading(true);
-    const prevState = battleState;
+    const prevState = prevBattleStateRef.current ?? battleState;
 
-    // Enemy attack animation
+    // Enemy attack animation — set class, then wait for the browser to actually paint
+    // it before firing the API call; without the rAF wait the class and the result
+    // state update can land in the same commit on fast local responses.
     if (actionType === 'ENEMY_TURN' && actorId) {
       setAttackingEnemyId(actorId);
       setTimeout(() => setAttackingEnemyId(null), 350);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
     try {
