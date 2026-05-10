@@ -99,6 +99,21 @@ export default function BattlePage() {
     };
   }, [battleState, modal.open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Defeat guard: if the battle state arrives already-defeated (leading enemy turns wiped the
+  // team before the frontend got the state — e.g. startRun / restart with enemies going first),
+  // navigate to game over immediately so the screen doesn't freeze.
+  useEffect(() => {
+    if (battleState?.fightOver && !battleState?.victory) {
+      navigate('/gameover', {
+        state: {
+          endReason: 'DEFEATED',
+          fightsSurvived: (battleState.fightNumber ?? 1) - 1,
+          heroConfigs,
+        },
+      });
+    }
+  }, [battleState?.fightOver, battleState?.victory]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Victory: fade overlay in + play sound once
   useEffect(() => {
     const isVictory = battleState?.fightOver && battleState?.victory;
