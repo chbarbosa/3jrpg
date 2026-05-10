@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { theme } from '../styles/theme';
 import AlertModal from '../components/AlertModal';
@@ -41,6 +42,7 @@ export default function BattlePage() {
   );
   const [enemyTurnPending, setEnemyTurnPending] = useState(false);
   const [attackingEnemyId, setAttackingEnemyId] = useState(null);
+  const [attackKey, setAttackKey] = useState(0);
   const [floatingDamage, setFloatingDamage] = useState([]); // [{id, targetId, value, color}]
 
   const prevVictoryRef = useRef(false);
@@ -146,13 +148,15 @@ export default function BattlePage() {
     setLoading(true);
     const prevState = prevBattleStateRef.current ?? battleState;
 
-    // Enemy attack animation — set class, then wait for the browser to actually paint
-    // it before firing the API call; without the rAF wait the class and the result
-    // state update can land in the same commit on fast local responses.
+    // Enemy attack animation — flushSync guarantees the enemy-attacking class is
+    // committed to the DOM synchronously before the API call starts, so it always
+    // gets its own render frame even on the very first turn of a battle.
     if (actionType === 'ENEMY_TURN' && actorId) {
-      setAttackingEnemyId(actorId);
+      flushSync(() => {
+        setAttackingEnemyId(actorId);
+        setAttackKey((k) => k + 1);
+      });
       setTimeout(() => setAttackingEnemyId(null), 350);
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
     try {
@@ -394,6 +398,9 @@ export default function BattlePage() {
                 isTargeted={targeting?.mode === 'enemy' && targeting !== null}
                 onClick={targeting?.mode === 'enemy' && enemy.hp > 0 ? () => handleEnemyClick(enemy) : null}
               />
+              {enemy.id === attackingEnemyId && (
+                <div key={attackKey} className="enemy-attack-flash" />
+              )}
               {floatingDamage.filter((d) => d.targetId === enemy.id).map((d) => (
                 <span
                   key={d.id}
