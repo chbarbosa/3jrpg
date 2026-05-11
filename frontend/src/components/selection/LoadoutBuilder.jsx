@@ -137,30 +137,6 @@ export default function LoadoutBuilder({ classId, augmentationType, primaryWeapo
       <div className="armor-display">
         {ARMOR_TIER_LABELS[armorTier]} · Plain — assigned automatically
       </div>
-
-      <SectionLabel>Accessory (Starting)</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-xs)' }}>
-        <button
-          onClick={() => onUpdate({ accessoryId: null })}
-          className="weapon-card-btn"
-          style={{
-            background: accessoryId == null ? theme.colors.bgPanelDark : theme.colors.bgPanel,
-            border: `${accessoryId == null ? 2 : 1}px solid ${accessoryId == null ? theme.colors.borderGold : theme.colors.borderBrown}`,
-          }}
-          onMouseEnter={(e) => { if (accessoryId != null) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
-          onMouseLeave={(e) => { if (accessoryId != null) e.currentTarget.style.background = theme.colors.bgPanel; }}
-        >
-          <div className="weapon-card-skills">None — find accessories during run</div>
-        </button>
-        {COMMON_ACCESSORIES.map((acc) => (
-          <AccessoryCard
-            key={acc.id}
-            acc={acc}
-            selected={acc.id === accessoryId}
-            onClick={(id) => onUpdate({ accessoryId: id })}
-          />
-        ))}
-      </div>
     </div>
   );
 }
