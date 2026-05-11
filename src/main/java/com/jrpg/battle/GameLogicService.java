@@ -723,6 +723,7 @@ public class GameLogicService {
 
         if ("ally".equals(spell.targetType())) return resolveAllySpell(state, hero, targetId, spell);
         if ("all".equals(spell.targetType())) return resolveAoeSpell(state, hero, spell);
+        if ("all_allies".equals(spell.targetType())) return resolveAllAlliesHealSpell(state, hero, spell);
 
         // Single-target offensive
         EnemyState target = findEnemy(state, targetId);
@@ -839,6 +840,58 @@ public class GameLogicService {
         String msg = sb.toString();
         addLog(state, msg);
         return msg;
+    }
+
+    private String resolveAllAlliesHealSpell(BattleState state, HeroState caster, SpellData spell) {
+        int healAmt = 5;
+        for (HeroState hero : state.getHeroes()) {
+            if (!hero.isKnockedOut()) {
+                hero.setHp(Math.min(hero.getHp() + healAmt, hero.getMaxHp()));
+            }
+        }
+        String msg = heroLabel(caster) + " casts " + spell.name() + "! All heroes restore 5 HP.";
+        addLog(state, msg);
+        return msg;
+    }
+
+    public List<Map<String, Object>> castHealingSpellPrep(BattleState state, HeroState caster, String spellId, String targetHeroId) {
+        SpellData spell = gameDataService.findSpell(spellId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown spell: " + spellId));
+        if (caster.getEn() < spell.enCost()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient EN to cast " + spell.name());
+        }
+        caster.setEn(caster.getEn() - spell.enCost());
+
+        List<Map<String, Object>> healed = new ArrayList<>();
+        if ("massHeal".equals(spellId)) {
+            for (HeroState hero : state.getHeroes()) {
+                if (!hero.isKnockedOut()) {
+                    int prev = hero.getHp();
+                    hero.setHp(Math.min(hero.getHp() + 5, hero.getMaxHp()));
+                    int amount = hero.getHp() - prev;
+                    if (amount > 0) {
+                        Map<String, Object> entry = new LinkedHashMap<>();
+                        entry.put("heroId", hero.getId());
+                        entry.put("amount", amount);
+                        healed.add(entry);
+                    }
+                }
+            }
+        } else {
+            HeroState target = (targetHeroId != null) ? findHero(state, targetHeroId) : caster;
+            if (target.isKnockedOut()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot heal a knocked-out hero with Mend");
+            }
+            int healAmt = 5;
+            int prev = target.getHp();
+            target.setHp(Math.min(target.getHp() + healAmt, target.getMaxHp()));
+            int amount = target.getHp() - prev;
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("heroId", target.getId());
+            entry.put("amount", amount);
+            healed.add(entry);
+        }
+        return healed;
     }
 
     private String performMagicBolt(BattleState state, HeroState hero, String targetId) {

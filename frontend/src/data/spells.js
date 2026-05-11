@@ -16,11 +16,12 @@ export const SPELL_LIST = [
   { id: 'zyx',          label: 'Zyx',           school: 'electric', enCost: 7, targetType: 'single', description: 'Maximum voltage discharge. Devastating single target damage. 50% chance to inflict Dizzle.' },
   { id: 'thunderstorm', label: 'Thunderstorm',  school: 'electric', enCost: 6, targetType: 'all',    description: 'Calls lightning down on all enemies' },
 
-  { id: 'mend',         label: 'Mend',          school: 'light',    enCost: 3, targetType: 'ally',   description: 'Restores a small amount of HP to one ally' },
-  { id: 'heal',         label: 'Heal',          school: 'light',    enCost: 5, targetType: 'ally',   description: 'Restores a moderate amount of HP to one ally' },
-  { id: 'cure',         label: 'Cure',          school: 'light',    enCost: 2, targetType: 'ally',   description: 'Removes one status effect from an ally' },
-  { id: 'holyBolt',     label: 'Holy Bolt',     school: 'light',    enCost: 5, targetType: 'single', description: 'Holy bolt; bonus damage vs undead' },
-  { id: 'revive',       label: 'Revive',        school: 'light',    enCost: 7, targetType: 'ally',   description: 'Revives a fallen ally at 1/4 max HP' },
+  { id: 'mend',         label: 'Mend',          school: 'light',    enCost: 3, targetType: 'ally',       description: 'Restores a small amount of HP to one ally' },
+  { id: 'heal',         label: 'Heal',          school: 'light',    enCost: 5, targetType: 'ally',       description: 'Restores a moderate amount of HP to one ally' },
+  { id: 'cure',         label: 'Cure',          school: 'light',    enCost: 2, targetType: 'ally',       description: 'Removes one status effect from an ally' },
+  { id: 'holyBolt',     label: 'Holy Bolt',     school: 'light',    enCost: 5, targetType: 'single',     description: 'Holy bolt; bonus damage vs undead' },
+  { id: 'revive',       label: 'Revive',        school: 'light',    enCost: 7, targetType: 'ally',       description: 'Revives a fallen ally at 1/4 max HP' },
+  { id: 'massHeal',     label: 'Mass Heal',     school: 'light',    enCost: 7, targetType: 'all_allies', description: 'Restores 5 HP to all living heroes. Costs 7 EN.' },
 
   { id: 'voidBolt',     label: 'Void Bolt',     school: 'arcane',   enCost: 3, targetType: 'single', description: 'Fires a bolt of void energy at one target' },
   { id: 'drain',        label: 'Drain',         school: 'arcane',   enCost: 5, targetType: 'single', description: 'Deals damage and absorbs HP from target' },

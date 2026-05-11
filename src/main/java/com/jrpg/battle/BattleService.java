@@ -398,17 +398,34 @@ public class BattleService {
                 gameLogicService.reviveHero(target);
             }
             case PASS -> { /* no-op */ }
+            case CAST_SPELL -> {
+                if (req.spellId() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "spellId required for CAST_SPELL");
+                if (!"cleric".equalsIgnoreCase(actor.getClassId()))
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only Clerics can cast healing spells during prep");
+                List<String> allowedPrepSpells = List.of("mend", "massHeal");
+                if (!allowedPrepSpells.contains(req.spellId()))
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Spell not allowed in prep phase: " + req.spellId());
+                List<Map<String, Object>> healDetails = gameLogicService.castHealingSpellPrep(state, actor, req.spellId(), req.targetHeroId());
+                runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.PREP_ACTION, buildMap(
+                        "hero",       req.heroId(),
+                        "actionType", "CAST_SPELL",
+                        "spellId",    req.spellId(),
+                        "targets",    healDetails));
+            }
         }
 
         state.getHeroPrepTaken().put(req.heroId(), true);
         saveState(run, state);
         runRepository.save(run);
 
-        runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.PREP_ACTION, buildMap(
-                "hero",         req.heroId(),
-                "actionType",   req.actionType().name(),
-                "targetHeroId", String.valueOf(req.targetHeroId()),
-                "itemId",       String.valueOf(req.itemId())));
+        if (req.actionType() != PrepActionType.CAST_SPELL) {
+            runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.PREP_ACTION, buildMap(
+                    "hero",         req.heroId(),
+                    "actionType",   req.actionType().name(),
+                    "targetHeroId", String.valueOf(req.targetHeroId()),
+                    "itemId",       String.valueOf(req.itemId())));
+        }
 
         if (req.actionType() == PrepActionType.USE_ITEM && req.itemId() != null) {
             runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.ITEM_USED, buildMap(

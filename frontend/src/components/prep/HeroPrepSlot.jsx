@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { theme } from '../../styles/theme';
 import { ITEM_LIST } from '../../data/items';
 import { WEAPON_LIST } from '../../data/weapons';
+import { SPELL_LIST } from '../../data/spells';
 import { ARMOR_TIER_LABELS, QUALITY_LABELS, QUALITY_COLORS } from '../../data/gameConstants';
 
 function ActionCard({ label, sublabel, selected, disabled, onClick }) {
@@ -97,13 +98,12 @@ function CurrentLoadout({ hero }) {
   const secondaryWeapon = hero.secondaryWeaponId ? WEAPON_LIST.find((w) => w.id === hero.secondaryWeaponId) : null;
   const armorLabel = hero.equippedArmorId ? (ARMOR_TIER_LABELS[hero.equippedArmorId] ?? hero.equippedArmorId) : 'None';
 
-  // Find equipped loot items from inventory by UUID
   const lootByUuid = {};
   (hero.inventory ?? []).filter((i) => i.uuid).forEach((i) => { lootByUuid[i.uuid] = i; });
 
-  const equippedWeaponLoot   = hero.equippedLootWeaponUuid   ? lootByUuid[hero.equippedLootWeaponUuid]   : null;
+  const equippedWeaponLoot    = hero.equippedLootWeaponUuid    ? lootByUuid[hero.equippedLootWeaponUuid]    : null;
   const equippedSecondaryLoot = hero.equippedLootSecondaryUuid ? lootByUuid[hero.equippedLootSecondaryUuid] : null;
-  const equippedArmorLoot    = hero.equippedLootArmorUuid    ? lootByUuid[hero.equippedLootArmorUuid]    : null;
+  const equippedArmorLoot     = hero.equippedLootArmorUuid     ? lootByUuid[hero.equippedLootArmorUuid]     : null;
   const equippedAccessoryLoot = hero.equippedLootAccessoryUuid ? lootByUuid[hero.equippedLootAccessoryUuid] : null;
 
   const row = (label, value, lootItem) => (
@@ -132,22 +132,90 @@ function CurrentLoadout({ hero }) {
   );
 }
 
+function SpellCard({ spell, casterEn, onSelect }) {
+  const disabled = casterEn < spell.enCost;
+  return (
+    <button
+      onClick={disabled ? undefined : onSelect}
+      disabled={disabled}
+      style={{
+        flex: 1,
+        background: theme.colors.bgPanel,
+        border: `1px solid ${theme.colors.borderGold}`,
+        borderRadius: theme.radius.md,
+        padding: theme.spacing.md,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
+        textAlign: 'left',
+        transition: theme.transitions.fast,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.background = theme.colors.bgPanelDark;
+          e.currentTarget.style.borderColor = theme.colors.actionHover;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.background = theme.colors.bgPanel;
+          e.currentTarget.style.borderColor = theme.colors.borderGold;
+        }
+      }}
+    >
+      <div style={{ color: theme.colors.textHeader, fontFamily: theme.fonts.header, fontWeight: theme.fontWeights.bold, fontSize: theme.fontSizes.sm }}>
+        {spell.label}
+      </div>
+      <div style={{ marginTop: theme.spacing.xs }}>
+        <span style={{ background: theme.colors.barEN, color: theme.colors.bgPage, borderRadius: theme.radius.pill, fontSize: theme.fontSizes.xs, padding: '2px 6px' }}>
+          {spell.enCost} EN
+        </span>
+      </div>
+      <div style={{ color: theme.colors.textMuted, fontSize: theme.fontSizes.xs, marginTop: theme.spacing.xs }}>
+        {spell.id === 'massHeal' ? 'Restore 5 HP to all living heroes.' : 'Restore HP to one ally.'}
+      </div>
+      {disabled && (
+        <div style={{ color: theme.colors.barHP, fontSize: theme.fontSizes.xs, marginTop: '2px' }}>Not enough EN</div>
+      )}
+    </button>
+  );
+}
+
 export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) {
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [spellPickerStage, setSpellPickerStage] = useState(null); // 'spell' | 'mend-target' | null
   const [submitting, setSubmitting] = useState(false);
   const [doneLabel, setDoneLabel] = useState(null);
   const [equipMsg, setEquipMsg] = useState(null);
+  const [floatingHeals, setFloatingHeals] = useState([]);
+  const prevHpRef = useRef(hero.hp);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      prevHpRef.current = hero.hp;
+      return;
+    }
+    const delta = hero.hp - prevHpRef.current;
+    if (delta > 0) {
+      const id = Date.now() + Math.random();
+      setFloatingHeals((prev) => [...prev, { id, amount: delta }]);
+      setTimeout(() => setFloatingHeals((prev) => prev.filter((f) => f.id !== id)), 700);
+    }
+    prevHpRef.current = hero.hp;
+  }, [hero.hp]);
 
   const classColor = theme.classColors[hero.className?.toLowerCase()] ?? theme.colors.textMuted;
+  const isCleric = hero.className?.toLowerCase() === 'cleric';
+  const clericPrepSpells = isCleric ? SPELL_LIST.filter((s) => ['mend', 'massHeal'].includes(s.id)) : [];
 
   const prepItems = (hero.inventory ?? []).filter((invItem) => {
-    if (invItem.uuid) return false; // loot items handled in SWAP_GEAR
+    if (invItem.uuid) return false;
     const itemData = ITEM_LIST.find((i) => i.id === invItem.id);
     return itemData?.usableIn.includes('prep') ?? false;
   });
 
-  // Only WEAPON, ARMOR, ACCESSORY loot items are equippable; CONSUMABLE loot is in the consumable stack
   const lootItems = Array.from(
     new Map(
       (hero.inventory ?? [])
@@ -160,17 +228,30 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   const canRevive = knockedOutAllies.length > 0;
   const hasItems = prepItems.length > 0;
 
-  async function submit(actionType, itemId = null, targetHeroId = null, equipSlot = null, itemUuid = null) {
+  async function submit(actionType, itemId = null, targetHeroId = null, equipSlot = null, itemUuid = null, spellId = null) {
     setSubmitting(true);
     try {
-      await onPrepAction(hero.id, actionType, itemId, targetHeroId, equipSlot, itemUuid);
+      await onPrepAction(hero.id, actionType, itemId, targetHeroId, equipSlot, itemUuid, spellId);
       const labels = {
         USE_ITEM: `Used ${ITEM_LIST.find(i => i.id === itemId)?.label ?? itemId}`,
         SWAP_GEAR: equipSlot ? `Equipped to ${SLOT_LABEL[equipSlot] ?? equipSlot}` : 'Swapped weapons',
         REVIVE: `Revived ally`,
         PASS: 'Passed',
+        CAST_SPELL: spellId === 'massHeal' ? 'Cast Mass Heal' : 'Cast Mend',
       };
       setDoneLabel(labels[actionType] ?? actionType);
+    } catch {
+      // error handled by parent
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitSpell(spellId, targetHeroId = null) {
+    setSubmitting(true);
+    try {
+      await onPrepAction(hero.id, 'CAST_SPELL', null, targetHeroId, null, null, spellId);
+      setDoneLabel(spellId === 'massHeal' ? 'Cast Mass Heal' : 'Cast Mend');
     } catch {
       // error handled by parent
     } finally {
@@ -215,6 +296,12 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     </button>
   );
 
+  const floatElements = floatingHeals.map((f) => (
+    <span key={f.id} className="float-damage" style={{ color: theme.colors.statusPositive }}>
+      +{f.amount}
+    </span>
+  ));
+
   // Knocked out — no action picker
   if (hero.isKnockedOut) {
     return (
@@ -228,8 +315,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // Done
   if (isDone) {
     return (
-      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
         {heroLabel}
+        {floatElements}
         <div className="prep-slot-done-row">
           <span className="prep-slot-done-label">{doneLabel ?? 'Action taken'}</span>
           <span className="prep-slot-done-check">✓</span>
@@ -238,11 +326,73 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     );
   }
 
+  // CAST_SPELL: mend target picker
+  if (selectedAction === 'CAST_SPELL' && spellPickerStage === 'mend-target') {
+    const aliveHeroes = allHeroes.filter((h) => !h.isKnockedOut);
+    return (
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
+        {heroLabel}
+        {floatElements}
+        <div style={{ flex: 1 }}>
+          <div className="prep-slot-sub-title">Mend — target ally:</div>
+          <div className="prep-slot-sub-list">
+            {aliveHeroes.map((ally) => (
+              <button
+                key={ally.id}
+                onClick={() => submitSpell('mend', ally.id)}
+                disabled={submitting}
+                className="prep-slot-ally-btn"
+              >
+                {ally.name} <span className="prep-slot-ally-class">({ally.className})</span>
+              </button>
+            ))}
+          </div>
+          <div className="prep-slot-back-row">
+            {smallBtn('← Back', () => setSpellPickerStage('spell'))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // CAST_SPELL: spell picker
+  if (selectedAction === 'CAST_SPELL' && spellPickerStage === 'spell') {
+    return (
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
+        {heroLabel}
+        {floatElements}
+        <div style={{ flex: 1 }}>
+          <div className="prep-slot-sub-title">Cast Healing Spell</div>
+          <div style={{ display: 'flex', gap: theme.spacing.md, marginTop: theme.spacing.sm }}>
+            {clericPrepSpells.map((spell) => (
+              <SpellCard
+                key={spell.id}
+                spell={spell}
+                casterEn={hero.en}
+                onSelect={() => {
+                  if (spell.id === 'massHeal') {
+                    submitSpell('massHeal', null);
+                  } else {
+                    setSpellPickerStage('mend-target');
+                  }
+                }}
+              />
+            ))}
+          </div>
+          <div className="prep-slot-back-row" style={{ marginTop: theme.spacing.sm }}>
+            {smallBtn('← Back', () => { setSelectedAction(null); setSpellPickerStage(null); })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // REVIVE sub-view
   if (selectedAction === 'REVIVE') {
     return (
-      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
         {heroLabel}
+        {floatElements}
         <div style={{ flex: 1 }}>
           <div className="prep-slot-sub-title">Revive who?</div>
           <div className="prep-slot-sub-list">
@@ -275,8 +425,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     ].filter(Boolean));
 
     return (
-      <div className="prep-slot prep-slot--wide" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+      <div className="prep-slot prep-slot--wide" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
         {heroLabel}
+        {floatElements}
         {equipMsg && (
           <div className="prep-equip-msg">{equipMsg}</div>
         )}
@@ -336,8 +487,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   if (selectedAction === 'USE_ITEM' && selectedItemId) {
     if (selectedItemId === 'reviveScroll') {
       return (
-        <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+        <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
           {heroLabel}
+          {floatElements}
           <div style={{ flex: 1 }}>
             <div className="prep-slot-sub-title">Revive Scroll — target:</div>
             <div className="prep-slot-sub-list">
@@ -370,8 +522,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   // USE_ITEM: show item list
   if (selectedAction === 'USE_ITEM') {
     return (
-      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+      <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
         {heroLabel}
+        {floatElements}
         <div style={{ flex: 1 }}>
           <div className="prep-slot-sub-title">Use which item?</div>
           <div className="prep-slot-sub-list">
@@ -396,8 +549,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
 
   // Default: action picker
   return (
-    <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1 }}>
+    <div className="prep-slot" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
       {heroLabel}
+      {floatElements}
       <div className="prep-slot-actions">
         <ActionCard
           label="Use Item"
@@ -420,6 +574,15 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
           disabled={!canRevive}
           onClick={() => setSelectedAction('REVIVE')}
         />
+        {isCleric && (
+          <ActionCard
+            label="Cast Healing Spell"
+            sublabel="Use Mend or Mass Heal to restore HP."
+            selected={false}
+            disabled={false}
+            onClick={() => { setSelectedAction('CAST_SPELL'); setSpellPickerStage('spell'); }}
+          />
+        )}
         <ActionCard
           label="Pass"
           sublabel="Skip this hero's prep turn"

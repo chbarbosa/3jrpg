@@ -68,7 +68,7 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
   function handleSpellSelect(spell) {
     const spellData = SPELL_LIST.find((s) => s.id === spell.id);
     const targetType = spellData?.targetType ?? 'single';
-    if (targetType === 'all') {
+    if (targetType === 'all' || targetType === 'all_allies') {
       onAction({ actionType: 'MAGIC', actorId, spellId: spell.id });
       setSubmenu(null);
     } else if (targetType === 'ally') {
@@ -170,19 +170,27 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
           })}
           {spells.map((sp) => {
             const spellData = SPELL_LIST.find((s) => s.id === sp.id);
+            const isAllAllies = spellData?.targetType === 'all_allies';
             const tooltipText = spellData
               ? `${spellData.description} | Cost: ${sp.enCost} EN | Target: ${spellData.targetType}`
               : `Cost: ${sp.enCost} EN`;
             return (
-              <Tooltip key={sp.id} text={tooltipText}>
-                <SubMenuItem
-                  label={sp.name}
-                  cost={sp.enCost}
-                  school={sp.school}
-                  disabled={hero.en < sp.enCost}
-                  onClick={() => handleSpellSelect(sp)}
-                />
-              </Tooltip>
+              <div key={sp.id}>
+                <Tooltip text={tooltipText}>
+                  <SubMenuItem
+                    label={sp.name}
+                    cost={sp.enCost}
+                    school={sp.school}
+                    disabled={hero.en < sp.enCost}
+                    onClick={() => handleSpellSelect(sp)}
+                  />
+                </Tooltip>
+                {isAllAllies && (
+                  <div style={{ color: theme.colors.textMuted, fontSize: theme.fontSizes.xs, paddingLeft: theme.spacing.xs, marginTop: '2px' }}>
+                    Targets all allies
+                  </div>
+                )}
+              </div>
             );
           })}
           {skills.length === 0 && spells.length === 0 && (
