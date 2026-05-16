@@ -18,10 +18,10 @@
 
   {"id": "mend",         "name": "Mend",          "school": "Light",    "effect": "Restores a small amount of HP to one ally",       "enCost": 3, "targetType": "ally",   "statusEffect": null},
   {"id": "heal",         "name": "Heal",          "school": "Light",    "effect": "Restores a moderate amount of HP to one ally",    "enCost": 5, "targetType": "ally",   "statusEffect": null},
+  {"id": "massHeal",     "name": "Mass Heal",     "school": "Light",    "effect": "Restores 5 HP to every hero in the party",         "enCost": 7, "targetType": "all_allies", "statusEffect": null},
   {"id": "cure",         "name": "Cure",          "school": "Light",    "effect": "Removes one status effect from an ally",          "enCost": 2, "targetType": "ally",   "statusEffect": null},
   {"id": "holyBolt",     "name": "Holy Bolt",     "school": "Light",    "effect": "Holy bolt; bonus damage vs undead",               "enCost": 5, "targetType": "single", "statusEffect": null},
   {"id": "revive",       "name": "Revive",        "school": "Light",    "effect": "Revives a fallen ally at 1/4 max HP",             "enCost": 7, "targetType": "ally",      "statusEffect": null},
-  {"id": "massHeal",     "name": "Mass Heal",     "school": "Light",    "effect": "Restores 5 HP to every hero in the party",         "enCost": 7, "targetType": "all_allies", "statusEffect": null},
 
   {"id": "voidBolt",     "name": "Void Bolt",     "school": "Arcane",   "effect": "Fires a bolt of void energy at one target",       "enCost": 3, "targetType": "single", "statusEffect": null},
   {"id": "drain",        "name": "Drain",         "school": "Arcane",   "effect": "Deals damage and absorbs HP from target",         "enCost": 5, "targetType": "single", "statusEffect": null},
