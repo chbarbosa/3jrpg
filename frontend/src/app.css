@@ -1222,7 +1222,7 @@ h1, h2, h3 {
 
 .action-menu-scroll-list {
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: var(--sp-xs);
