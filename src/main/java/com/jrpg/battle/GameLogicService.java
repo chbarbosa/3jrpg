@@ -2,7 +2,6 @@ package com.jrpg.battle;
 
 import com.jrpg.battle.dto.*;
 import com.jrpg.battle.state.*;
-import com.jrpg.battle.dto.LootItemDTO;
 import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.*;
 import lombok.RequiredArgsConstructor;
@@ -1491,7 +1490,7 @@ public class GameLogicService {
         List<String> trimmedLog = log.size() > 10 ? List.copyOf(log.subList(log.size() - 10, log.size())) : List.copyOf(log);
         return new BattleStateResponse(
                 runUuid, state.getFightNumber(),
-                cyclePos, MonsterCapService.cycleDescription(cyclePos),
+                cyclePos, "No modifier",
                 enemies, heroes, List.copyOf(state.getTurnOrder()),
                 activeId, trimmedLog, state.isFightOver(), state.isVictory());
     }
