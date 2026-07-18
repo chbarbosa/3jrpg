@@ -41,7 +41,9 @@ function QualityBadge({ quality }) {
   );
 }
 
-function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot }) {
+function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot, equipOptions = null }) {
+  const options = equipOptions ?? (equipSlot ? [{ slot: equipSlot, label: 'Equip' }] : []);
+
   return (
     <div
       className="prep-loot-item-row"
@@ -67,13 +69,17 @@ function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot }) {
       {isEquipped ? (
         <span style={{ fontSize: 'var(--fs-xs)', color: theme.colors.borderGold, fontWeight: theme.fontWeights.bold }}>Equipped</span>
       ) : (
-        <button
-          onClick={() => onEquip(item.uuid, equipSlot)}
-          className="prep-small-btn prep-small-btn--primary"
-          style={{ flexShrink: 0 }}
-        >
-          Equip
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--sp-xs)', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {options.map((option) => (
+            <button
+              key={option.slot}
+              onClick={() => onEquip(item.uuid, option.slot)}
+              className="prep-small-btn prep-small-btn--primary"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -457,6 +463,22 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                       isEquipped
                       onEquip={handleEquip}
                       equipSlot={equippedSlot}
+                    />
+                  );
+                }
+
+                if (slots.length > 1) {
+                  return (
+                    <LootItemRow
+                      key={item.uuid}
+                      item={item}
+                      slotLabel="Primary or Secondary Weapon"
+                      isEquipped={false}
+                      onEquip={handleEquip}
+                      equipOptions={slots.map((slot) => ({
+                        slot,
+                        label: slot === 'WEAPON_PRIMARY' ? 'Primary' : 'Secondary',
+                      }))}
                     />
                   );
                 }
