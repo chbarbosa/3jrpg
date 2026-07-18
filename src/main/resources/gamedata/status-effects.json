@@ -2,6 +2,7 @@
   {"id": "poison",  "name": "Poison",  "type": "NEGATIVE", "description": "Takes INT/4 damage at the start of each turn; lasts 3 turns"},
   {"id": "burn",    "name": "Burn",    "type": "NEGATIVE", "description": "Takes 2 fire damage at the start of each turn; lasts 3 turns"},
   {"id": "bleed",   "name": "Bleed",   "type": "NEGATIVE", "description": "Takes 1 physical damage at the start of each turn; lasts 4 turns"},
+  {"id": "leaking", "name": "Leaking", "type": "NEGATIVE", "description": "Mechanical damage over time; takes 1 damage at the start of each turn; lasts 4 turns"},
   {"id": "frozen",  "name": "Frozen",  "type": "NEGATIVE", "description": "Cannot act for 1 turn; loses 2 DEX while frozen"},
   {"id": "stun",    "name": "Stun",    "type": "NEGATIVE", "description": "Cannot act for 1 turn"},
   {"id": "dizzle",  "name": "Dizzle",  "type": "NEGATIVE", "description": "Reduces DEF and MDEF for 2 turns"},

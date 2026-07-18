@@ -463,8 +463,9 @@ public class GameLogicService {
         // Generic skill status from data
         if (skill.statusEffect() != null && !"stun".equals(skillId) && !"pain".equals(skillId)
                 && ThreadLocalRandom.current().nextDouble() < skill.statusChance()) {
-            applyStatusEnemy(target, skill.statusEffect(), statusDuration(skill.statusEffect()), 1);
-            msg.append(" ").append(target.getName()).append(" is ").append(skill.statusEffect()).append("!");
+            String statusType = enemyStatusType(target, skill.statusEffect());
+            applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
+            msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(statusType));
         }
 
         String result = msg.toString();
@@ -603,8 +604,9 @@ public class GameLogicService {
 
         if (target.getHp() > 0 && "sword".equals(weaponId)) {
             if (ThreadLocalRandom.current().nextDouble() < 0.5) {
-                applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
-                msg.append(" Bleed!");
+                String statusType = enemyStatusType(target, "bleed");
+                applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
+                msg.append(" ").append(statusCallout(statusType));
             }
             if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                 applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
@@ -620,8 +622,9 @@ public class GameLogicService {
 
             if (target.getHp() > 0 && "sword".equals(weaponId)) {
                 if (ThreadLocalRandom.current().nextDouble() < 0.5) {
-                    applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
-                    msg.append(" Bleed!");
+                    String statusType = enemyStatusType(target, "bleed");
+                    applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
+                    msg.append(" ").append(statusCallout(statusType));
                 }
                 if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                     applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
@@ -645,7 +648,7 @@ public class GameLogicService {
             msg.append(" Hit ").append(hit).append(": ").append(dmg).append(" dmg.");
             if (target.getHp() > 0) {
                 applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
-                msg.append(" Bleed!");
+                msg.append(" ").append(statusCallout(enemyStatusType(target, "bleed")));
                 if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                     applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
                     msg.append(" Trauma!");
@@ -1143,7 +1146,7 @@ public class GameLogicService {
         while (it.hasNext()) {
             ActiveStatus s = it.next();
             switch (s.getType()) {
-                case "bleed", "burn", "poison" -> {
+                case "bleed", "leaking", "burn", "poison" -> {
                     int dmg = Math.max(1, s.getMagnitude());
                     enemy.setHp(Math.max(0, enemy.getHp() - dmg));
                     addLog(state, enemy.getName() + " takes " + dmg + " " + s.getType() + " damage.");
@@ -1168,9 +1171,10 @@ public class GameLogicService {
     }
 
     private void applyStatusEnemy(EnemyState enemy, String type, int duration, int magnitude) {
-        enemy.getStatuses().removeIf(s -> s.getType().equals(type));
-        enemy.getStatuses().add(new ActiveStatus(type, duration, magnitude));
-        switch (type) {
+        String appliedType = enemyStatusType(enemy, type);
+        enemy.getStatuses().removeIf(s -> s.getType().equals(appliedType));
+        enemy.getStatuses().add(new ActiveStatus(appliedType, duration, magnitude));
+        switch (appliedType) {
             case "stun", "slow" -> enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
             case "frozen" -> {
                 enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
@@ -1189,6 +1193,31 @@ public class GameLogicService {
                 else                 enemy.setDex(Math.max(1, enemy.getDex() - 1));
             }
         }
+    }
+
+    private String enemyStatusType(EnemyState enemy, String type) {
+        if ("bleed".equals(type) && "mechanical".equals(enemy.getType())) {
+            return "leaking";
+        }
+        return type;
+    }
+
+    private String statusAppliedText(String type) {
+        return switch (type) {
+            case "bleed"   -> "is bleeding!";
+            case "leaking" -> "is leaking!";
+            case "poison"  -> "is poisoned!";
+            case "burn"    -> "is burning!";
+            default        -> "is " + type + "!";
+        };
+    }
+
+    private String statusCallout(String type) {
+        return switch (type) {
+            case "leaking" -> "Leaking!";
+            case "bleed"   -> "Bleed!";
+            default        -> statusAppliedText(type);
+        };
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1241,7 +1270,7 @@ public class GameLogicService {
     private int statusDuration(String type) {
         return switch (type) {
             case "stun", "frozen" -> 1;
-            case "bleed"          -> 4;
+            case "bleed", "leaking" -> 4;
             case "burn", "poison", "regen" -> 3;
             case "dizzle"         -> 2;
             default               -> 2;

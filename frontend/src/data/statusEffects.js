@@ -2,6 +2,7 @@ export const STATUS_EFFECTS = {
   poison:  { type: 'negative', colorKey: '#27AE60', description: 'Takes INT/4 damage at the start of each turn; lasts 3 turns' },
   burn:    { type: 'negative', colorKey: '#E74C3C', description: 'Takes 2 fire damage at the start of each turn; lasts 3 turns' },
   bleed:   { type: 'negative', colorKey: '#C0392B', description: 'Takes 1 physical damage at the start of each turn; lasts 4 turns' },
+  leaking: { type: 'negative', colorKey: '#7F8C8D', description: 'Mechanical damage over time; takes 1 damage at the start of each turn; lasts 4 turns' },
   frozen:  { type: 'negative', colorKey: '#87CEEB', description: 'Cannot act for 1 turn; physical attacks remove the effect' },
   stun:    { type: 'negative', colorKey: '#F39C12', description: 'Cannot act for 1 turn' },
   slow:    { type: 'negative', colorKey: '#8E44AD', description: 'SPD halved for 2 turns' },

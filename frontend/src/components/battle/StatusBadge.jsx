@@ -3,7 +3,7 @@ import { theme } from '../../styles/theme';
 import { STATUS_EFFECTS } from '../../data/statusEffects';
 
 const ABBREV = {
-  poison: 'PSN', burn: 'BRN', bleed: 'BLD', frozen: 'FRZ',
+  poison: 'PSN', burn: 'BRN', bleed: 'BLD', leaking: 'LEK', frozen: 'FRZ',
   stun: 'STN', slow: 'SLW', silence: 'SIL', blind: 'BLN',
   curse: 'CRS', regen: 'REG', haste: 'HST', shell: 'SHL',
 };
