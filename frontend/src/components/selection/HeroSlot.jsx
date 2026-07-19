@@ -102,7 +102,6 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
       augmentationAdvantageId: null,
       mageSpecializationId: null,
       primaryWeaponId: null,
-      secondaryWeaponId: null,
       armorTier: CLASS_ARMOR[classId] ?? 'light',
       accessoryId: null,
       items: {},
@@ -200,7 +199,6 @@ export default function HeroSlot({ hero, heroIndex, onUpdate }) {
             classId={hero.classId}
             augmentationType={hero.augmentationType}
             primaryWeaponId={hero.primaryWeaponId}
-            secondaryWeaponId={hero.secondaryWeaponId}
             accessoryId={hero.accessoryId}
             onUpdate={handleLoadoutUpdate}
           />

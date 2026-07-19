@@ -8,7 +8,6 @@ public record HeroConfigDTO(
         String augmentationType,
         String augmentationAdvantageId,
         @NotBlank String primaryWeaponId,
-        String secondaryWeaponId,
         String armorId,
         String accessoryId,
         String mageSpecializationId,

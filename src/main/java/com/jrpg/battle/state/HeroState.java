@@ -15,7 +15,6 @@ public class HeroState {
     private String augmentationId;
     private String advantageId;
     private String equippedWeaponId;
-    private String secondaryWeaponId;
     private String equippedArmorId;
     private String elementalWeakness; // set for Enhanced augmentation
 
@@ -67,7 +66,6 @@ public class HeroState {
 
     // Equipped loot item UUIDs — null means no loot equipped in that slot
     private String equippedLootWeaponUuid;
-    private String equippedLootSecondaryUuid;
     private String equippedLootArmorUuid;
     private String equippedLootAccessoryUuid;
 }

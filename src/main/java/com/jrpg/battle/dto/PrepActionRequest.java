@@ -10,7 +10,7 @@ public record PrepActionRequest(
         @NotNull PrepActionType actionType,
         String itemId,
         String targetHeroId,
-        String equipSlot,   // WEAPON_PRIMARY, WEAPON_SECONDARY, ARMOR, ACCESSORY
+        String equipSlot,   // WEAPON_PRIMARY, ARMOR, ACCESSORY
         String itemUuid,    // UUID of loot item to equip (non-null triggers equip path)
         String spellId      // spell to cast (CAST_SPELL action only)
 ) {}

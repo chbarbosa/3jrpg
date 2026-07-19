@@ -469,7 +469,7 @@ public class BattleService {
             HeroState h = old.get(i);
             HeroConfigDTO cfg = new HeroConfigDTO(
                     h.getClassId(), h.getAugmentationId(), h.getAdvantageId(),
-                    h.getEquippedWeaponId(), null, h.getEquippedArmorId(), null, null, null);
+                    h.getEquippedWeaponId(), h.getEquippedArmorId(), null, null, null);
             HeroState fresh = gameLogicService.buildHeroStates(List.of(cfg)).get(0);
             fresh.setId("hero_" + i);
             freshHeroes.add(fresh);

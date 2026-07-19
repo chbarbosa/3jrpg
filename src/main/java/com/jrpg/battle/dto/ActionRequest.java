@@ -11,5 +11,5 @@ public record ActionRequest(
         String targetId,
         String skillId,
         String spellId,
-        String itemId   // also carries new weaponId for CHANGE_WEAPON
+        String itemId
 ) {}

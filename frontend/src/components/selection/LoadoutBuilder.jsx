@@ -68,18 +68,12 @@ function AccessoryCard({ acc, selected, onClick }) {
   );
 }
 
-export default function LoadoutBuilder({ classId, augmentationType, primaryWeaponId, secondaryWeaponId, accessoryId, onUpdate }) {
+export default function LoadoutBuilder({ classId, augmentationType, primaryWeaponId, accessoryId, onUpdate }) {
   const weapons = WEAPON_LIST.filter((w) => w.equippableBy.includes(classId));
   const armorTier = CLASS_ARMOR[classId] ?? 'light';
 
   function handlePrimary(weaponId) {
-    const updates = { primaryWeaponId: weaponId };
-    if (secondaryWeaponId === weaponId) updates.secondaryWeaponId = null;
-    onUpdate(updates);
-  }
-
-  function handleSecondary(weaponId) {
-    onUpdate({ secondaryWeaponId: secondaryWeaponId === weaponId ? null : weaponId });
+    onUpdate({ primaryWeaponId: weaponId });
   }
 
   return (
@@ -93,33 +87,6 @@ export default function LoadoutBuilder({ classId, augmentationType, primaryWeapo
             selected={w.id === primaryWeaponId}
             disabled={false}
             onClick={handlePrimary}
-          />
-        ))}
-      </div>
-
-      <SectionLabel>Secondary Weapon (optional)</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-xs)' }}>
-        <button
-          onClick={() => onUpdate({ secondaryWeaponId: null })}
-          className="weapon-card-btn"
-          style={{
-            background: secondaryWeaponId == null ? theme.colors.bgPanelDark : theme.colors.bgPanel,
-            border: `${secondaryWeaponId == null ? 2 : 1}px solid ${secondaryWeaponId == null ? theme.colors.borderGold : theme.colors.borderBrown}`,
-          }}
-          onMouseEnter={(e) => { if (secondaryWeaponId != null) e.currentTarget.style.background = theme.colors.bgPanelDark; }}
-          onMouseLeave={(e) => { if (secondaryWeaponId != null) e.currentTarget.style.background = theme.colors.bgPanel; }}
-        >
-          <div className="weapon-card-skills">
-            None
-          </div>
-        </button>
-        {weapons.map((w) => (
-          <WeaponCard
-            key={w.id}
-            weapon={w}
-            selected={w.id === secondaryWeaponId}
-            disabled={w.id === primaryWeaponId}
-            onClick={handleSecondary}
           />
         ))}
       </div>

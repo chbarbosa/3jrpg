@@ -181,7 +181,7 @@ export default function BattlePage() {
       );
 
       // Play sounds for hero actions
-      if (actionType === 'ATTACK' || actionType === 'CHANGE_WEAPON') {
+      if (actionType === 'ATTACK') {
         playSound('hit');
       } else if (actionType === 'SKILL') {
         playSound('skill');
@@ -284,16 +284,6 @@ export default function BattlePage() {
     if (targeting.mode === 'ally' || targeting.mode === 'ally-ko') {
       submitAction({ ...targeting, targetId: hero.id });
     }
-  }
-
-  function promptChangeWeapon(actorId) {
-    setModal({
-      open: true, title: 'Change Weapon?',
-      message: 'Swapping your weapon costs your turn. Continue?',
-      variant: 'warning', confirmLabel: 'Swap', cancelLabel: 'Cancel',
-      onConfirm: () => { closeModal(); submitAction({ actionType: 'CHANGE_WEAPON', actorId }); },
-      onCancel: closeModal,
-    });
   }
 
   function promptGiveUp() {
@@ -491,7 +481,6 @@ export default function BattlePage() {
               targeting={targeting}
               onBeginTarget={handleBeginTarget}
               onAction={submitAction}
-              onChangeWeapon={() => promptChangeWeapon(activeHero.id)}
               onCancelTarget={handleCancelTarget}
               isLoading={loading}
             />

@@ -149,9 +149,6 @@ public class GameLogicService {
         h.setKnockedOut(false);
 
         equipWeapon(h, cfg.primaryWeaponId());
-        if (cfg.secondaryWeaponId() != null) {
-            h.setSecondaryWeaponId(cfg.secondaryWeaponId());
-        }
         String armorId = (cfg.armorId() != null) ? cfg.armorId() : cls.equippableArmor();
         h.setEquippedArmorId(armorId);
 
@@ -306,7 +303,6 @@ public class GameLogicService {
             case SKILL         -> resolveSkill(state, req.actorId(), req.targetId(), req.skillId());
             case MAGIC         -> resolveMagic(state, req.actorId(), req.targetId(), req.spellId());
             case ITEM          -> resolveItem(state, req.actorId(), req.targetId(), req.itemId());
-            case CHANGE_WEAPON -> changeWeapon(state, req.actorId(), req.itemId());
             case ENEMY_TURN    -> resolveOneEnemyTurn(state);
         };
         return result;
@@ -972,22 +968,6 @@ public class GameLogicService {
         else inv.setQuantity(inv.getQuantity() - 1);
     }
 
-    private String changeWeapon(BattleState state, String actorId, String weaponId) {
-        if (weaponId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemId (weapon) required");
-        HeroState hero = findHero(state, actorId);
-        ClassData cls = gameDataService.findClass(hero.getClassId()).orElseThrow();
-        WeaponType newWeapon = gameDataService.findWeapon(weaponId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown weapon: " + weaponId));
-        if (!newWeapon.equippableBy().contains(hero.getClassId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    cls.name() + " cannot equip " + newWeapon.name());
-        }
-        equipWeapon(hero, weaponId);
-        String msg = heroLabel(hero) + " equips " + newWeapon.name() + ". (full turn used)";
-        addLog(state, msg);
-        return msg;
-    }
-
     // ═══════════════════════════════════════════════════════════════════════
     // Enemy AI
     // ═══════════════════════════════════════════════════════════════════════
@@ -1405,7 +1385,7 @@ public class GameLogicService {
                         "Item not found in inventory: " + itemUuid));
 
         boolean valid = switch (equipSlot) {
-            case "WEAPON_PRIMARY", "WEAPON_SECONDARY" -> "WEAPON".equals(lootItem.getItemType());
+            case "WEAPON_PRIMARY" -> "WEAPON".equals(lootItem.getItemType());
             case "ARMOR"     -> "ARMOR".equals(lootItem.getItemType());
             case "ACCESSORY" -> "ACCESSORY".equals(lootItem.getItemType());
             default -> false;
@@ -1437,7 +1417,6 @@ public class GameLogicService {
     private String getEquippedLootUuid(HeroState hero, String slot) {
         return switch (slot) {
             case "WEAPON_PRIMARY"   -> hero.getEquippedLootWeaponUuid();
-            case "WEAPON_SECONDARY" -> hero.getEquippedLootSecondaryUuid();
             case "ARMOR"            -> hero.getEquippedLootArmorUuid();
             case "ACCESSORY"        -> hero.getEquippedLootAccessoryUuid();
             default -> null;
@@ -1447,7 +1426,6 @@ public class GameLogicService {
     private void setEquippedLootUuid(HeroState hero, String slot, String uuid) {
         switch (slot) {
             case "WEAPON_PRIMARY"   -> hero.setEquippedLootWeaponUuid(uuid);
-            case "WEAPON_SECONDARY" -> hero.setEquippedLootSecondaryUuid(uuid);
             case "ARMOR"            -> hero.setEquippedLootArmorUuid(uuid);
             case "ACCESSORY"        -> hero.setEquippedLootAccessoryUuid(uuid);
         }
@@ -1590,9 +1568,9 @@ public class GameLogicService {
                 h.getHp(), h.getMaxHp(), h.getEn(), h.getMaxEn(),
                 h.getSpd(), h.getStr(), def, mdef,
                 statuses, h.isKnockedOut(), skills, spells, inventory,
-                h.getSecondaryWeaponId(), h.isPostponed(),
+                h.isPostponed(),
                 h.getEquippedWeaponId(), h.getEquippedArmorId(),
-                h.getEquippedLootWeaponUuid(), h.getEquippedLootSecondaryUuid(),
+                h.getEquippedLootWeaponUuid(),
                 h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid(),
                 h.getEquippedStartingAccessoryId(),
                 h.getAugmentationId(), h.getAdvantageId());

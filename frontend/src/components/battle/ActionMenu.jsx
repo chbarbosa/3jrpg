@@ -50,7 +50,7 @@ function SubMenuItem({ label, cost, school, disabled, onClick }) {
   );
 }
 
-export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, onChangeWeapon, onCancelTarget, isLoading }) {
+export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, onCancelTarget, isLoading }) {
   const [submenu, setSubmenu] = useState(null); // null | 'skill' | 'item'
 
   const actorId = hero.id;
@@ -277,13 +277,6 @@ export default function ActionMenu({ hero, targeting, onBeginTarget, onAction, o
         onClick={() => setSubmenu('item')}
         disabled={!hasItems}
       />
-      {hero.secondaryWeaponId && (
-        <MenuButton
-          label="🔄 Change Weapon"
-          sublabel="Swap — costs your turn"
-          onClick={onChangeWeapon}
-        />
-      )}
     </div>
   );
 }

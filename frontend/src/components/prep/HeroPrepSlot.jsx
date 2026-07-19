@@ -87,13 +87,12 @@ function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot, equipOpt
 
 const SLOT_LABEL = {
   WEAPON_PRIMARY:   'Primary Weapon',
-  WEAPON_SECONDARY: 'Secondary Weapon',
   ARMOR:            'Armor',
   ACCESSORY:        'Accessory',
 };
 
 function getItemSlotType(itemType) {
-  if (itemType === 'weapon') return ['WEAPON_PRIMARY', 'WEAPON_SECONDARY'];
+  if (itemType === 'weapon') return ['WEAPON_PRIMARY'];
   if (itemType === 'armor')  return ['ARMOR'];
   if (itemType === 'accessory') return ['ACCESSORY'];
   return [];
@@ -101,14 +100,12 @@ function getItemSlotType(itemType) {
 
 function CurrentLoadout({ hero }) {
   const primaryWeapon = WEAPON_LIST.find((w) => w.id === hero.equippedWeaponId);
-  const secondaryWeapon = hero.secondaryWeaponId ? WEAPON_LIST.find((w) => w.id === hero.secondaryWeaponId) : null;
   const armorLabel = hero.equippedArmorId ? (ARMOR_TIER_LABELS[hero.equippedArmorId] ?? hero.equippedArmorId) : 'None';
 
   const lootByUuid = {};
   (hero.inventory ?? []).filter((i) => i.uuid).forEach((i) => { lootByUuid[i.uuid] = i; });
 
   const equippedWeaponLoot    = hero.equippedLootWeaponUuid    ? lootByUuid[hero.equippedLootWeaponUuid]    : null;
-  const equippedSecondaryLoot = hero.equippedLootSecondaryUuid ? lootByUuid[hero.equippedLootSecondaryUuid] : null;
   const equippedArmorLoot     = hero.equippedLootArmorUuid     ? lootByUuid[hero.equippedLootArmorUuid]     : null;
   const equippedAccessoryLoot = hero.equippedLootAccessoryUuid ? lootByUuid[hero.equippedLootAccessoryUuid] : null;
 
@@ -131,7 +128,6 @@ function CurrentLoadout({ hero }) {
     <div className="prep-loadout-panel">
       <div className="prep-slot-sub-title">Current Loadout</div>
       {row('Primary', primaryWeapon?.label ?? hero.equippedWeaponId ?? '—', equippedWeaponLoot)}
-      {row('Secondary', secondaryWeapon?.label ?? 'None', equippedSecondaryLoot)}
       {row('Armor', armorLabel, equippedArmorLoot)}
       {row('Accessory', equippedAccessoryLoot ? null : '—', equippedAccessoryLoot)}
     </div>
@@ -425,7 +421,6 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   if (selectedAction === 'SWAP_GEAR') {
     const equippedUuids = new Set([
       hero.equippedLootWeaponUuid,
-      hero.equippedLootSecondaryUuid,
       hero.equippedLootArmorUuid,
       hero.equippedLootAccessoryUuid,
     ].filter(Boolean));
@@ -449,7 +444,6 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                 const isEquipped = equippedUuids.has(item.uuid);
                 const equippedSlot = isEquipped
                   ? (item.uuid === hero.equippedLootWeaponUuid ? 'WEAPON_PRIMARY'
-                    : item.uuid === hero.equippedLootSecondaryUuid ? 'WEAPON_SECONDARY'
                     : item.uuid === hero.equippedLootArmorUuid ? 'ARMOR'
                     : 'ACCESSORY')
                   : null;
@@ -463,22 +457,6 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                       isEquipped
                       onEquip={handleEquip}
                       equipSlot={equippedSlot}
-                    />
-                  );
-                }
-
-                if (slots.length > 1) {
-                  return (
-                    <LootItemRow
-                      key={item.uuid}
-                      item={item}
-                      slotLabel="Primary or Secondary Weapon"
-                      isEquipped={false}
-                      onEquip={handleEquip}
-                      equipOptions={slots.map((slot) => ({
-                        slot,
-                        label: slot === 'WEAPON_PRIMARY' ? 'Primary' : 'Secondary',
-                      }))}
                     />
                   );
                 }

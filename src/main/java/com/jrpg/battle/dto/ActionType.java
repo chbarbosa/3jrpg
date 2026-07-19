@@ -1,5 +1,5 @@
 package com.jrpg.battle.dto;
 
 public enum ActionType {
-    ATTACK, SKILL, MAGIC, ITEM, CHANGE_WEAPON, ENEMY_TURN
+    ATTACK, SKILL, MAGIC, ITEM, ENEMY_TURN
 }
