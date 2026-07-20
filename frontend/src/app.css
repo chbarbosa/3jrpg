@@ -2016,6 +2016,11 @@ h1, h2, h3 {
   cursor: pointer;
   font-size: var(--fs-xs);
   font-family: var(--font-body);
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast),
+    transform var(--t-fast);
 }
 
 .prep-small-btn--default {
@@ -2030,6 +2035,30 @@ h1, h2, h3 {
   color: var(--color-bg-page);
   border: 1px solid var(--color-border-gold);
   font-weight: var(--fw-bold);
+}
+
+.prep-small-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.prep-small-btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.prep-small-btn--default:not(:disabled):hover {
+  background: var(--color-bg-panel-dark);
+  border-color: var(--color-border-gold);
+  color: var(--color-text-header);
+}
+
+.prep-small-btn--primary:not(:disabled):hover {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
+}
+
+.prep-small-btn--primary:not(:disabled):active {
+  background: var(--color-action-active);
+  border-color: var(--color-action-active);
 }
 
 .prep-slot-no-allies {
