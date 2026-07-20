@@ -229,6 +229,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   const knockedOutAllies = allHeroes.filter((h) => h.isKnockedOut && h.id !== hero.id);
   const canRevive = knockedOutAllies.length > 0;
   const hasItems = prepItems.length > 0;
+  const heroDisplayName = (h) => h?.heroName ?? h?.name ?? 'Hero';
 
   async function submit(actionType, itemId = null, targetHeroId = null, equipSlot = null, itemUuid = null, spellId = null) {
     setSubmitting(true);
@@ -268,7 +269,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
     try {
       await onPrepAction(hero.id, 'SWAP_GEAR', null, null, equipSlot, itemUuid);
       const itemName = item?.name ?? 'item';
-      setEquipMsg(`${hero.name} equipped ${itemName}.`);
+      setEquipMsg(`${heroDisplayName(hero)} equipped ${itemName}.`);
       setTimeout(() => setEquipMsg(null), 2000);
       setDoneLabel(`Equipped to ${SLOT_LABEL[equipSlot] ?? equipSlot}`);
     } catch {
@@ -283,9 +284,8 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
       <div className="team-dot" style={{ background: classColor }} />
       <div>
         <div className="prep-slot-hero-name">
-          {hero.name}
+          {heroDisplayName(hero)}
         </div>
-        <div style={{ fontSize: 'var(--fs-xs)', color: classColor }}>{hero.className}</div>
       </div>
     </div>
   );
@@ -345,7 +345,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                 disabled={submitting}
                 className="prep-slot-ally-btn"
               >
-                {ally.name} <span className="prep-slot-ally-class">({ally.className})</span>
+                {heroDisplayName(ally)}
               </button>
             ))}
           </div>
@@ -405,7 +405,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                 disabled={submitting}
                 className="prep-slot-ally-btn"
               >
-                {ally.name} <span className="prep-slot-ally-class">({ally.className})</span>
+                {heroDisplayName(ally)}
               </button>
             ))}
           </div>
@@ -500,7 +500,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                   disabled={submitting}
                   className="prep-slot-ally-btn"
                 >
-                  {ally.name}
+                  {heroDisplayName(ally)}
                 </button>
               ))}
               {knockedOutAllies.length === 0 && (

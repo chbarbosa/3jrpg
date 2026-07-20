@@ -96,6 +96,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
 
   const qualityColor = QUALITY_COLORS[lootItem.quality?.toLowerCase()] ?? theme.colors.textMuted;
   const qualityLabel = QUALITY_LABELS[lootItem.quality?.toLowerCase()] ?? lootItem.quality ?? '';
+  const heroDisplayName = (hero) => hero?.heroName ?? hero?.name ?? 'hero';
 
   return (
     <div
@@ -142,7 +143,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
       {/* Assignment */}
       {lootAssigned ? (
         <div className="loot-assigned-msg">
-          ✓ Assigned to {heroes.find(h => h.id === lootRecipientHeroId)?.name ?? 'hero'}
+          ✓ Assigned to {heroDisplayName(heroes.find(h => h.id === lootRecipientHeroId))}
         </div>
       ) : (
         <>
@@ -161,7 +162,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
                   className={`loot-hero-btn${disabled ? ' loot-hero-btn--disabled' : ''}`}
                 >
                   <div className="team-dot" style={{ background: classColor }} />
-                  {hero.name}
+                  {heroDisplayName(hero)}
                   {hero.isKnockedOut && <span className="loot-ko-label"> (KO)</span>}
                 </button>
               );
