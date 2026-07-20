@@ -389,6 +389,13 @@ public class BattleService {
                     swapWeapon(actor, req.itemId());
                 }
             }
+            case TRANSFER_GEAR -> {
+                if (req.itemUuid() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "itemUuid required");
+                if (req.targetHeroId() == null)
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "targetHeroId required");
+                transferGear(actor, gameLogicService.findHero(state, req.targetHeroId()), req.itemUuid());
+            }
             case REVIVE -> {
                 if (req.targetHeroId() == null)
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "targetHeroId required");
@@ -435,6 +442,32 @@ public class BattleService {
         }
 
         return gameLogicService.toHeroDTOs(state.getHeroes());
+    }
+
+    private void transferGear(HeroState from, HeroState to, String itemUuid) {
+        if (from.getId().equals(to.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer gear to the same hero");
+        }
+        if (itemUuid.equals(from.getEquippedLootWeaponUuid())
+                || itemUuid.equals(from.getEquippedLootArmorUuid())
+                || itemUuid.equals(from.getEquippedLootAccessoryUuid())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer equipped gear");
+        }
+
+        InventoryItem item = from.getInventory().stream()
+                .filter(i -> itemUuid.equals(i.getItemUuid()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Item not found in inventory: " + itemUuid));
+
+        if (item.getItemUuid() == null || (!"WEAPON".equals(item.getItemType())
+                && !"ARMOR".equals(item.getItemType())
+                && !"ACCESSORY".equals(item.getItemType()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only equipment can be transferred");
+        }
+
+        from.getInventory().remove(item);
+        to.getInventory().add(item);
     }
 
     public Map<String, Object> giveUp(UUID playerUuid, GiveUpRequest req) {

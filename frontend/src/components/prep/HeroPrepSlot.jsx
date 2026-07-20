@@ -41,7 +41,7 @@ function QualityBadge({ quality }) {
   );
 }
 
-function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot, equipOptions = null }) {
+function LootItemRow({ item, slotLabel, isEquipped, onEquip, onTransfer, equipSlot, equipOptions = null }) {
   const options = equipOptions ?? (equipSlot ? [{ slot: equipSlot, label: 'Equip' }] : []);
 
   return (
@@ -79,6 +79,14 @@ function LootItemRow({ item, slotLabel, isEquipped, onEquip, equipSlot, equipOpt
               {option.label}
             </button>
           ))}
+          {onTransfer && (
+            <button
+              onClick={() => onTransfer(item.uuid)}
+              className="prep-small-btn prep-small-btn--default"
+            >
+              Send
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -189,6 +197,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   const [submitting, setSubmitting] = useState(false);
   const [doneLabel, setDoneLabel] = useState(null);
   const [equipMsg, setEquipMsg] = useState(null);
+  const [transferItemUuid, setTransferItemUuid] = useState(null);
   const [floatingHeals, setFloatingHeals] = useState([]);
   const prevHpRef = useRef(hero.hp);
   const isMountedRef = useRef(false);
@@ -272,6 +281,22 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
       setEquipMsg(`${heroDisplayName(hero)} equipped ${itemName}.`);
       setTimeout(() => setEquipMsg(null), 2000);
       setDoneLabel(`Equipped to ${SLOT_LABEL[equipSlot] ?? equipSlot}`);
+    } catch {
+      // error handled by parent
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleTransfer(itemUuid, targetHeroId) {
+    const item = lootItems.find((i) => i.uuid === itemUuid);
+    const target = allHeroes.find((h) => h.id === targetHeroId);
+    setSubmitting(true);
+    setEquipMsg(null);
+    try {
+      await onPrepAction(hero.id, 'TRANSFER_GEAR', null, targetHeroId, null, itemUuid);
+      setTransferItemUuid(null);
+      setDoneLabel(`Sent ${item?.name ?? 'gear'} to ${heroDisplayName(target)}`);
     } catch {
       // error handled by parent
     } finally {
@@ -424,6 +449,8 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
       hero.equippedLootArmorUuid,
       hero.equippedLootAccessoryUuid,
     ].filter(Boolean));
+    const transferItem = lootItems.find((item) => item.uuid === transferItemUuid);
+    const transferTargets = allHeroes.filter((h) => h.id !== hero.id);
 
     return (
       <div className="prep-slot prep-slot--wide" style={{ border: `1px solid ${slotBorderColor}`, opacity: submitting ? 0.7 : 1, position: 'relative' }}>
@@ -436,6 +463,26 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
           <CurrentLoadout hero={hero} />
           <div className="prep-inventory-panel">
             <div className="prep-slot-sub-title">Equipment in Inventory</div>
+            {transferItem && (
+              <div className="prep-transfer-panel">
+                <div className="prep-slot-sub-title">Send {transferItem.name} to:</div>
+                <div className="prep-slot-sub-list">
+                  {transferTargets.map((target) => (
+                    <button
+                      key={target.id}
+                      onClick={() => handleTransfer(transferItem.uuid, target.id)}
+                      disabled={submitting}
+                      className="prep-slot-ally-btn"
+                    >
+                      {heroDisplayName(target)}
+                    </button>
+                  ))}
+                </div>
+                <div className="prep-slot-back-row">
+                  {smallBtn('Cancel', () => setTransferItemUuid(null))}
+                </div>
+              </div>
+            )}
             {lootItems.length === 0 ? (
               <div className="prep-slot-swap-desc">No equipment items in inventory.</div>
             ) : (
@@ -456,6 +503,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                       slotLabel={SLOT_LABEL[equippedSlot]}
                       isEquipped
                       onEquip={handleEquip}
+                      onTransfer={null}
                       equipSlot={equippedSlot}
                     />
                   );
@@ -468,6 +516,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                     slotLabel={SLOT_LABEL[slot]}
                     isEquipped={false}
                     onEquip={handleEquip}
+                    onTransfer={setTransferItemUuid}
                     equipSlot={slot}
                   />
                 ));

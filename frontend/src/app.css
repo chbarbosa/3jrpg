@@ -2006,6 +2006,14 @@ h1, h2, h3 {
   gap: var(--sp-sm);
 }
 
+.prep-transfer-panel {
+  background: var(--color-bg-panel-dark);
+  border: 1px solid var(--color-border-gold);
+  border-radius: var(--r-sm);
+  padding: var(--sp-sm);
+  margin-bottom: var(--sp-sm);
+}
+
 .prep-slot-back-row {
   margin-top: var(--sp-xs);
 }

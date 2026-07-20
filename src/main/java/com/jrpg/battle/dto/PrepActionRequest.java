@@ -9,7 +9,7 @@ public record PrepActionRequest(
         @NotBlank String heroId,
         @NotNull PrepActionType actionType,
         String itemId,
-        String targetHeroId,
+        String targetHeroId, // target hero for REVIVE, USE_ITEM targeting, or TRANSFER_GEAR recipient
         String equipSlot,   // WEAPON_PRIMARY, ARMOR, ACCESSORY
         String itemUuid,    // UUID of loot item to equip (non-null triggers equip path)
         String spellId      // spell to cast (CAST_SPELL action only)
