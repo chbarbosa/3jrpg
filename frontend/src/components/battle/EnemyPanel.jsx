@@ -3,9 +3,11 @@ import { ENEMY_TYPE_LABELS, ENEMY_TYPE_NOTES } from '../../data/enemies';
 import HPBar from './HPBar';
 import StatusBadge from './StatusBadge';
 
-export default function EnemyPanel({ enemy, isTargeted, onClick }) {
-  const defeated = enemy.hp <= 0;
+export default function EnemyPanel({ enemy, isTargeted, onClick, showScan = false }) {
+  const defeated = enemy.defeated ?? enemy.hp <= 0;
   const clickable = !!onClick && !defeated;
+  const hasExactHp = enemy.hp != null && enemy.maxHp != null;
+  const showExactHp = showScan && hasExactHp;
   const nameLen = enemy.name?.length ?? 0;
   let nameFontSize = 'var(--fs-sm)';
   let nameTextStyle = {};
@@ -89,9 +91,20 @@ export default function EnemyPanel({ enemy, isTargeted, onClick }) {
         </div>
       </div>
 
-      <div className="enemy-hp-bar">
-        <HPBar current={enemy.hp} max={enemy.maxHp} />
-      </div>
+      {showExactHp && (
+        <div className="enemy-hp-bar">
+          <HPBar current={enemy.hp} max={enemy.maxHp} showValues />
+        </div>
+      )}
+
+      {showExactHp && (
+        <div className="enemy-scan-info">
+          <span>Weak: {enemy.weaknesses?.length > 0 ? enemy.weaknesses.join(', ') : 'None'}</span>
+          {enemy.elementalImmunity?.length > 0 && (
+            <span>Immune: {enemy.elementalImmunity.join(', ')}</span>
+          )}
+        </div>
+      )}
 
       {enemy.statuses.length > 0 && (
         <div className="enemy-statuses">

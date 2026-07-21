@@ -1104,6 +1104,21 @@ h1, h2, h3 {
   width: 80px;
 }
 
+.enemy-hp-bar .bar-values {
+  text-align: center;
+}
+
+.enemy-scan-info {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.6rem;
+  line-height: 1.1;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .enemy-statuses {
   display: flex;
   flex-wrap: wrap;

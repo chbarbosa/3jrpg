@@ -34,5 +34,16 @@
       {"id": "ironDef", "name": "Damage Absorption", "description": "Increases armor reduction by 1"}
     ],
     "tradeoff": "Reduced SPD by 2"
+  },
+  {
+    "id": "cyber", "name": "Cyber",
+    "availableTo": ["warrior", "ranger"],
+    "advantages": [
+      {"id": "precision",     "name": "Precision",      "description": "Adds extra physical damage per hit"},
+      {"id": "reflexBooster", "name": "Reflex Booster", "description": "Increases DEX and SPD"},
+      {"id": "armorSkin",     "name": "Armor Skin",     "description": "Reduces incoming physical damage"},
+      {"id": "cyberEye",      "name": "Cyber Eye",      "description": "Reveals enemy HP and elemental defenses"}
+    ],
+    "tradeoff": "Takes extra damage from Electric"
   }
 ]

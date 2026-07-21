@@ -1489,7 +1489,10 @@ public class GameLogicService {
 
     public BattleStateResponse toBattleStateResponse(UUID runUuid, BattleState state) {
         List<HeroStateDTO> heroes = state.getHeroes().stream().map(this::toHeroDTO).collect(Collectors.toList());
-        List<EnemyStateDTO> enemies = state.getEnemies().stream().map(this::toEnemyDTO).collect(Collectors.toList());
+        boolean cyberEyeScan = hasCyberEye(state);
+        List<EnemyStateDTO> enemies = state.getEnemies().stream()
+                .map(e -> toEnemyDTO(e, cyberEyeScan))
+                .collect(Collectors.toList());
         String activeId = state.isFightOver() ? null : findActiveActorId(state);
         String cyclePos = state.getCyclePosition();
         // Trim combat log to last 10
@@ -1499,7 +1502,14 @@ public class GameLogicService {
                 runUuid, state.getFightNumber(),
                 cyclePos, "No modifier",
                 enemies, heroes, List.copyOf(state.getTurnOrder()),
-                activeId, trimmedLog, state.isFightOver(), state.isVictory());
+                activeId, trimmedLog, state.isFightOver(), state.isVictory(),
+                cyberEyeScan);
+    }
+
+    private boolean hasCyberEye(BattleState state) {
+        return state.getHeroes().stream()
+                .anyMatch(h -> "cyber".equalsIgnoreCase(h.getAugmentationId())
+                        && "cyberEye".equalsIgnoreCase(h.getAdvantageId()));
     }
 
     public List<HeroStateDTO> toHeroDTOs(List<HeroState> heroes) {
@@ -1605,10 +1615,23 @@ public class GameLogicService {
         return List.of();
     }
 
-    private EnemyStateDTO toEnemyDTO(EnemyState e) {
+    private EnemyStateDTO toEnemyDTO(EnemyState e, boolean revealScan) {
         List<ActiveStatusDTO> statuses = e.getStatuses().stream()
                 .map(s -> new ActiveStatusDTO(s.getType(), s.getDuration()))
                 .collect(Collectors.toList());
-        return new EnemyStateDTO(e.getId(), e.getName(), e.getType(), e.getHp(), e.getMaxHp(), statuses);
+        Integer hpPercent = revealScan
+                ? Math.max(0, Math.min(100,
+                        e.getMaxHp() > 0 ? (int) Math.round((e.getHp() * 100.0) / e.getMaxHp()) : 0))
+                : null;
+        List<String> immunities = revealScan
+                ? (e.getElementalImmunity() != null ? List.copyOf(e.getElementalImmunity()) : List.of())
+                : null;
+        List<String> weaknesses = revealScan ? List.of() : null;
+        return new EnemyStateDTO(
+                e.getId(), e.getName(), e.getType(),
+                revealScan ? e.getHp() : null,
+                revealScan ? e.getMaxHp() : null,
+                hpPercent, e.getHp() <= 0,
+                immunities, weaknesses, statuses);
     }
 }

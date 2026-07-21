@@ -196,7 +196,7 @@ export default function BattlePage() {
       // Death sounds
       result.enemies?.forEach((enemy) => {
         const prev = prevState.enemies?.find((e) => e.id === enemy.id);
-        if (prev && prev.hp > 0 && enemy.hp <= 0) playSound('enemyDeath');
+        if (prev && !(prev.defeated ?? prev.hp <= 0) && (enemy.defeated ?? enemy.hp <= 0)) playSound('enemyDeath');
       });
       result.heroes?.forEach((hero) => {
         const prev = prevState.heroes?.find((h) => h.id === hero.id);
@@ -207,7 +207,7 @@ export default function BattlePage() {
       if (actionType !== 'ENEMY_TURN') {
         result.enemies?.forEach((enemy) => {
           const prev = prevState.enemies?.find((e) => e.id === enemy.id);
-          if (prev && prev.hp > enemy.hp) {
+          if (prev && prev.hp != null && enemy.hp != null && prev.hp > enemy.hp) {
             showFloatDamage(enemy.id, prev.hp - enemy.hp, theme.colors.textHeader);
           }
         });
@@ -357,6 +357,10 @@ export default function BattlePage() {
   const heroIds = new Set(heroes.map((h) => h.id));
   const isEnemyTurn = !fightOver && activeActorId && !heroIds.has(activeActorId);
   const cycleLabel = cycleModifier && cycleModifier !== '' ? cycleModifier : null;
+  const showCyberEyeScan = battleState.cyberEyeScan || heroes.some((hero) => {
+    const advantageId = hero.advantageId ?? hero.augmentationAdvantageId ?? '';
+    return hero.augmentationId?.toLowerCase() === 'cyber' && advantageId.toLowerCase() === 'cybereye';
+  });
 
   return (
     <div className="battle-page">
@@ -401,7 +405,8 @@ export default function BattlePage() {
               <EnemyPanel
                 enemy={enemy}
                 isTargeted={targeting?.mode === 'enemy' && targeting !== null}
-                onClick={targeting?.mode === 'enemy' && enemy.hp > 0 ? () => handleEnemyClick(enemy) : null}
+                onClick={targeting?.mode === 'enemy' && !(enemy.defeated ?? enemy.hp <= 0) ? () => handleEnemyClick(enemy) : null}
+                showScan={showCyberEyeScan}
               />
               {enemy.id === attackingEnemyId && (
                 <div key={attackKey} className="enemy-attack-flash" />

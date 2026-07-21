@@ -12,7 +12,8 @@ public class ActionResultResponse extends BattleStateResponse {
                 base.getCyclePosition(), base.getCycleModifier(),
                 base.getEnemies(), base.getHeroes(),
                 base.getTurnOrder(), base.getActiveActorId(),
-                base.getCombatLog(), base.isFightOver(), base.isVictory()
+                base.getCombatLog(), base.isFightOver(), base.isVictory(),
+                base.isCyberEyeScan()
         );
         this.actionSummary = actionSummary;
     }

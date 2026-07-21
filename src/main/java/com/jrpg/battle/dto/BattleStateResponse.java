@@ -20,4 +20,5 @@ public class BattleStateResponse {
     private final List<String> combatLog; // last 10 entries
     private final boolean fightOver;
     private final boolean victory;
+    private final boolean cyberEyeScan;
 }

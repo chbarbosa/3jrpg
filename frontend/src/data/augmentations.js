@@ -17,6 +17,7 @@ export const AUGMENTATION_LIST = [
       { id: 'precision',     label: 'Precision',     description: 'extra physical damage per hit.' },
       { id: 'reflexBooster', label: 'Reflex Booster', description: 'increasing SPD.' },
       { id: 'armorSkin',     label: 'Armor Skin',     description: 'Reduces each incoming physical hit.' },
+      { id: 'cyberEye',      label: 'Cyber Eye',      description: 'Reveals enemy HP and elemental defenses.' },
     ],
   },
   {
