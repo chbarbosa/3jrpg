@@ -19,7 +19,7 @@ class EnemyStateDTOTest {
                 "MECHANICAL",
                 null,
                 null,
-                null,
+                50,
                 false,
                 null,
                 null,
@@ -29,7 +29,7 @@ class EnemyStateDTOTest {
 
         assertThat(json).doesNotContain("\"hp\":");
         assertThat(json).doesNotContain("\"maxHp\":");
-        assertThat(json).doesNotContain("\"hpPercent\":");
+        assertThat(json).contains("\"hpPercent\":50");
         assertThat(json).doesNotContain("\"weaknesses\":");
         assertThat(json).doesNotContain("\"elementalImmunity\":");
     }

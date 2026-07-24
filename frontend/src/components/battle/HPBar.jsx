@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 
-export default function HPBar({ current, max, showValues = false }) {
+export default function HPBar({ current, max, showValues = false, ariaLabel = 'HP' }) {
   const prevRef = useRef(current);
   const [flashing, setFlashing] = useState(false);
 
@@ -24,7 +24,7 @@ export default function HPBar({ current, max, showValues = false }) {
         aria-valuenow={current}
         aria-valuemin={0}
         aria-valuemax={max}
-        aria-label="HP"
+        aria-label={ariaLabel}
         className="bar-track"
       >
         <div

@@ -8,6 +8,9 @@ export default function EnemyPanel({ enemy, isTargeted, onClick, showScan = fals
   const clickable = !!onClick && !defeated;
   const hasExactHp = enemy.hp != null && enemy.maxHp != null;
   const showExactHp = showScan && hasExactHp;
+  const inferredHpPercent = enemy.hpPercent ?? (defeated ? 0 : 100);
+  const hpBarCurrent = hasExactHp ? enemy.hp : inferredHpPercent;
+  const hpBarMax = hasExactHp ? enemy.maxHp : 100;
   const nameLen = enemy.name?.length ?? 0;
   let nameFontSize = 'var(--fs-sm)';
   let nameTextStyle = {};
@@ -91,11 +94,14 @@ export default function EnemyPanel({ enemy, isTargeted, onClick, showScan = fals
         </div>
       </div>
 
-      {showExactHp && (
-        <div className="enemy-hp-bar">
-          <HPBar current={enemy.hp} max={enemy.maxHp} showValues />
-        </div>
-      )}
+      <div className="enemy-hp-bar">
+        <HPBar
+          current={hpBarCurrent}
+          max={hpBarMax}
+          showValues={showExactHp}
+          ariaLabel={showExactHp ? 'Enemy HP' : 'Enemy remaining HP'}
+        />
+      </div>
 
       {showExactHp && (
         <div className="enemy-scan-info">

@@ -1619,10 +1619,8 @@ public class GameLogicService {
         List<ActiveStatusDTO> statuses = e.getStatuses().stream()
                 .map(s -> new ActiveStatusDTO(s.getType(), s.getDuration()))
                 .collect(Collectors.toList());
-        Integer hpPercent = revealScan
-                ? Math.max(0, Math.min(100,
-                        e.getMaxHp() > 0 ? (int) Math.round((e.getHp() * 100.0) / e.getMaxHp()) : 0))
-                : null;
+        Integer hpPercent = Math.max(0, Math.min(100,
+                e.getMaxHp() > 0 ? (int) Math.round((e.getHp() * 100.0) / e.getMaxHp()) : 0));
         List<String> immunities = revealScan
                 ? (e.getElementalImmunity() != null ? List.copyOf(e.getElementalImmunity()) : List.of())
                 : null;

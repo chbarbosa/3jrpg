@@ -1132,10 +1132,9 @@ h1, h2, h3 {
 .turn-order-bar {
   display: flex;
   gap: var(--sp-sm);
-  overflow-x: auto;
+  overflow: hidden;
   padding: var(--sp-xs) var(--sp-md);
   align-items: flex-end;
-  scrollbar-width: thin;
 }
 
 .turn-order-item {
@@ -1190,6 +1189,7 @@ h1, h2, h3 {
   flex-direction: column;
   gap: var(--sp-sm);
   height: 100%;
+  min-height: 0;
   position: relative;
 }
 
@@ -1237,10 +1237,13 @@ h1, h2, h3 {
 
 .action-menu-scroll-list {
   flex: 1;
-  overflow: visible;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: var(--sp-xs);
   display: flex;
   flex-direction: column;
   gap: var(--sp-xs);
+  scrollbar-width: thin;
 }
 
 .action-menu-empty {
