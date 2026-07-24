@@ -234,6 +234,7 @@ public class BattleService {
         state.setPrepPhase(false);
         state.setHeroPrepTaken(new HashMap<>());
         state.setPendingLoot(null);
+        state.setPendingLootItems(new ArrayList<>());
 
         saveState(run, state);
         runRepository.save(run);
@@ -300,8 +301,10 @@ public class BattleService {
         }
 
         int cap = GameData.monsterCap(state.getFightNumber());
-        LootItemDTO loot = lootService.generateLootDrop(cap);
+        List<LootItemDTO> lootItems = generateLootDropsForTeam(state, cap);
+        LootItemDTO loot = lootItems.isEmpty() ? null : lootItems.get(0);
         state.setPendingLoot(loot);
+        state.setPendingLootItems(lootItems);
         state.setPrepPhase(true);
 
         Map<String, Boolean> prepMap = new HashMap<>();
@@ -315,7 +318,7 @@ public class BattleService {
                 "regenDetails", regenDetails));
 
         List<HeroStateDTO> autoRevivedDTOs = gameLogicService.toHeroDTOs(autoRevived);
-        return new PrepResultResponse(gameLogicService.toHeroDTOs(state.getHeroes()), regenLog, loot, autoRevivedDTOs);
+        return new PrepResultResponse(gameLogicService.toHeroDTOs(state.getHeroes()), regenLog, loot, lootItems, autoRevivedDTOs);
     }
 
     public List<HeroStateDTO> assignLoot(UUID playerUuid, LootAssignRequest req) {
@@ -326,12 +329,13 @@ public class BattleService {
         if (!state.isPrepPhase()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not in prep phase");
         }
-        if (state.getPendingLoot() == null) {
+        List<LootItemDTO> pendingLootItems = pendingLootItems(state);
+        if (pendingLootItems.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No pending loot to assign");
         }
 
         HeroState hero = gameLogicService.findHero(state, req.recipientHeroId());
-        LootItemDTO loot = state.getPendingLoot();
+        LootItemDTO loot = selectPendingLoot(pendingLootItems, req.itemUuid());
 
         if ("CONSUMABLE".equals(loot.itemType())) {
             String itemId = gameDataService.allItemIds().stream()
@@ -344,7 +348,9 @@ public class BattleService {
         } else {
             gameLogicService.addLootToInventory(hero, loot);
         }
-        state.setPendingLoot(null);
+        pendingLootItems.remove(loot);
+        state.setPendingLootItems(pendingLootItems);
+        state.setPendingLoot(pendingLootItems.isEmpty() ? null : pendingLootItems.get(0));
         saveState(run, state);
         runRepository.save(run);
         runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.LOOT_ASSIGNED, buildMap(
@@ -354,6 +360,40 @@ public class BattleService {
                 "modifiers", loot.modifiers() != null ? loot.modifiers() : List.of()));
 
         return gameLogicService.toHeroDTOs(state.getHeroes());
+    }
+
+    private List<LootItemDTO> generateLootDropsForTeam(BattleState state, int cap) {
+        int dropCount = hasThiefHero(state) ? 2 : 1;
+        List<LootItemDTO> drops = new ArrayList<>();
+        for (int i = 0; i < dropCount; i++) {
+            drops.add(lootService.generateLootDrop(cap));
+        }
+        return drops;
+    }
+
+    private boolean hasThiefHero(BattleState state) {
+        return state.getHeroes().stream()
+                .anyMatch(hero -> "thief".equalsIgnoreCase(hero.getClassId()));
+    }
+
+    private List<LootItemDTO> pendingLootItems(BattleState state) {
+        if (state.getPendingLootItems() != null && !state.getPendingLootItems().isEmpty()) {
+            return new ArrayList<>(state.getPendingLootItems());
+        }
+        if (state.getPendingLoot() != null) {
+            return new ArrayList<>(List.of(state.getPendingLoot()));
+        }
+        return new ArrayList<>();
+    }
+
+    private LootItemDTO selectPendingLoot(List<LootItemDTO> pendingLootItems, String itemUuid) {
+        if (itemUuid == null || itemUuid.isBlank()) {
+            return pendingLootItems.get(0);
+        }
+        return pendingLootItems.stream()
+                .filter(loot -> itemUuid.equals(loot.itemUuid()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pending loot not found"));
     }
 
     public List<HeroStateDTO> processPrepAction(UUID playerUuid, PrepActionRequest req) {

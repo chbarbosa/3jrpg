@@ -200,6 +200,8 @@ public class GameLogicService {
     public List<String> buildTurnOrder(BattleState state) {
         final List<String> prev = state.getTurnOrder() != null
                 ? List.copyOf(state.getTurnOrder()) : List.of();
+        Map<String, HeroState> heroesById = state.getHeroes().stream()
+                .collect(Collectors.toMap(HeroState::getId, h -> h));
 
         List<Map.Entry<String, Integer>> normalActors = new ArrayList<>();
         List<String> brokenActors = new ArrayList<>();
@@ -215,6 +217,10 @@ public class GameLogicService {
         }
 
         normalActors.sort((a, b) -> {
+            boolean aThief = isThiefHero(a.getKey(), heroesById);
+            boolean bThief = isThiefHero(b.getKey(), heroesById);
+            if (aThief && !bThief) return -1;
+            if (!aThief && bThief) return 1;
             int spdDiff = b.getValue() - a.getValue();
             if (spdDiff != 0) return spdDiff;
             boolean aHero = a.getKey().startsWith("hero_");
@@ -231,6 +237,11 @@ public class GameLogicService {
         List<String> result = normalActors.stream().map(Map.Entry::getKey).collect(Collectors.toList());
         result.addAll(brokenActors);
         return result;
+    }
+
+    private boolean isThiefHero(String actorId, Map<String, HeroState> heroesById) {
+        HeroState hero = heroesById.get(actorId);
+        return hero != null && "thief".equalsIgnoreCase(hero.getClassId());
     }
 
     public String findActiveActorId(BattleState state) {

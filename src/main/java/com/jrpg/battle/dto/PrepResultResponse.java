@@ -6,5 +6,6 @@ public record PrepResultResponse(
         List<HeroStateDTO> heroes,
         List<String> regenLog,
         LootItemDTO lootItem,
+        List<LootItemDTO> lootItems,
         List<HeroStateDTO> autoRevivedHeroes
 ) {}

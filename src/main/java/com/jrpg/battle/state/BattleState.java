@@ -27,4 +27,5 @@ public class BattleState {
     private boolean prepPhase;
     private Map<String, Boolean> heroPrepTaken = new HashMap<>();  // heroId → used prep action
     private LootItemDTO pendingLoot;
+    private List<LootItemDTO> pendingLootItems = new ArrayList<>();
 }

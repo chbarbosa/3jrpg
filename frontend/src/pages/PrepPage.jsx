@@ -26,12 +26,13 @@ export default function PrepPage() {
 
   const [heroes, setHeroes] = useState(prepResult?.heroes ?? []);
   const [heroActions, setHeroActions] = useState(() => initHeroActions(prepResult?.heroes ?? []));
-  const [lootAssigned, setLootAssigned] = useState(false);
-  const [lootRecipientHeroId, setLootRecipientHeroId] = useState(null);
+  const [assignedLoot, setAssignedLoot] = useState({});
   const [modal, setModal] = useState(MODAL_CLOSED);
   const [loadingReady, setLoadingReady] = useState(false);
 
-  const lootItem = prepResult?.lootItem ?? null;
+  const lootItems = prepResult?.lootItems?.length
+    ? prepResult.lootItems
+    : (prepResult?.lootItem ? [prepResult.lootItem] : []);
 
   // Guard: redirect if all heroes are KO'd
   useEffect(() => {
@@ -79,11 +80,10 @@ export default function PrepPage() {
     };
   }
 
-  async function handleAssignLoot(heroId) {
-    const updatedHeroes = await wrapApiCall(assignLoot)(runUuid, heroId);
+  async function handleAssignLoot(heroId, itemUuid) {
+    const updatedHeroes = await wrapApiCall(assignLoot)(runUuid, heroId, itemUuid);
     setHeroes(updatedHeroes);
-    setLootAssigned(true);
-    setLootRecipientHeroId(heroId);
+    setAssignedLoot((prev) => ({ ...prev, [itemUuid]: heroId }));
   }
 
   async function handlePrepAction(heroId, actionType, itemId, targetHeroId, equipSlot = null, itemUuid = null, spellId = null) {
@@ -112,7 +112,7 @@ export default function PrepPage() {
     }
   }
 
-  const lootReady = lootAssigned || !lootItem;
+  const lootReady = lootItems.every((item) => assignedLoot[item.itemUuid]);
   const allActionsDone = Object.values(heroActions).every((v) => v);
   const readyToStart = lootReady && allActionsDone;
 
@@ -131,15 +131,18 @@ export default function PrepPage() {
         <RegenDisplay regenLog={prepResult.regenLog ?? []} heroes={heroes} autoRevivedHeroes={prepResult.autoRevivedHeroes ?? []} />
 
         {/* Loot */}
-        {lootItem && (
+        {lootItems.map((lootItem, index) => (
           <LootDropPanel
+            key={lootItem.itemUuid ?? index}
             lootItem={lootItem}
+            lootIndex={index}
+            lootCount={lootItems.length}
             heroes={heroes}
             onAssignLoot={handleAssignLoot}
-            lootAssigned={lootAssigned}
-            lootRecipientHeroId={lootRecipientHeroId}
+            lootAssigned={!!assignedLoot[lootItem.itemUuid]}
+            lootRecipientHeroId={assignedLoot[lootItem.itemUuid]}
           />
-        )}
+        ))}
 
         {/* Prep actions */}
         <PrepActionPanel
@@ -155,7 +158,7 @@ export default function PrepPage() {
               {!lootReady && !allActionsDone
                 ? 'Assign loot and complete all hero actions'
                 : !lootReady
-                  ? 'Assign the loot drop to continue'
+                  ? `Assign the loot drop${lootItems.length !== 1 ? 's' : ''} to continue`
                   : 'All heroes must take a prep action'}
             </div>
           )}

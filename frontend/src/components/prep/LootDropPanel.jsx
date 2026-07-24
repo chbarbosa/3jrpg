@@ -70,7 +70,7 @@ function ItemCategoryDetail({ lootItem }) {
   return null;
 }
 
-export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssigned, lootRecipientHeroId }) {
+export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, heroes, onAssignLoot, lootAssigned, lootRecipientHeroId }) {
   const [glowing, setGlowing] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState(null);
@@ -85,7 +85,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
     setAssigning(true);
     setError(null);
     try {
-      await onAssignLoot(heroId);
+      await onAssignLoot(heroId, lootItem.itemUuid);
       playSound('lootDrop');
     } catch (err) {
       setError(err.message ?? 'Failed to assign loot.');
@@ -104,7 +104,7 @@ export default function LootDropPanel({ lootItem, heroes, onAssignLoot, lootAssi
       style={{ boxShadow: glowing ? theme.shadows.highlight : theme.shadows.panel, transition: `box-shadow var(--t-slow)` }}
     >
       <div className="panel-title">
-        Loot Drop
+        {lootCount > 1 ? `Loot Drop ${lootIndex + 1}` : 'Loot Drop'}
       </div>
 
       {/* Item details */}

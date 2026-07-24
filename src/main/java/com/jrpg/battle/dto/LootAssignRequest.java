@@ -6,5 +6,6 @@ import java.util.UUID;
 
 public record LootAssignRequest(
         @NotNull UUID runUuid,
-        @NotBlank String recipientHeroId
+        @NotBlank String recipientHeroId,
+        String itemUuid
 ) {}
