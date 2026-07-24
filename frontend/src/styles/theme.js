@@ -20,6 +20,6 @@ export const theme = {
   radius: { sm: '4px', md: '8px', lg: '12px', pill: '999px' },
   shadows: { panel: '2px 2px 6px rgba(44,26,14,0.25)', highlight: '0 0 10px rgba(255,224,102,0.7)' },
   transitions: { fast: '100ms ease', normal: '200ms ease', slow: '350ms ease' },
-  classColors: { warrior: '#C0392B', ranger: '#27AE60', mage: '#2980B9', cleric: '#F39C12' },
+  classColors: { warrior: '#C0392B', ranger: '#27AE60', mage: '#2980B9', cleric: '#F39C12', thief: '#7F8C8D' },
   enemyColors: { humanoid: '#8E44AD', beast: '#E67E22', mechanical: '#7F8C8D', undead: '#2C3E50', elemental: '#1ABC9C' },
 }

@@ -28,4 +28,11 @@ export const CLASS_LIST = [
     colorKey: 'cleric',
     equippableWeapons: ['mace', 'hammer', 'scythe'],
   },
+  {
+    id: 'thief',
+    label: 'Thief',
+    type: 'physical',
+    description: 'Fast opportunist. Bonus damage vs humanoids.',
+    colorKey: 'thief',
+  },
 ];

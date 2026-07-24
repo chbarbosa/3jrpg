@@ -37,7 +37,7 @@
   },
   {
     "id": "cyber", "name": "Cyber",
-    "availableTo": ["warrior", "ranger"],
+    "availableTo": ["warrior", "ranger", "thief"],
     "advantages": [
       {"id": "precision",     "name": "Precision",      "description": "Adds extra physical damage per hit"},
       {"id": "reflexBooster", "name": "Reflex Booster", "description": "Increases DEX and SPD"},

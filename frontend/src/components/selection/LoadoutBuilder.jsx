@@ -3,7 +3,7 @@ import { WEAPON_LIST, SKILL_LABELS } from '../../data/weapons';
 import { ARMOR_TIER_LABELS } from '../../data/gameConstants';
 import { COMMON_ACCESSORIES } from '../../data/accessories';
 
-const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', cleric: 'medium', mage: 'light' };
+const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', cleric: 'medium', mage: 'light', thief: 'light' };
 
 function SectionLabel({ children }) {
   return (

@@ -7,7 +7,7 @@ import AugmentationPicker from './AugmentationPicker';
 import LoadoutBuilder from './LoadoutBuilder';
 import ItemStarter from './ItemStarter';
 
-const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', cleric: 'medium', mage: 'light' };
+const CLASS_ARMOR = { warrior: 'heavy', ranger: 'medium', cleric: 'medium', mage: 'light', thief: 'light' };
 
 function augDone(hero) {
   return !!hero.augmentationType && (hero.augmentationType === 'natural' || !!hero.augmentationAdvantageId);

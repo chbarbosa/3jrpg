@@ -2,7 +2,7 @@ export const WEAPON_LIST = [
   {
     id: 'sword',
     label: 'Sword',
-    equippableBy: ['warrior', 'ranger'],
+    equippableBy: ['warrior', 'ranger', 'thief'],
     skills: ['stab', 'cut', 'doubleHit', 'perfectDoubleCut'],
     passiveEffect: null,
   },
@@ -16,14 +16,14 @@ export const WEAPON_LIST = [
   {
     id: 'mace',
     label: 'Mace',
-    equippableBy: ['warrior', 'cleric'],
+    equippableBy: ['warrior', 'cleric', 'thief'],
     skills: ['headBash', 'limbStrike', 'doubleHit', 'smash'],
     passiveEffect: null,
   },
   {
     id: 'bow',
     label: 'Bow',
-    equippableBy: ['ranger'],
+    equippableBy: ['ranger', 'thief'],
     skills: ['normalAttack', 'doubleShot', 'fatalShot', 'piercingShot', 'poisonShot', 'fireShot'],
     passiveEffect: 'Each shot reduces your SPD by 1 this battle.',
   },
@@ -58,7 +58,7 @@ export const WEAPON_LIST = [
   {
     id: 'scythe',
     label: 'Scythe',
-    equippableBy: ['cleric'],
+    equippableBy: ['cleric', 'thief'],
     skills: ['cut', 'dismember', 'deathDance'],
     passiveEffect: null,
   },

@@ -5,6 +5,7 @@ const CLASS_COLOR = {
   ranger: theme.classColors.ranger,
   mage: theme.classColors.mage,
   cleric: theme.classColors.cleric,
+  thief: theme.classColors.thief,
 };
 
 function classColor(name) {

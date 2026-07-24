@@ -1,7 +1,7 @@
 [
   {
     "id": "sword", "name": "Sword",
-    "equippableBy": ["warrior", "ranger"],
+    "equippableBy": ["warrior", "ranger", "thief"],
     "skills": [
       {"id": "stab",            "name": "Stab",             "effect": "Thrusting attack; always applies Bleeding.",                     "enCost": 2,  "statusEffect": "bleed",   "statusChance": 1.0},
       {"id": "cut",             "name": "Cut",              "effect": "Slashing attack; 30% Trauma chance.",                            "enCost": 2,  "statusEffect": "trauma",  "statusChance": 0.3},
@@ -22,7 +22,7 @@
   },
   {
     "id": "mace", "name": "Mace",
-    "equippableBy": ["warrior", "cleric"],
+    "equippableBy": ["warrior", "cleric", "thief"],
     "skills": [
       {"id": "headBash",    "name": "Head Bash",     "effect": "Crushing blow that may stun the target",               "enCost": 2, "statusEffect": "stun",  "statusChance": 0.6},
       {"id": "limbStrike",  "name": "Limb Strike",   "effect": "Targets limbs, applying pain (slow)",                  "enCost": 2, "statusEffect": "slow",  "statusChance": 0.7},
@@ -33,7 +33,7 @@
   },
   {
     "id": "bow", "name": "Bow",
-    "equippableBy": ["ranger"],
+    "equippableBy": ["ranger", "thief"],
     "skills": [
       {"id": "normalAttack","name": "Normal Attack", "effect": "Ranged strike dealing STR−DEF damage; 20% slow, 10% pain chance.", "enCost": 0, "statusEffect": null,     "statusChance": 0.0},
       {"id": "doubleShot",  "name": "Double Shot",   "effect": "Two ranged strikes at half damage each, no status.",              "enCost": 2, "statusEffect": null,     "statusChance": 0.0},
@@ -84,7 +84,7 @@
   },
   {
     "id": "scythe", "name": "Scythe",
-    "equippableBy": ["cleric"],
+    "equippableBy": ["cleric", "thief"],
     "skills": [
       {"id": "cut",         "name": "Cut",           "effect": "Slashing attack; 30% Trauma chance (reduces STR or DEX).", "enCost": 2,  "statusEffect": "trauma", "statusChance": 0.3},
       {"id": "dismember",   "name": "Dismember",     "effect": "Cleaving attack; 20% instant kill vs humanoids.",          "enCost": 2,  "statusEffect": "bleed",  "statusChance": 0.9},
