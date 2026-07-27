@@ -168,13 +168,13 @@ public class GameLogicService {
 
     private void applyStartingAccessoryBonus(HeroState hero, String accessoryId) {
         switch (accessoryId) {
-            case "commonStr"   -> hero.setStr(hero.getStr() + 1);
-            case "commonDex"   -> hero.setDex(hero.getDex() + 1);
-            case "commonInt"   -> hero.setIntel(hero.getIntel() + 1);
-            case "commonHp"    -> { hero.setMaxHp(hero.getMaxHp() + 2); hero.setHp(hero.getMaxHp()); }
-            case "commonEn"    -> { hero.setMaxEn(hero.getMaxEn() + 2); hero.setEn(hero.getMaxEn()); }
-            case "commonHpEn"  -> { hero.setMaxHp(hero.getMaxHp() + 1); hero.setHp(hero.getMaxHp());
-                                    hero.setMaxEn(hero.getMaxEn() + 1); hero.setEn(hero.getMaxEn()); }
+            case "commonStr"   -> hero.setStr(hero.getStr() + 2);
+            case "commonDex"   -> hero.setDex(hero.getDex() + 2);
+            case "commonInt"   -> hero.setIntel(hero.getIntel() + 2);
+            case "commonHp"    -> { hero.setMaxHp(hero.getMaxHp() + 5); hero.setHp(hero.getMaxHp()); }
+            case "commonEn"    -> { hero.setMaxEn(hero.getMaxEn() + 5); hero.setEn(hero.getMaxEn()); }
+            case "commonHpEn"  -> { hero.setMaxHp(hero.getMaxHp() + 2); hero.setHp(hero.getMaxHp());
+                                    hero.setMaxEn(hero.getMaxEn() + 2); hero.setEn(hero.getMaxEn()); }
             case "barrierRing" -> {} // effect handled in applyDmgToHero
         }
     }
@@ -1084,13 +1084,15 @@ public class GameLogicService {
         for (HeroState h : state.getHeroes()) {
             if (h.isKnockedOut()) continue;
 
-            // Per-battle regen from potions (no duration limit)
-            if (h.getRegenHpPerTurn() > 0) {
-                h.setHp(Math.min(h.getHp() + h.getRegenHpPerTurn(), h.getMaxHp()));
-                addLog(state, heroLabel(h) + " regenerates " + h.getRegenHpPerTurn() + " HP.");
+            int hpRegen = 1 + h.getRegenHpPerTurn();
+            int enRegen = 1 + h.getRegenEnPerTurn();
+            int hpRecovered = recoverHp(h, hpRegen);
+            int enRecovered = recoverEn(h, enRegen);
+            if (hpRecovered > 0) {
+                addLog(state, heroLabel(h) + " regenerates " + hpRecovered + " HP.");
             }
-            if (h.getRegenEnPerTurn() > 0) {
-                h.setEn(Math.min(h.getEn() + h.getRegenEnPerTurn(), h.getMaxEn()));
+            if (enRecovered > 0) {
+                addLog(state, heroLabel(h) + " regenerates " + enRecovered + " EN.");
             }
 
             // Enhanced "recover" advantage: +1 HP or EN per turn
@@ -1116,6 +1118,18 @@ public class GameLogicService {
                 if (s.getDuration() <= 0) it.remove();
             }
         }
+    }
+
+    private int recoverHp(HeroState hero, int amount) {
+        int before = hero.getHp();
+        hero.setHp(Math.min(hero.getHp() + amount, hero.getMaxHp()));
+        return hero.getHp() - before;
+    }
+
+    private int recoverEn(HeroState hero, int amount) {
+        int before = hero.getEn();
+        hero.setEn(Math.min(hero.getEn() + amount, hero.getMaxEn()));
+        return hero.getEn() - before;
     }
 
     private void applyHeroStatusTick(HeroState hero, ActiveStatus s, BattleState state) {
