@@ -490,7 +490,9 @@ public class BattleService {
         }
         if (itemUuid.equals(from.getEquippedLootWeaponUuid())
                 || itemUuid.equals(from.getEquippedLootArmorUuid())
-                || itemUuid.equals(from.getEquippedLootAccessoryUuid())) {
+                || itemUuid.equals(from.getEquippedLootAccessoryUuid())
+                || itemUuid.equals(from.getEquippedLootRing1Uuid())
+                || itemUuid.equals(from.getEquippedLootRing2Uuid())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer equipped gear");
         }
 

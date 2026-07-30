@@ -12,6 +12,14 @@ export default function HeroPanel({ hero, isActive }) {
     ? AUGMENTATION_LIST.find((a) => a.id === hero.augmentationId) ?? null
     : null;
   const advLabel = augData?.advantages?.find((a) => a.id === hero.advantageId)?.label ?? null;
+  const equippedAccessoryUuids = [
+    hero.equippedLootAccessoryUuid,
+    hero.equippedLootRing1Uuid,
+    hero.equippedLootRing2Uuid,
+  ].filter(Boolean);
+  const hasRebirthRing = equippedAccessoryUuids.length > 0 && (hero.inventory ?? []).some(
+    (i) => equippedAccessoryUuids.includes(i.uuid) && i.name?.includes('Rebirth')
+  );
 
   return (
     <div
@@ -84,9 +92,7 @@ export default function HeroPanel({ hero, isActive }) {
         </div>
       )}
 
-      {hero.equippedLootAccessoryUuid && (hero.inventory ?? []).some(
-        (i) => i.uuid === hero.equippedLootAccessoryUuid && i.name?.includes('Rebirth')
-      ) && (
+      {hasRebirthRing && (
         <div className="accessory-badge accessory-badge--rebirth">
           ✨ Rebirth
         </div>

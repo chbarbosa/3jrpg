@@ -68,4 +68,6 @@ public class HeroState {
     private String equippedLootWeaponUuid;
     private String equippedLootArmorUuid;
     private String equippedLootAccessoryUuid;
+    private String equippedLootRing1Uuid;
+    private String equippedLootRing2Uuid;
 }

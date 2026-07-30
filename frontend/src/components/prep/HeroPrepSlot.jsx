@@ -97,12 +97,20 @@ const SLOT_LABEL = {
   WEAPON_PRIMARY:   'Primary Weapon',
   ARMOR:            'Armor',
   ACCESSORY:        'Accessory',
+  RING_1:           'Ring 1',
+  RING_2:           'Ring 2',
 };
 
-function getItemSlotType(itemType) {
+function isRingAccessory(item) {
+  return item?.itemType?.toLowerCase() === 'accessory'
+    && (item.accessoryType?.toLowerCase() === 'ring' || item.name?.toLowerCase().includes('ring'));
+}
+
+function getItemSlotType(item) {
+  const itemType = item.itemType?.toLowerCase();
   if (itemType === 'weapon') return ['WEAPON_PRIMARY'];
   if (itemType === 'armor')  return ['ARMOR'];
-  if (itemType === 'accessory') return ['ACCESSORY'];
+  if (itemType === 'accessory') return isRingAccessory(item) ? ['RING_1', 'RING_2'] : ['ACCESSORY'];
   return [];
 }
 
@@ -116,6 +124,8 @@ function CurrentLoadout({ hero }) {
   const equippedWeaponLoot    = hero.equippedLootWeaponUuid    ? lootByUuid[hero.equippedLootWeaponUuid]    : null;
   const equippedArmorLoot     = hero.equippedLootArmorUuid     ? lootByUuid[hero.equippedLootArmorUuid]     : null;
   const equippedAccessoryLoot = hero.equippedLootAccessoryUuid ? lootByUuid[hero.equippedLootAccessoryUuid] : null;
+  const equippedRing1Loot     = hero.equippedLootRing1Uuid     ? lootByUuid[hero.equippedLootRing1Uuid]     : null;
+  const equippedRing2Loot     = hero.equippedLootRing2Uuid     ? lootByUuid[hero.equippedLootRing2Uuid]     : null;
 
   const row = (label, value, lootItem) => (
     <div className="prep-loadout-row" key={label}>
@@ -137,6 +147,8 @@ function CurrentLoadout({ hero }) {
       <div className="prep-slot-sub-title">Current Loadout</div>
       {row('Primary', primaryWeapon?.label ?? hero.equippedWeaponId ?? '—', equippedWeaponLoot)}
       {row('Armor', armorLabel, equippedArmorLoot)}
+      {row('Ring 1', equippedRing1Loot ? null : '-', equippedRing1Loot)}
+      {row('Ring 2', equippedRing2Loot ? null : '-', equippedRing2Loot)}
       {row('Accessory', equippedAccessoryLoot ? null : '—', equippedAccessoryLoot)}
     </div>
   );
@@ -448,6 +460,8 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
       hero.equippedLootWeaponUuid,
       hero.equippedLootArmorUuid,
       hero.equippedLootAccessoryUuid,
+      hero.equippedLootRing1Uuid,
+      hero.equippedLootRing2Uuid,
     ].filter(Boolean));
     const transferItem = lootItems.find((item) => item.uuid === transferItemUuid);
     const transferTargets = allHeroes.filter((h) => h.id !== hero.id);
@@ -487,12 +501,14 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
               <div className="prep-slot-swap-desc">No equipment items in inventory.</div>
             ) : (
               lootItems.map((item) => {
-                const slots = getItemSlotType(item.itemType);
+                const slots = getItemSlotType(item);
                 const isEquipped = equippedUuids.has(item.uuid);
                 const equippedSlot = isEquipped
                   ? (item.uuid === hero.equippedLootWeaponUuid ? 'WEAPON_PRIMARY'
                     : item.uuid === hero.equippedLootArmorUuid ? 'ARMOR'
-                    : 'ACCESSORY')
+                    : item.uuid === hero.equippedLootAccessoryUuid ? 'ACCESSORY'
+                    : item.uuid === hero.equippedLootRing1Uuid ? 'RING_1'
+                    : 'RING_2')
                   : null;
 
                 if (isEquipped) {
@@ -509,17 +525,17 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                   );
                 }
 
-                return slots.map((slot) => (
+                return (
                   <LootItemRow
-                    key={`${item.uuid}-${slot}`}
+                    key={item.uuid}
                     item={item}
-                    slotLabel={SLOT_LABEL[slot]}
+                    slotLabel={slots.length > 1 ? slots.map((slot) => SLOT_LABEL[slot]).join(' / ') : SLOT_LABEL[slots[0]]}
                     isEquipped={false}
                     onEquip={handleEquip}
                     onTransfer={setTransferItemUuid}
-                    equipSlot={slot}
+                    equipOptions={slots.map((slot) => ({ slot, label: slots.length > 1 ? SLOT_LABEL[slot] : 'Equip' }))}
                   />
-                ));
+                );
               })
             )}
           </div>

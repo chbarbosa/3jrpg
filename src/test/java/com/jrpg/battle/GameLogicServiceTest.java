@@ -3,6 +3,7 @@ package com.jrpg.battle;
 import com.jrpg.battle.state.BattleState;
 import com.jrpg.battle.state.EnemyState;
 import com.jrpg.battle.state.HeroState;
+import com.jrpg.battle.state.InventoryItem;
 import com.jrpg.battle.dto.HeroConfigDTO;
 import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.ClassData;
@@ -83,6 +84,38 @@ class GameLogicServiceTest {
         assertEquals(32, hero.getHp());
         assertEquals(16, hero.getMaxEn());
         assertEquals(16, hero.getEn());
+    }
+
+    @Test
+    void equipLootItemFromInventory_allowsTwoRingSlotsToStackBonuses() {
+        HeroState hero = hero("hero_0", "warrior", 14);
+        hero.setStr(10);
+        hero.getInventory().add(InventoryItem.accessoryLoot(
+                "ring-1", "ring", "Strong Ring", "MAGIC", List.of("Strong"), "test"));
+        hero.getInventory().add(InventoryItem.accessoryLoot(
+                "ring-2", "ring", "Sharp Ring", "MAGIC", List.of("Sharp"), "test"));
+
+        gameLogicService.equipLootItemFromInventory(hero, "ring-1", "RING_1");
+        gameLogicService.equipLootItemFromInventory(hero, "ring-2", "RING_2");
+
+        assertEquals("ring-1", hero.getEquippedLootRing1Uuid());
+        assertEquals("ring-2", hero.getEquippedLootRing2Uuid());
+        assertEquals(12, hero.getStr());
+    }
+
+    @Test
+    void equipLootItemFromInventory_movesRingBetweenSlotsWithoutDuplicatingBonus() {
+        HeroState hero = hero("hero_0", "warrior", 14);
+        hero.setStr(10);
+        hero.getInventory().add(InventoryItem.accessoryLoot(
+                "ring-1", "ring", "Strong Ring", "MAGIC", List.of("Strong"), "test"));
+
+        gameLogicService.equipLootItemFromInventory(hero, "ring-1", "RING_1");
+        gameLogicService.equipLootItemFromInventory(hero, "ring-1", "RING_2");
+
+        assertEquals(null, hero.getEquippedLootRing1Uuid());
+        assertEquals("ring-1", hero.getEquippedLootRing2Uuid());
+        assertEquals(11, hero.getStr());
     }
 
     private HeroState hero(String id, String classId, int spd) {

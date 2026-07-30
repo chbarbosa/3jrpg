@@ -1300,7 +1300,7 @@ public class GameLogicService {
                 hero.setHp(hero.getMaxHp());
                 hero.setEn(hero.getMaxEn());
                 hero.getInventory().remove(rebirthRing);
-                hero.setEquippedLootAccessoryUuid(null);
+                clearEquippedLootUuid(hero, rebirthRing.getItemUuid());
                 addLog(state, heroLabel(hero) + "'s Magic Rebirth Ring shatters! "
                         + heroLabel(hero) + " is fully restored!");
                 return; // no knockout
@@ -1312,11 +1312,21 @@ public class GameLogicService {
     }
 
     private InventoryItem findEquippedEffectAccessory(HeroState hero, String effectId) {
-        String uuid = hero.getEquippedLootAccessoryUuid();
-        if (uuid == null) return null;
+        Set<String> equippedUuids = new HashSet<>();
+        if (hero.getEquippedLootAccessoryUuid() != null) equippedUuids.add(hero.getEquippedLootAccessoryUuid());
+        if (hero.getEquippedLootRing1Uuid() != null) equippedUuids.add(hero.getEquippedLootRing1Uuid());
+        if (hero.getEquippedLootRing2Uuid() != null) equippedUuids.add(hero.getEquippedLootRing2Uuid());
+        if (equippedUuids.isEmpty()) return null;
         return hero.getInventory().stream()
-                .filter(i -> uuid.equals(i.getItemUuid()) && effectId.equals(i.getEffectId()))
+                .filter(i -> equippedUuids.contains(i.getItemUuid()) && effectId.equals(i.getEffectId()))
                 .findFirst().orElse(null);
+    }
+
+    private void clearEquippedLootUuid(HeroState hero, String itemUuid) {
+        String slot = findEquippedLootSlot(hero, itemUuid);
+        if (slot != null) {
+            setEquippedLootUuid(hero, slot, null);
+        }
     }
 
     private void applyDmgToEnemy(EnemyState enemy, int dmg, BattleState state) {
@@ -1393,8 +1403,14 @@ public class GameLogicService {
         if ("ACCESSORY".equals(loot.itemType()) && loot.name() != null
                 && loot.name().contains("Rebirth Ring")) {
             hero.getInventory().add(InventoryItem.specialAccessoryLoot(
-                    loot.itemUuid(), "rebirth", loot.name(), loot.quality(),
+                    loot.itemUuid(), "rebirth", loot.accessoryType(), loot.name(), loot.quality(),
                     loot.description() != null ? loot.description() : "Restores full HP and EN once on defeat."));
+            return;
+        }
+        if ("ACCESSORY".equals(loot.itemType())) {
+            hero.getInventory().add(InventoryItem.accessoryLoot(
+                    loot.itemUuid(), loot.accessoryType(), loot.name(),
+                    loot.quality(), loot.modifiers(), loot.description()));
             return;
         }
         hero.getInventory().add(InventoryItem.loot(
@@ -1413,11 +1429,14 @@ public class GameLogicService {
             case "WEAPON_PRIMARY" -> "WEAPON".equals(lootItem.getItemType());
             case "ARMOR"     -> "ARMOR".equals(lootItem.getItemType());
             case "ACCESSORY" -> "ACCESSORY".equals(lootItem.getItemType());
+            case "RING_1", "RING_2" -> "ACCESSORY".equals(lootItem.getItemType())
+                    && "ring".equalsIgnoreCase(lootItem.getAccessoryType());
             default -> false;
         };
         if (!valid) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "Item type " + lootItem.getItemType() + " does not match slot " + equipSlot);
 
+        String currentSlot = findEquippedLootSlot(hero, itemUuid);
         // Revert bonuses from the previously equipped loot in this slot
         String prevUuid = getEquippedLootUuid(hero, equipSlot);
         if (prevUuid != null && !prevUuid.equals(itemUuid)) {
@@ -1427,10 +1446,13 @@ public class GameLogicService {
                     .ifPresent(prev -> revertModifierBonuses(hero, prev.getModifiers()));
         }
 
-        if (!itemUuid.equals(prevUuid)) {
-            applyModifierBonuses(hero, lootItem.getModifiers());
-            setEquippedLootUuid(hero, equipSlot, itemUuid);
+        if (currentSlot != null && !currentSlot.equals(equipSlot)) {
+            setEquippedLootUuid(hero, currentSlot, null);
         }
+        if (currentSlot == null && !itemUuid.equals(prevUuid)) {
+            applyModifierBonuses(hero, lootItem.getModifiers());
+        }
+        setEquippedLootUuid(hero, equipSlot, itemUuid);
         int logDef  = physArmorReductionBase(hero.getEquippedArmorId()) + hero.getArmorDefBonus();
         int logMdef = magicArmorReduction(hero.getEquippedArmorId());
         log.info("Hero {} equipped {}. New stats: STR={} DEX={} INT={} DEF={} MDEF={} HP={} EN={}",
@@ -1444,8 +1466,17 @@ public class GameLogicService {
             case "WEAPON_PRIMARY"   -> hero.getEquippedLootWeaponUuid();
             case "ARMOR"            -> hero.getEquippedLootArmorUuid();
             case "ACCESSORY"        -> hero.getEquippedLootAccessoryUuid();
+            case "RING_1"           -> hero.getEquippedLootRing1Uuid();
+            case "RING_2"           -> hero.getEquippedLootRing2Uuid();
             default -> null;
         };
+    }
+
+    private String findEquippedLootSlot(HeroState hero, String itemUuid) {
+        return List.of("WEAPON_PRIMARY", "ARMOR", "ACCESSORY", "RING_1", "RING_2").stream()
+                .filter(slot -> itemUuid.equals(getEquippedLootUuid(hero, slot)))
+                .findFirst()
+                .orElse(null);
     }
 
     private void setEquippedLootUuid(HeroState hero, String slot, String uuid) {
@@ -1453,6 +1484,8 @@ public class GameLogicService {
             case "WEAPON_PRIMARY"   -> hero.setEquippedLootWeaponUuid(uuid);
             case "ARMOR"            -> hero.setEquippedLootArmorUuid(uuid);
             case "ACCESSORY"        -> hero.setEquippedLootAccessoryUuid(uuid);
+            case "RING_1"           -> hero.setEquippedLootRing1Uuid(uuid);
+            case "RING_2"           -> hero.setEquippedLootRing2Uuid(uuid);
         }
     }
 
@@ -1584,7 +1617,8 @@ public class GameLogicService {
                 // Loot item — include directly
                 inventory.add(new ItemSummaryDTO(
                         null, inv.getName(), inv.getItemType() != null ? inv.getItemType().toLowerCase() : "loot",
-                        inv.getItemUuid(), inv.getQuality(), inv.getModifiers(), inv.getDescription()));
+                        inv.getItemUuid(), inv.getQuality(), inv.getModifiers(), inv.getDescription(),
+                        inv.getAccessoryType()));
             } else if (inv.getItemId() != null) {
                 // Consumable stack — one entry per quantity
                 ItemData item = gameDataService.findItem(inv.getItemId()).orElse(null);
@@ -1592,7 +1626,7 @@ public class GameLogicService {
                     for (int q = 0; q < inv.getQuantity(); q++) {
                         inventory.add(new ItemSummaryDTO(
                                 inv.getItemId(), item.name(), "consumable",
-                                null, null, null, item.effect()));
+                                null, null, null, item.effect(), null));
                     }
                 }
             }
@@ -1607,6 +1641,7 @@ public class GameLogicService {
                 h.getEquippedWeaponId(), h.getEquippedArmorId(),
                 h.getEquippedLootWeaponUuid(),
                 h.getEquippedLootArmorUuid(), h.getEquippedLootAccessoryUuid(),
+                h.getEquippedLootRing1Uuid(), h.getEquippedLootRing2Uuid(),
                 h.getEquippedStartingAccessoryId(),
                 h.getAugmentationId(), h.getAdvantageId());
     }

@@ -26,6 +26,8 @@ public record HeroStateDTO(
         String equippedLootWeaponUuid,
         String equippedLootArmorUuid,
         String equippedLootAccessoryUuid,
+        String equippedLootRing1Uuid,
+        String equippedLootRing2Uuid,
         String equippedStartingAccessoryId,
         String augmentationId,
         String advantageId
