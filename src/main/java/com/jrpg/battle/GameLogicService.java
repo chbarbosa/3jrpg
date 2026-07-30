@@ -584,6 +584,7 @@ public class GameLogicService {
         for (EnemyState e : state.getEnemies()) {
             if (e.getHp() <= 0) continue;
             int dmg = Math.max(1, hero.getStr() - enemyPhysDef(e) + hero.getCyberPrecisionBonus());
+            dmg = dmg / 2;
             if ("elemental".equals(e.getType())) dmg = Math.max(1, dmg / 2);
             applyDmgToEnemy(e, dmg, state);
             sb.append(" ").append(e.getName()).append(" -").append(dmg).append("HP;");
