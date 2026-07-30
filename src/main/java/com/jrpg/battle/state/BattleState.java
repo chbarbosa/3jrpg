@@ -22,6 +22,7 @@ public class BattleState {
     private boolean victory;
     private List<String> combatLog = new ArrayList<>();
     private int enemyGroupSize;
+    private boolean holyAuraAppliedThisRound;
 
     // Prep phase
     private boolean prepPhase;

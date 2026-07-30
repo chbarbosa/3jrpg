@@ -297,6 +297,51 @@ public class GameLogicService {
         return state.getHeroes().stream().allMatch(HeroState::isKnockedOut);
     }
 
+    /** Applies the once-per-round Holy Aura pulse from every conscious Cleric. */
+    public boolean applyPriestHolyAura(BattleState state, String activeActorId) {
+        List<HeroState> priests = state.getHeroes().stream()
+                .filter(h -> !h.isKnockedOut())
+                .filter(h -> "cleric".equalsIgnoreCase(h.getClassId()))
+                .toList();
+        if (priests.isEmpty()) return false;
+
+        for (HeroState priest : priests) {
+            for (EnemyState enemy : state.getEnemies()) {
+                if (enemy.getHp() <= 0 || !"undead".equalsIgnoreCase(enemy.getType())) continue;
+                int damage = ThreadLocalRandom.current().nextInt(1, 4);
+                enemy.setHp(Math.max(0, enemy.getHp() - damage));
+                addLog(state, heroLabel(priest) + "'s Holy Aura deals " + damage
+                        + " damage to " + enemy.getName() + ".");
+            }
+        }
+
+        boolean activeActorDefeated = activeActorId != null
+                && state.getEnemies().stream()
+                .filter(e -> activeActorId.equals(e.getId()))
+                .anyMatch(e -> e.getHp() <= 0);
+        if (activeActorDefeated && !checkAllEnemiesDead(state)) {
+            moveToNextLivingActor(state, activeActorId);
+        }
+        return activeActorDefeated;
+    }
+
+    private void moveToNextLivingActor(BattleState state, String defeatedActorId) {
+        List<String> oldOrder = List.copyOf(state.getTurnOrder());
+        int defeatedIndex = oldOrder.indexOf(defeatedActorId);
+        String nextLivingId = null;
+        for (int offset = 1; offset <= oldOrder.size(); offset++) {
+            String candidate = oldOrder.get((defeatedIndex + offset) % oldOrder.size());
+            if (isAlive(candidate, state)) {
+                nextLivingId = candidate;
+                break;
+            }
+        }
+
+        List<String> newOrder = buildTurnOrder(state);
+        state.setTurnOrder(newOrder);
+        state.setCurrentTurnIndex(nextLivingId == null ? 0 : newOrder.indexOf(nextLivingId));
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // Action resolution
     // ═══════════════════════════════════════════════════════════════════════

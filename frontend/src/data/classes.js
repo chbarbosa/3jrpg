@@ -24,7 +24,7 @@ export const CLASS_LIST = [
     id: 'cleric',
     label: 'Cleric',
     type: 'magic',
-    description: 'Healer and support. Light magic and holy power.',
+    description: 'Healer and support. Holy Aura deals 1–3 damage to every undead enemy at the start of each round.',
     colorKey: 'cleric',
     equippableWeapons: ['mace', 'hammer', 'scythe'],
   },

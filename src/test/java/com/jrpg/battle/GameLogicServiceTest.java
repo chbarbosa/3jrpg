@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -116,6 +118,71 @@ class GameLogicServiceTest {
         assertEquals(null, hero.getEquippedLootRing1Uuid());
         assertEquals("ring-1", hero.getEquippedLootRing2Uuid());
         assertEquals(11, hero.getStr());
+    }
+
+    @Test
+    void applyPriestHolyAura_damagesEveryUndeadByOneToThreeOnly() {
+        BattleState state = new BattleState();
+        HeroState priest = hero("hero_0", "cleric", 14);
+        EnemyState undead = enemy("enemy_0", 10);
+        undead.setName("Skeleton");
+        undead.setType("undead");
+        EnemyState beast = enemy("enemy_1", 9);
+        beast.setName("Wolf");
+        beast.setType("beast");
+        state.setHeroes(List.of(priest));
+        state.setEnemies(List.of(undead, beast));
+        state.setTurnOrder(List.of("hero_0", "enemy_0", "enemy_1"));
+
+        gameLogicService.applyPriestHolyAura(state, "hero_0");
+
+        assertTrue(undead.getHp() >= 7 && undead.getHp() <= 9);
+        assertEquals(10, beast.getHp());
+        assertTrue(state.getCombatLog().get(0).contains("Holy Aura"));
+    }
+
+    @Test
+    void applyPriestHolyAura_stacksForEachConsciousPriest() {
+        BattleState state = new BattleState();
+        HeroState first = hero("hero_0", "cleric", 14);
+        HeroState second = hero("hero_1", "cleric", 13);
+        HeroState knockedOut = hero("hero_2", "cleric", 12);
+        knockedOut.setKnockedOut(true);
+        EnemyState undead = enemy("enemy_0", 10);
+        undead.setName("Ghoul");
+        undead.setType("undead");
+        state.setHeroes(List.of(first, second, knockedOut));
+        state.setEnemies(List.of(undead));
+        state.setTurnOrder(List.of("hero_0", "hero_1", "enemy_0"));
+
+        boolean activeActorDefeated = gameLogicService.applyPriestHolyAura(state, "hero_0");
+
+        assertTrue(undead.getHp() >= 4 && undead.getHp() <= 8);
+        assertEquals(2, state.getCombatLog().size());
+        assertFalse(activeActorDefeated);
+    }
+
+    @Test
+    void applyPriestHolyAura_advancesPastUndeadKilledBeforeItsTurn() {
+        BattleState state = new BattleState();
+        HeroState priest = hero("hero_0", "cleric", 14);
+        EnemyState undead = enemy("skeleton_1_0", 13);
+        undead.setName("Skeleton");
+        undead.setType("undead");
+        undead.setHp(1);
+        EnemyState beast = enemy("wolf_1_1", 12);
+        beast.setName("Wolf");
+        beast.setType("beast");
+        state.setHeroes(List.of(priest));
+        state.setEnemies(List.of(undead, beast));
+        state.setTurnOrder(List.of("hero_0", "skeleton_1_0", "wolf_1_1"));
+        state.setCurrentTurnIndex(1);
+
+        boolean activeActorDefeated =
+                gameLogicService.applyPriestHolyAura(state, "skeleton_1_0");
+
+        assertTrue(activeActorDefeated);
+        assertEquals("wolf_1_1", gameLogicService.findActiveActorId(state));
     }
 
     private HeroState hero(String id, String classId, int spd) {

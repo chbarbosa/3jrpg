@@ -56,6 +56,7 @@ public class BattleService {
         state.setTurnOrder(gameLogicService.buildTurnOrder(state));
         state.setCurrentTurnIndex(0);
         state.setCombatLog(new ArrayList<>());
+        beginRound(state);
 
         Run run = new Run();
         run.setPlayerUuid(playerUuid);
@@ -106,6 +107,9 @@ public class BattleService {
         // ENEMY_TURN: frontend-triggered enemy action (shown one at a time with 2s delay)
         if (req.actionType() == ActionType.ENEMY_TURN) {
             String description = gameLogicService.resolveOneEnemyTurn(state);
+            if (state.getCurrentTurnIndex() == 0) {
+                beginRound(state);
+            }
             boolean defeated = false;
             if (gameLogicService.checkAllEnemiesDead(state)) {
                 state.setFightOver(true);
@@ -149,6 +153,7 @@ public class BattleService {
             // (all actors have taken their turn).
             if (state.getCurrentTurnIndex() == 0) {
                 gameLogicService.tickHeroStatuses(state);
+                beginRound(state);
             }
         }
         // Enemy turns are resolved one-at-a-time by the frontend (ENEMY_TURN requests)
@@ -235,6 +240,8 @@ public class BattleService {
         state.setHeroPrepTaken(new HashMap<>());
         state.setPendingLoot(null);
         state.setPendingLootItems(new ArrayList<>());
+        state.setHolyAuraAppliedThisRound(false);
+        beginRound(state);
 
         saveState(run, state);
         runRepository.save(run);
@@ -558,6 +565,7 @@ public class BattleService {
         newState.setTurnOrder(gameLogicService.buildTurnOrder(newState));
         newState.setCurrentTurnIndex(0);
         newState.setCombatLog(new ArrayList<>());
+        beginRound(newState);
 
         Run newRun = new Run();
         newRun.setPlayerUuid(playerUuid);
@@ -594,6 +602,18 @@ public class BattleService {
     // ═══════════════════════════════════════════════════════════════════════
     // Leading enemy turn resolution (new fight starts with enemy first)
     // ═══════════════════════════════════════════════════════════════════════
+
+    private void beginRound(BattleState state) {
+        if (state.isFightOver()) return;
+        String activeId = gameLogicService.findActiveActorId(state);
+        gameLogicService.applyPriestHolyAura(state, activeId);
+        state.setHolyAuraAppliedThisRound(true);
+        if (gameLogicService.checkAllEnemiesDead(state)) {
+            state.setFightOver(true);
+            state.setVictory(true);
+            state.getCombatLog().add("Victory! All enemies defeated by Holy Aura.");
+        }
+    }
 
     private void resolveLeadingEnemyTurns(BattleState state, Run run, UUID playerUuid) {
         int limit = state.getTurnOrder().size() + 1;
