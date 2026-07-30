@@ -185,6 +185,55 @@ class GameLogicServiceTest {
         assertEquals("wolf_1_1", gameLogicService.findActiveActorId(state));
     }
 
+    @Test
+    void applyCyberEyeHackAura_damagesMechanicalEnemiesByTwoToFourOnly() {
+        BattleState state = new BattleState();
+        HeroState hacker = hero("hero_0", "ranger", 14);
+        hacker.setAugmentationId("cyber");
+        hacker.setAdvantageId("cyberEye");
+        EnemyState machine = enemy("drone_1_0", 10);
+        machine.setName("Drone");
+        machine.setType("mechanical");
+        EnemyState undead = enemy("skeleton_1_1", 9);
+        undead.setName("Skeleton");
+        undead.setType("undead");
+        state.setHeroes(List.of(hacker));
+        state.setEnemies(List.of(machine, undead));
+        state.setTurnOrder(List.of("hero_0", "drone_1_0", "skeleton_1_1"));
+
+        gameLogicService.applyCyberEyeHackAura(state, "hero_0");
+
+        assertTrue(machine.getHp() >= 6 && machine.getHp() <= 8);
+        assertEquals(10, undead.getHp());
+        assertTrue(state.getCombatLog().get(0).contains("Hack Aura"));
+    }
+
+    @Test
+    void applyCyberEyeHackAura_stacksAndIgnoresKnockedOutHackers() {
+        BattleState state = new BattleState();
+        HeroState first = hero("hero_0", "warrior", 14);
+        first.setAugmentationId("cyber");
+        first.setAdvantageId("cyberEye");
+        HeroState second = hero("hero_1", "ranger", 13);
+        second.setAugmentationId("cyber");
+        second.setAdvantageId("cyberEye");
+        HeroState knockedOut = hero("hero_2", "thief", 12);
+        knockedOut.setAugmentationId("cyber");
+        knockedOut.setAdvantageId("cyberEye");
+        knockedOut.setKnockedOut(true);
+        EnemyState machine = enemy("drone_1_0", 10);
+        machine.setName("Drone");
+        machine.setType("mechanical");
+        state.setHeroes(List.of(first, second, knockedOut));
+        state.setEnemies(List.of(machine));
+        state.setTurnOrder(List.of("hero_0", "hero_1", "drone_1_0"));
+
+        gameLogicService.applyCyberEyeHackAura(state, "hero_0");
+
+        assertTrue(machine.getHp() >= 2 && machine.getHp() <= 6);
+        assertEquals(2, state.getCombatLog().size());
+    }
+
     private HeroState hero(String id, String classId, int spd) {
         HeroState hero = new HeroState();
         hero.setId(id);

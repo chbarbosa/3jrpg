@@ -325,6 +325,35 @@ public class GameLogicService {
         return activeActorDefeated;
     }
 
+    /** Applies the once-per-round Hack Aura pulse from every conscious Cyber Eye hero. */
+    public boolean applyCyberEyeHackAura(BattleState state, String activeActorId) {
+        List<HeroState> hackers = state.getHeroes().stream()
+                .filter(h -> !h.isKnockedOut())
+                .filter(h -> "cyber".equalsIgnoreCase(h.getAugmentationId()))
+                .filter(h -> "cyberEye".equalsIgnoreCase(h.getAdvantageId()))
+                .toList();
+        if (hackers.isEmpty()) return false;
+
+        for (HeroState hacker : hackers) {
+            for (EnemyState enemy : state.getEnemies()) {
+                if (enemy.getHp() <= 0 || !"mechanical".equalsIgnoreCase(enemy.getType())) continue;
+                int damage = ThreadLocalRandom.current().nextInt(2, 5);
+                enemy.setHp(Math.max(0, enemy.getHp() - damage));
+                addLog(state, heroLabel(hacker) + "'s Hack Aura deals " + damage
+                        + " damage to " + enemy.getName() + ".");
+            }
+        }
+
+        boolean activeActorDefeated = activeActorId != null
+                && state.getEnemies().stream()
+                .filter(e -> activeActorId.equals(e.getId()))
+                .anyMatch(e -> e.getHp() <= 0);
+        if (activeActorDefeated && !checkAllEnemiesDead(state)) {
+            moveToNextLivingActor(state, activeActorId);
+        }
+        return activeActorDefeated;
+    }
+
     private void moveToNextLivingActor(BattleState state, String defeatedActorId) {
         List<String> oldOrder = List.copyOf(state.getTurnOrder());
         int defeatedIndex = oldOrder.indexOf(defeatedActorId);

@@ -240,7 +240,6 @@ public class BattleService {
         state.setHeroPrepTaken(new HashMap<>());
         state.setPendingLoot(null);
         state.setPendingLootItems(new ArrayList<>());
-        state.setHolyAuraAppliedThisRound(false);
         beginRound(state);
 
         saveState(run, state);
@@ -607,11 +606,14 @@ public class BattleService {
         if (state.isFightOver()) return;
         String activeId = gameLogicService.findActiveActorId(state);
         gameLogicService.applyPriestHolyAura(state, activeId);
-        state.setHolyAuraAppliedThisRound(true);
+        if (!gameLogicService.checkAllEnemiesDead(state)) {
+            activeId = gameLogicService.findActiveActorId(state);
+            gameLogicService.applyCyberEyeHackAura(state, activeId);
+        }
         if (gameLogicService.checkAllEnemiesDead(state)) {
             state.setFightOver(true);
             state.setVictory(true);
-            state.getCombatLog().add("Victory! All enemies defeated by Holy Aura.");
+            state.getCombatLog().add("Victory! All enemies defeated by a passive aura.");
         }
     }
 
