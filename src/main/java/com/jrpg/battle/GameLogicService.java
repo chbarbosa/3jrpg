@@ -1759,12 +1759,29 @@ public class GameLogicService {
         List<String> immunities = revealScan
                 ? (e.getElementalImmunity() != null ? List.copyOf(e.getElementalImmunity()) : List.of())
                 : null;
-        List<String> weaknesses = revealScan ? List.of() : null;
+        List<String> weaknesses = revealScan ? enemyTypeWeaknesses(e.getType()) : null;
+        List<String> resistances = revealScan ? enemyTypeResistances(e.getType()) : null;
         return new EnemyStateDTO(
                 e.getId(), e.getName(), e.getType(),
                 revealScan ? e.getHp() : null,
                 revealScan ? e.getMaxHp() : null,
                 hpPercent, e.getHp() <= 0,
-                immunities, weaknesses, statuses);
+                immunities, weaknesses, resistances, statuses);
+    }
+
+    private List<String> enemyTypeWeaknesses(String enemyType) {
+        if (enemyType == null) return List.of();
+        return switch (enemyType.toLowerCase()) {
+            case "beast", "humanoid" -> List.of("Sharp hits");
+            case "undead" -> List.of("Holy magic");
+            case "mechanical" -> List.of("Electric magic");
+            default -> List.of();
+        };
+    }
+
+    private List<String> enemyTypeResistances(String enemyType) {
+        return "elemental".equalsIgnoreCase(enemyType)
+                ? List.of("Physical hits")
+                : List.of();
     }
 }

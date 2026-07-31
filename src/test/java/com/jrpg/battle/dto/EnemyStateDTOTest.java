@@ -23,6 +23,7 @@ class EnemyStateDTOTest {
                 false,
                 null,
                 null,
+                null,
                 List.of());
 
         String json = objectMapper.writeValueAsString(dto);
@@ -31,6 +32,7 @@ class EnemyStateDTOTest {
         assertThat(json).doesNotContain("\"maxHp\":");
         assertThat(json).contains("\"hpPercent\":50");
         assertThat(json).doesNotContain("\"weaknesses\":");
+        assertThat(json).doesNotContain("\"resistances\":");
         assertThat(json).doesNotContain("\"elementalImmunity\":");
     }
 }

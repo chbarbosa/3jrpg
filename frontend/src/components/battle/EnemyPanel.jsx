@@ -106,6 +106,9 @@ export default function EnemyPanel({ enemy, isTargeted, onClick, showScan = fals
       {showExactHp && (
         <div className="enemy-scan-info">
           <span>Weak: {enemy.weaknesses?.length > 0 ? enemy.weaknesses.join(', ') : 'None'}</span>
+          {enemy.resistances?.length > 0 && (
+            <span>Strong: {enemy.resistances.join(', ')}</span>
+          )}
           {enemy.elementalImmunity?.length > 0 && (
             <span>Immune: {enemy.elementalImmunity.join(', ')}</span>
           )}

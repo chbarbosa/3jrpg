@@ -14,5 +14,6 @@ public record EnemyStateDTO(
         boolean defeated,
         List<String> elementalImmunity,
         List<String> weaknesses,
+        List<String> resistances,
         List<ActiveStatusDTO> statuses
 ) {}
