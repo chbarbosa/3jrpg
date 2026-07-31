@@ -1024,13 +1024,13 @@ public class GameLogicService {
 
         switch (itemId) {
             case "healingPotion" -> {
-                int heal = ThreadLocalRandom.current().nextInt(2, 5); // 2–4
+                int heal = ThreadLocalRandom.current().nextInt(8, 10); // 8–10
                 targetHero.setHp(Math.min(targetHero.getHp() + heal, targetHero.getMaxHp()));
                 targetHero.getStatuses().removeIf(s ->
                         List.of("bleed", "stun", "slow", "blind", "pain").contains(s.getType()));
             }
             case "energyPotion" -> {
-                int en = ThreadLocalRandom.current().nextInt(3, 6); // 3–5
+                int en = ThreadLocalRandom.current().nextInt(5, 7); // 5-7
                 targetHero.setEn(Math.min(targetHero.getEn() + en, targetHero.getMaxEn()));
             }
             case "reviveScroll" -> {
