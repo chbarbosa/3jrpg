@@ -103,7 +103,7 @@ const SLOT_LABEL = {
 
 function isRingAccessory(item) {
   return item?.itemType?.toLowerCase() === 'accessory'
-    && (item.accessoryType?.toLowerCase() === 'ring' || item.name?.toLowerCase().includes('ring'));
+    && (item.accessoryType?.toLowerCase() === 'ring' || /\bring\b/i.test(item.name ?? ''));
 }
 
 function getItemSlotType(item) {
