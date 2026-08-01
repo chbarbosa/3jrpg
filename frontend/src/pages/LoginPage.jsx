@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getActiveRun, giveUp } from '../services/api';
@@ -6,6 +6,11 @@ import AlertModal from '../components/AlertModal';
 import { theme } from '../styles/theme';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
+const LOGIN_MESSAGES = [
+  'Logging in…',
+  'Waking the airship engines…',
+  'The moogles are still carrying your paperwork…',
+];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -16,7 +21,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(LOGIN_MESSAGES[0]);
   const [modal, setModal] = useState(MODAL_CLOSED);
+  const messageTimersRef = useRef([]);
+
+  function clearMessageTimers() {
+    messageTimersRef.current.forEach(clearTimeout);
+    messageTimersRef.current = [];
+  }
+
+  useEffect(() => clearMessageTimers, []);
 
   function closeModal() {
     setModal(MODAL_CLOSED);
@@ -59,7 +73,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearMessageTimers();
+    setLoadingMessage(LOGIN_MESSAGES[0]);
     setLoading(true);
+    messageTimersRef.current = [
+      setTimeout(() => setLoadingMessage(LOGIN_MESSAGES[1]), 20_000),
+      setTimeout(() => setLoadingMessage(LOGIN_MESSAGES[2]), 40_000),
+    ];
     try {
       await login(email, password);
 
@@ -71,10 +91,24 @@ export default function LoginPage() {
 
       navigate(from, { replace: true });
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setModal({ open: true, title: 'Login Failed', message: msg, variant: 'danger', confirmLabel: 'OK', cancelLabel: null, onConfirm: closeModal, onCancel: null });
+      const timedOut = err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT';
+      const msg = timedOut
+        ? 'The login server took longer than 60 seconds to answer. It may be waking up—please try again.'
+        : err.response?.data?.message || 'Login failed. Please check your credentials.';
+      setModal({
+        open: true,
+        title: timedOut ? 'Login Timed Out' : 'Login Failed',
+        message: msg,
+        variant: 'danger',
+        confirmLabel: 'OK',
+        cancelLabel: null,
+        onConfirm: closeModal,
+        onCancel: null,
+      });
     } finally {
+      clearMessageTimers();
       setLoading(false);
+      setLoadingMessage(LOGIN_MESSAGES[0]);
     }
   };
 
@@ -121,7 +155,7 @@ export default function LoginPage() {
             onMouseDown={(e) => { e.currentTarget.style.background = theme.colors.actionActive; }}
             onMouseUp={(e) => { e.currentTarget.style.background = theme.colors.actionHover; }}
           >
-            {loading ? 'Logging in…' : 'Login'}
+            {loading ? loadingMessage : 'Login'}
           </button>
         </form>
         <div className="form-link-row">

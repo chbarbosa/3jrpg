@@ -32,7 +32,7 @@ export const register = (email, nickname, password) =>
   api.post('/auth/register', { email, nickname, password }).then((r) => r.data);
 
 export const login = (email, password) =>
-  api.post('/auth/login', { email, password }).then((r) => r.data);
+  api.post('/auth/login', { email, password }, { timeout: 60_000 }).then((r) => r.data);
 
 export const sessionCheck = () =>
   api.get('/auth/session-check').then((r) => r.data);
