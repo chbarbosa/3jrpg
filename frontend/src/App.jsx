@@ -29,6 +29,7 @@ function PublicOnlyRoute({ children }) {
 function PageFade({ children }) {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const isBattlePage = location.pathname === '/battle';
 
   useEffect(() => {
     setVisible(false);
@@ -37,15 +38,21 @@ function PageFade({ children }) {
   }, [location.pathname]);
 
   return (
-    <div className="page-fade" style={{ opacity: visible ? 1 : 0 }}>
+    <div
+      className={`page-fade${isBattlePage ? ' page-fade--battle' : ''}`}
+      style={{ opacity: visible ? 1 : 0 }}
+    >
       {children}
     </div>
   );
 }
 
 function AppRoutes() {
+  const location = useLocation();
+  const isBattlePage = location.pathname === '/battle';
+
   return (
-    <>
+    <div className={`app-shell${isBattlePage ? ' app-shell--battle' : ''}`}>
       <NavBar />
       <PageFade>
       <Routes>
@@ -61,7 +68,7 @@ function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </PageFade>
-    </>
+    </div>
   );
 }
 

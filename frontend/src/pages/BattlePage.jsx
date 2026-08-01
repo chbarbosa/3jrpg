@@ -49,6 +49,14 @@ export default function BattlePage() {
   const enemyTurnScheduledRef = useRef(false);
   const enemyTurnTimerRef = useRef(null);
   const prevBattleStateRef = useRef(battleState);
+  const battlePageRef = useRef(null);
+
+  // A long selection page can leave browser scroll restoration offset when this
+  // route becomes the mobile battle scroller. Always enter a fight at its header.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+    battlePageRef.current?.scrollTo({ top: 0, left: 0 });
+  }, []);
 
   // Keep a ref that always holds the latest battleState so submitAction's prevState is never stale
   useEffect(() => { prevBattleStateRef.current = battleState; });
@@ -363,7 +371,7 @@ export default function BattlePage() {
   });
 
   return (
-    <div className="battle-page">
+    <div className="battle-page" ref={battlePageRef}>
       {/* Top bar */}
       <div className="battle-top-bar">
         <div className="battle-top-title">

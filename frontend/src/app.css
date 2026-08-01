@@ -225,7 +225,8 @@ h1, h2, h3 {
 /* ── Battle page layout ──────────────────────────────────────────────────── */
 
 .battle-page {
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--color-bg-page);
@@ -3065,19 +3066,139 @@ h1, h2, h3 {
   transition: opacity 200ms ease;
 }
 
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell--battle {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-fade--battle {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Responsive layout ───────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .navbar {
+    padding: var(--sp-xs) var(--sp-sm);
+    gap: var(--sp-xs);
+  }
+
+  .navbar-brand {
+    margin-right: var(--sp-xs);
+    font-size: var(--fs-md);
+  }
+
+  .navbar-link,
+  .navbar-link-btn {
+    padding: var(--sp-xs);
+    font-size: var(--fs-xs);
+  }
+
+  .navbar-nickname {
+    display: none;
+  }
+
+  .navbar-sound-btn {
+    font-size: var(--fs-md);
+  }
+
+  .navbar-logout-btn {
+    padding: var(--sp-xs) var(--sp-sm);
+    font-size: var(--fs-xs);
+  }
+
+  .page-fade--battle {
+    min-height: 0;
+  }
+
+  .battle-page {
+    height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .battle-top-bar {
+    padding: var(--sp-xs) var(--sp-sm);
+    gap: var(--sp-xs);
+  }
+
+  .battle-top-title {
+    font-size: var(--fs-md);
+  }
+
+  .battle-top-cycle-label {
+    flex: 1;
+  }
+
+  .battle-top-btns {
+    gap: var(--sp-xs);
+  }
+
+  .battle-enemy-area {
+    flex: none;
+    padding: var(--sp-sm);
+    overflow: visible;
+  }
+
+  .battle-enemy-row {
+    gap: var(--sp-sm);
+    align-items: stretch;
+  }
+
+  .enemy-panel {
+    width: 84px;
+    padding: var(--sp-xs);
+  }
+
   .enemy-shape {
-    width: 60px !important;
-    height: 60px !important;
+    width: 48px !important;
+    height: 48px !important;
   }
+
+  .enemy-name-wrapper {
+    width: 68px;
+    max-width: 68px;
+    height: 28px;
+  }
+
   .enemy-name {
-    max-width: 60px !important;
-    width: 60px !important;
+    max-width: 68px !important;
+    width: 68px !important;
   }
+
   .enemy-hp-bar {
-    width: 60px !important;
+    width: 68px !important;
+  }
+
+  .enemy-scan-info {
+    width: 68px;
+  }
+
+  .battle-turn-bar-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .turn-order-bar {
+    width: max-content;
+    min-width: 100%;
+    overflow: visible;
+    gap: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-sm);
   }
 
   html {
@@ -3094,6 +3215,32 @@ h1, h2, h3 {
   .battle-hero-col {
     flex: none !important;
     width: 100% !important;
+    padding: var(--sp-sm);
+    gap: var(--sp-xs);
+  }
+
+  .battle-heroes-row {
+    gap: var(--sp-xs);
+    flex: none;
+    overflow: visible;
+  }
+
+  .battle-hero-wrapper {
+    min-width: 0;
+  }
+
+  .hero-panel {
+    padding: var(--sp-xs);
+  }
+
+  .hero-avatar-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .combat-log {
+    height: 72px;
+    font-size: var(--fs-xs);
   }
 
   .battle-action-col {
@@ -3103,6 +3250,7 @@ h1, h2, h3 {
     border-top: 1px solid var(--color-border-brown);
     max-height: 200px;
     overflow-y: auto;
+    padding: var(--sp-sm);
   }
 
   /* Selection page — hero slots stack vertically */
