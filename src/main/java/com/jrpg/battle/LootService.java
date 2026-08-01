@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -104,7 +105,7 @@ public class LootService {
         String prefix = modifiers.isEmpty() ? "" : modifiers.get(0) + " ";
         String name = prefix + type;
         String desc = "A " + quality.toLowerCase() + " accessory"
-                + (modifiers.isEmpty() ? "." : " enhanced with " + modifiers.get(0) + ".");
+                + (modifiers.isEmpty() ? "." : " enhanced with " + String.join(" and ", modifiers) + ".");
         log.info("Accessory loot generated: {} {}", quality, name);
         return new LootItemDTO(name, quality, desc, List.copyOf(modifiers), itemUuid,
                 "ACCESSORY", "ACCESSORY", null, type.toLowerCase(), null, null);
@@ -120,16 +121,14 @@ public class LootService {
                 "CONSUMABLE", "CONSUMABLE", null, null, null, itemId);
     }
 
-    private List<String> pickModifiers(String quality, String[] pool) {
+    List<String> pickModifiers(String quality, String[] pool) {
         int count = switch (quality) {
             case "MAGIC" -> 1;
             case "RARE"  -> 2;
             default      -> 0;
         };
-        List<String> result = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            result.add(pool[ThreadLocalRandom.current().nextInt(pool.length)]);
-        }
-        return result;
+        List<String> available = new ArrayList<>(List.of(pool));
+        Collections.shuffle(available, ThreadLocalRandom.current());
+        return available.subList(0, Math.min(count, available.size()));
     }
 }
