@@ -1,10 +1,11 @@
-# fly.toml app configuration file generated for 3jrpg on 2026-08-02T20:37:16Z
+# fly.toml app configuration file generated for 3jrpg on 2026-08-02T21:26:50Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = '3jrpg'
 primary_region = 'iad'
+kill_timeout = '10m'
 
 [build]
 
