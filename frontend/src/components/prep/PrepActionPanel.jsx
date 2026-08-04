@@ -1,6 +1,6 @@
 import HeroPrepSlot from './HeroPrepSlot';
 
-export default function PrepActionPanel({ heroes, heroActions, onPrepAction }) {
+export default function PrepActionPanel({ heroes, heroActions, onPrepAction, onDiscardInventory }) {
   return (
     <div className="panel">
       <div className="panel-title">
@@ -14,6 +14,7 @@ export default function PrepActionPanel({ heroes, heroActions, onPrepAction }) {
             hero={hero}
             isDone={heroActions[hero.id] ?? false}
             onPrepAction={onPrepAction}
+            onDiscardInventory={onDiscardInventory}
             allHeroes={heroes}
           />
         ))}

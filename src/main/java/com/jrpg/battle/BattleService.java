@@ -368,6 +368,54 @@ public class BattleService {
         return gameLogicService.toHeroDTOs(state.getHeroes());
     }
 
+    public List<HeroStateDTO> discardLoot(UUID playerUuid, LootDiscardRequest req) {
+        Run run = runService.getActiveRunByUuid(req.runUuid());
+        runService.validateOwner(run, playerUuid);
+
+        BattleState state = loadState(run);
+        if (!state.isPrepPhase()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not in prep phase");
+        }
+
+        List<LootItemDTO> pendingLootItems = pendingLootItems(state);
+        if (pendingLootItems.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No pending loot to discard");
+        }
+
+        LootItemDTO loot = selectPendingLoot(pendingLootItems, req.itemUuid());
+        pendingLootItems.remove(loot);
+        state.setPendingLootItems(pendingLootItems);
+        state.setPendingLoot(pendingLootItems.isEmpty() ? null : pendingLootItems.get(0));
+        saveState(run, state);
+        runRepository.save(run);
+        runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.LOOT_DISCARDED, buildMap(
+                "itemName", loot.name(),
+                "quality", loot.quality()));
+
+        return gameLogicService.toHeroDTOs(state.getHeroes());
+    }
+
+    public List<HeroStateDTO> discardInventoryGear(UUID playerUuid, InventoryDiscardRequest req) {
+        Run run = runService.getActiveRunByUuid(req.runUuid());
+        runService.validateOwner(run, playerUuid);
+
+        BattleState state = loadState(run);
+        if (!state.isPrepPhase()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not in prep phase");
+        }
+
+        HeroState hero = gameLogicService.findHero(state, req.heroId());
+        discardGear(hero, req.itemUuid());
+        saveState(run, state);
+        runRepository.save(run);
+        runEventService.logEvent(run.getUuid(), playerUuid, RunEventService.LOOT_DISCARDED, buildMap(
+                "heroId", req.heroId(),
+                "itemUuid", req.itemUuid(),
+                "source", "INVENTORY"));
+
+        return gameLogicService.toHeroDTOs(state.getHeroes());
+    }
+
     private List<LootItemDTO> generateLootDropsForTeam(BattleState state, int cap) {
         int dropCount = hasThiefHero(state) ? 2 : 1;
         List<LootItemDTO> drops = new ArrayList<>();
@@ -516,6 +564,22 @@ public class BattleService {
 
         from.getInventory().remove(item);
         to.getInventory().add(item);
+    }
+
+    private void discardGear(HeroState hero, String itemUuid) {
+        if (itemUuid.equals(hero.getEquippedLootWeaponUuid())
+                || itemUuid.equals(hero.getEquippedLootArmorUuid())
+                || itemUuid.equals(hero.getEquippedLootAccessoryUuid())
+                || itemUuid.equals(hero.getEquippedLootRing1Uuid())
+                || itemUuid.equals(hero.getEquippedLootRing2Uuid())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot discard equipped gear");
+        }
+
+        boolean removed = hero.getInventory().removeIf(item -> itemUuid.equals(item.getItemUuid()));
+        if (!removed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Item not found in inventory: " + itemUuid);
+        }
     }
 
     public Map<String, Object> giveUp(UUID playerUuid, GiveUpRequest req) {

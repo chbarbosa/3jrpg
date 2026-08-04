@@ -4,6 +4,7 @@ import { ITEM_LIST } from '../../data/items';
 import { WEAPON_LIST } from '../../data/weapons';
 import { SPELL_LIST } from '../../data/spells';
 import { ARMOR_TIER_LABELS, QUALITY_LABELS, QUALITY_COLORS } from '../../data/gameConstants';
+import AlertModal from '../AlertModal';
 
 function ActionCard({ label, sublabel, selected, disabled, onClick }) {
   return (
@@ -41,7 +42,7 @@ function QualityBadge({ quality }) {
   );
 }
 
-function LootItemRow({ item, slotLabel, isEquipped, onEquip, onTransfer, equipSlot, equipOptions = null }) {
+function LootItemRow({ item, slotLabel, isEquipped, onEquip, onTransfer, onDiscard, equipSlot, equipOptions = null, equipDisabledReason = null }) {
   const options = equipOptions ?? (equipSlot ? [{ slot: equipSlot, label: 'Equip' }] : []);
 
   return (
@@ -74,9 +75,11 @@ function LootItemRow({ item, slotLabel, isEquipped, onEquip, onTransfer, equipSl
             <button
               key={option.slot}
               onClick={() => onEquip(item.uuid, option.slot)}
+              disabled={!!equipDisabledReason}
               className="prep-small-btn prep-small-btn--primary"
+              title={equipDisabledReason ?? undefined}
             >
-              {option.label}
+              {equipDisabledReason ? 'Cannot Equip' : option.label}
             </button>
           ))}
           {onTransfer && (
@@ -87,6 +90,19 @@ function LootItemRow({ item, slotLabel, isEquipped, onEquip, onTransfer, equipSl
               Send
             </button>
           )}
+          {onDiscard && (
+            <button
+              onClick={() => onDiscard(item)}
+              className="prep-small-btn prep-small-btn--danger"
+            >
+              Discard
+            </button>
+          )}
+        </div>
+      )}
+      {equipDisabledReason && (
+        <div style={{ fontSize: 'var(--fs-xs)', color: theme.colors.barHP, marginTop: 'var(--sp-xs)' }}>
+          {equipDisabledReason}
         </div>
       )}
     </div>
@@ -112,6 +128,16 @@ function getItemSlotType(item) {
   if (itemType === 'armor')  return ['ARMOR'];
   if (itemType === 'accessory') return isRingAccessory(item) ? ['RING_1', 'RING_2'] : ['ACCESSORY'];
   return [];
+}
+
+function canEquipArmor(className, armorTierId) {
+  const heroClass = className?.toLowerCase();
+  if (!heroClass || !armorTierId) return false;
+  if (heroClass === 'warrior') return true;
+  if (['ranger', 'cleric', 'priest'].includes(heroClass)) return armorTierId !== 'heavy';
+  if (heroClass === 'thief') return !['heavy', 'medium'].includes(armorTierId);
+  if (heroClass === 'mage') return ['clothes', 'magicClothes'].includes(armorTierId);
+  return false;
 }
 
 function CurrentLoadout({ hero }) {
@@ -202,7 +228,7 @@ function SpellCard({ spell, casterEn, onSelect }) {
   );
 }
 
-export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) {
+export default function HeroPrepSlot({ hero, isDone, onPrepAction, onDiscardInventory, allHeroes }) {
   const [selectedAction, setSelectedAction] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [spellPickerStage, setSpellPickerStage] = useState(null); // 'spell' | 'mend-target' | null
@@ -211,6 +237,7 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
   const [equipMsg, setEquipMsg] = useState(null);
   const [transferItemUuid, setTransferItemUuid] = useState(null);
   const [floatingHeals, setFloatingHeals] = useState([]);
+  const [discardItem, setDiscardItem] = useState(null);
   const prevHpRef = useRef(hero.hp);
   const isMountedRef = useRef(false);
 
@@ -309,6 +336,20 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
       await onPrepAction(hero.id, 'TRANSFER_GEAR', null, targetHeroId, null, itemUuid);
       setTransferItemUuid(null);
       setDoneLabel(`Sent ${item?.name ?? 'gear'} to ${heroDisplayName(target)}`);
+    } catch {
+      // error handled by parent
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDiscard() {
+    if (!discardItem) return;
+    const item = discardItem;
+    setDiscardItem(null);
+    setSubmitting(true);
+    try {
+      await onDiscardInventory(hero.id, item.uuid);
     } catch {
       // error handled by parent
     } finally {
@@ -502,6 +543,11 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
             ) : (
               lootItems.map((item) => {
                 const slots = getItemSlotType(item);
+                const armorBlocked = item.itemType?.toLowerCase() === 'armor'
+                  && !canEquipArmor(hero.className, item.armorTierId);
+                const equipDisabledReason = armorBlocked
+                  ? `${hero.className} cannot equip ${ARMOR_TIER_LABELS[item.armorTierId] ?? item.name}.`
+                  : null;
                 const isEquipped = equippedUuids.has(item.uuid);
                 const equippedSlot = isEquipped
                   ? (item.uuid === hero.equippedLootWeaponUuid ? 'WEAPON_PRIMARY'
@@ -533,7 +579,9 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
                     isEquipped={false}
                     onEquip={handleEquip}
                     onTransfer={setTransferItemUuid}
+                    onDiscard={setDiscardItem}
                     equipOptions={slots.map((slot) => ({ slot, label: slots.length > 1 ? SLOT_LABEL[slot] : 'Equip' }))}
+                    equipDisabledReason={equipDisabledReason}
                   />
                 );
               })
@@ -544,6 +592,16 @@ export default function HeroPrepSlot({ hero, isDone, onPrepAction, allHeroes }) 
           {smallBtn('← Back', () => setSelectedAction(null))}
           {smallBtn('Done', () => submit('PASS'), 'primary')}
         </div>
+        <AlertModal
+          isOpen={!!discardItem}
+          title="Discard Equipment?"
+          message={discardItem ? `Discard ${discardItem.name}? This cannot be undone.` : ''}
+          variant="danger"
+          confirmLabel="Discard"
+          cancelLabel="Cancel"
+          onConfirm={handleDiscard}
+          onCancel={() => setDiscardItem(null)}
+        />
       </div>
     );
   }

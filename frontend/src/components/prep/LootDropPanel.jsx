@@ -70,7 +70,7 @@ function ItemCategoryDetail({ lootItem }) {
   return null;
 }
 
-export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, heroes, onAssignLoot, lootAssigned, lootRecipientHeroId }) {
+export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, heroes, onAssignLoot, onDiscardLoot, lootAssigned, lootRecipientHeroId, lootDiscarded = false }) {
   const [glowing, setGlowing] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState(null);
@@ -143,7 +143,9 @@ export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, 
       {/* Assignment */}
       {lootAssigned ? (
         <div className="loot-assigned-msg">
-          ✓ Assigned to {heroDisplayName(heroes.find(h => h.id === lootRecipientHeroId))}
+          {lootDiscarded
+            ? 'Discarded'
+            : `✓ Assigned to ${heroDisplayName(heroes.find(h => h.id === lootRecipientHeroId))}`}
         </div>
       ) : (
         <>
@@ -167,6 +169,13 @@ export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, 
                 </button>
               );
             })}
+            <button
+              onClick={() => onDiscardLoot(lootItem)}
+              disabled={assigning}
+              className="loot-hero-btn loot-discard-btn"
+            >
+              Discard
+            </button>
           </div>
           {error && (
             <div className="loot-error">

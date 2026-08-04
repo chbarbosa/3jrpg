@@ -54,6 +54,12 @@ export const startPrep = (runUuid) =>
 export const assignLoot = (runUuid, recipientHeroId, itemUuid = null) =>
   api.post('/api/run/prep/assign-loot', { runUuid, recipientHeroId, itemUuid }).then((r) => r.data);
 
+export const discardLoot = (runUuid, itemUuid) =>
+  api.post('/api/run/prep/discard-loot', { runUuid, itemUuid }).then((r) => r.data);
+
+export const discardInventoryGear = (runUuid, heroId, itemUuid) =>
+  api.post('/api/run/prep/discard-inventory', { runUuid, heroId, itemUuid }).then((r) => r.data);
+
 export const prepAction = (runUuid, heroId, actionType, itemId, targetHeroId, equipSlot = null, itemUuid = null, spellId = null) =>
   api.post('/api/run/prep/action', { runUuid, heroId, actionType, itemId, targetHeroId, equipSlot, itemUuid, spellId }).then((r) => r.data);
 

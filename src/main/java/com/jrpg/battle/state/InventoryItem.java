@@ -22,6 +22,8 @@ public class InventoryItem {
 
     // Weapon loot only: the base WeaponType id (e.g. "sword", "bow") for skill lookup
     private String weaponTypeId;
+    // Armor loot only: light, medium, heavy, clothes, or magicClothes
+    private String armorTierId;
     // Accessory loot only: ring, amulet, or bracelet
     private String accessoryType;
     // Special accessories: effect identifier (e.g. "rebirth") for ring trigger logic
@@ -60,6 +62,13 @@ public class InventoryItem {
         InventoryItem i = loot(itemUuid, "ACCESSORY", name, quality, null, description);
         i.effectId = effectId;
         i.accessoryType = accessoryType;
+        return i;
+    }
+
+    public static InventoryItem armorLoot(String itemUuid, String armorTierId, String name,
+                                           String quality, List<String> modifiers, String description) {
+        InventoryItem i = loot(itemUuid, "ARMOR", name, quality, modifiers, description);
+        i.armorTierId = armorTierId;
         return i;
     }
 

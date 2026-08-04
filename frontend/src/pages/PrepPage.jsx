@@ -5,7 +5,7 @@ import AlertModal from '../components/AlertModal';
 import RegenDisplay from '../components/prep/RegenDisplay';
 import LootDropPanel from '../components/prep/LootDropPanel';
 import PrepActionPanel from '../components/prep/PrepActionPanel';
-import { assignLoot, prepAction, nextFight } from '../services/api';
+import { assignLoot, discardLoot, discardInventoryGear, prepAction, nextFight } from '../services/api';
 
 const MODAL_CLOSED = { open: false, title: '', message: '', variant: 'info', confirmLabel: 'OK', cancelLabel: null, onConfirm: null, onCancel: null };
 
@@ -86,6 +86,30 @@ export default function PrepPage() {
     setAssignedLoot((prev) => ({ ...prev, [itemUuid]: heroId }));
   }
 
+  function handleDiscardLoot(lootItem) {
+    setModal({
+      open: true,
+      title: 'Discard Loot?',
+      message: `Discard ${lootItem.name}? This cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Cancel',
+      onConfirm: async () => {
+        closeModal();
+        try {
+          const updatedHeroes = await wrapApiCall(discardLoot)(runUuid, lootItem.itemUuid);
+          setHeroes(updatedHeroes);
+          setAssignedLoot((prev) => ({ ...prev, [lootItem.itemUuid]: 'discarded' }));
+        } catch (err) {
+          if (err.response?.status !== 410) {
+            showError(err.response?.data?.error ?? err.message ?? 'Failed to discard loot.');
+          }
+        }
+      },
+      onCancel: closeModal,
+    });
+  }
+
   async function handlePrepAction(heroId, actionType, itemId, targetHeroId, equipSlot = null, itemUuid = null, spellId = null) {
     try {
       const updatedHeroes = await wrapApiCall(prepAction)(runUuid, heroId, actionType, itemId ?? null, targetHeroId ?? null, equipSlot, itemUuid, spellId);
@@ -94,6 +118,18 @@ export default function PrepPage() {
     } catch (err) {
       if (err.response?.status !== 410) {
         showError(err.response?.data?.error ?? err.message ?? 'Prep action failed.');
+      }
+      throw err;
+    }
+  }
+
+  async function handleDiscardInventory(heroId, itemUuid) {
+    try {
+      const updatedHeroes = await wrapApiCall(discardInventoryGear)(runUuid, heroId, itemUuid);
+      setHeroes(updatedHeroes);
+    } catch (err) {
+      if (err.response?.status !== 410) {
+        showError(err.response?.data?.error ?? err.message ?? 'Failed to discard equipment.');
       }
       throw err;
     }
@@ -139,8 +175,10 @@ export default function PrepPage() {
             lootCount={lootItems.length}
             heroes={heroes}
             onAssignLoot={handleAssignLoot}
+            onDiscardLoot={handleDiscardLoot}
             lootAssigned={!!assignedLoot[lootItem.itemUuid]}
             lootRecipientHeroId={assignedLoot[lootItem.itemUuid]}
+            lootDiscarded={assignedLoot[lootItem.itemUuid] === 'discarded'}
           />
         ))}
 
@@ -149,6 +187,7 @@ export default function PrepPage() {
           heroes={heroes}
           heroActions={heroActions}
           onPrepAction={handlePrepAction}
+          onDiscardInventory={handleDiscardInventory}
         />
 
         {/* Ready button */}

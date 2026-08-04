@@ -56,6 +56,20 @@ public class BattleController {
         return ResponseEntity.ok(battleService.assignLoot(playerUuid(auth), request));
     }
 
+    @PostMapping("/api/run/prep/discard-loot")
+    public ResponseEntity<List<HeroStateDTO>> discardLoot(
+            @Valid @RequestBody LootDiscardRequest request,
+            Authentication auth) {
+        return ResponseEntity.ok(battleService.discardLoot(playerUuid(auth), request));
+    }
+
+    @PostMapping("/api/run/prep/discard-inventory")
+    public ResponseEntity<List<HeroStateDTO>> discardInventoryGear(
+            @Valid @RequestBody InventoryDiscardRequest request,
+            Authentication auth) {
+        return ResponseEntity.ok(battleService.discardInventoryGear(playerUuid(auth), request));
+    }
+
     @PostMapping("/api/run/prep/action")
     public ResponseEntity<List<HeroStateDTO>> prepAction(
             @Valid @RequestBody PrepActionRequest request,

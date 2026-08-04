@@ -25,6 +25,7 @@ public class RunEventService {
     public static final String STATUS_EXPIRED    = "STATUS_EXPIRED";
     public static final String ITEM_USED         = "ITEM_USED";
     public static final String LOOT_ASSIGNED     = "LOOT_ASSIGNED";
+    public static final String LOOT_DISCARDED    = "LOOT_DISCARDED";
     public static final String PREP_PHASE_STARTED = "PREP_PHASE_STARTED";
     public static final String PREP_ACTION       = "PREP_ACTION";
     public static final String AUTO_REVIVE       = "AUTO_REVIVE";

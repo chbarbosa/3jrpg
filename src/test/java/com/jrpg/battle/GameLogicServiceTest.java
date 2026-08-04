@@ -7,15 +7,20 @@ import com.jrpg.battle.state.InventoryItem;
 import com.jrpg.battle.dto.HeroConfigDTO;
 import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.ClassData;
+import com.jrpg.gamedata.model.ItemData;
+import com.jrpg.gamedata.model.WeaponType;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -89,6 +94,40 @@ class GameLogicServiceTest {
     }
 
     @Test
+    void validateTeam_allowsUpToThreeStarterItemsPerHero() {
+        GameLogicService service = new GameLogicService(gameDataForStarterItemValidation());
+
+        service.validateTeam(List.of(
+                validHero(Map.of("healingPotion", 2, "energyPotion", 1)),
+                validHero(Map.of()),
+                validHero(null)));
+    }
+
+    @Test
+    void validateTeam_rejectsMoreThanThreeStarterItemsPerHero() {
+        GameLogicService service = new GameLogicService(gameDataForStarterItemValidation());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.validateTeam(List.of(
+                validHero(Map.of("healingPotion", 3, "energyPotion", 1)),
+                validHero(Map.of()),
+                validHero(null))));
+
+        assertEquals("Each hero can start with at most 3 items", ex.getReason());
+    }
+
+    @Test
+    void validateTeam_rejectsUnknownStarterItem() {
+        GameLogicService service = new GameLogicService(gameDataForStarterItemValidation());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.validateTeam(List.of(
+                validHero(Map.of("badPotion", 1)),
+                validHero(Map.of()),
+                validHero(null))));
+
+        assertEquals("Unknown item: badPotion", ex.getReason());
+    }
+
+    @Test
     void equipLootItemFromInventory_allowsTwoRingSlotsToStackBonuses() {
         HeroState hero = hero("hero_0", "warrior", 14);
         hero.setStr(10);
@@ -118,6 +157,33 @@ class GameLogicServiceTest {
         assertEquals(null, hero.getEquippedLootRing1Uuid());
         assertEquals("ring-1", hero.getEquippedLootRing2Uuid());
         assertEquals(11, hero.getStr());
+    }
+
+    @Test
+    void equipLootItemFromInventory_enforcesClassArmorRestrictions() {
+        HeroState mage = hero("hero_0", "mage", 14);
+        mage.getInventory().add(InventoryItem.armorLoot(
+                "heavy-1", "heavy", "Heavy Armor", "MAGIC", List.of(), "test"));
+
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> gameLogicService.equipLootItemFromInventory(mage, "heavy-1", "ARMOR"));
+        assertEquals(null, mage.getEquippedLootArmorUuid());
+
+        HeroState warrior = hero("hero_1", "warrior", 14);
+        warrior.getInventory().add(InventoryItem.armorLoot(
+                "heavy-2", "heavy", "Heavy Armor", "MAGIC", List.of(), "test"));
+        gameLogicService.equipLootItemFromInventory(warrior, "heavy-2", "ARMOR");
+        assertEquals("heavy-2", warrior.getEquippedLootArmorUuid());
+    }
+
+    @Test
+    void canEquipArmor_matchesEveryClassRule() {
+        assertTrue(GameLogicService.canEquipArmor("warrior", "heavy"));
+        assertFalse(GameLogicService.canEquipArmor("ranger", "heavy"));
+        assertFalse(GameLogicService.canEquipArmor("cleric", "heavy"));
+        assertFalse(GameLogicService.canEquipArmor("thief", "medium"));
+        assertFalse(GameLogicService.canEquipArmor("mage", "light"));
+        assertTrue(GameLogicService.canEquipArmor("mage", "magicClothes"));
     }
 
     @Test
@@ -248,5 +314,30 @@ class GameLogicServiceTest {
         enemy.setSpd(spd);
         enemy.setHp(10);
         return enemy;
+    }
+
+    private GameDataService gameDataForStarterItemValidation() {
+        GameDataService gameDataService = mock(GameDataService.class);
+        ClassData warrior = new ClassData(
+                "warrior", "Warrior", "PHYSICAL",
+                12, 8, 5, 30, 12, 14,
+                List.of("sword"), "heavy", null);
+        WeaponType sword = new WeaponType("sword", "Sword", List.of("warrior"), List.of(), null, false);
+        ItemData healingPotion = new ItemData(
+                "healingPotion", "Healing Potion", "heal", List.of("battle", "prep"), null);
+        ItemData energyPotion = new ItemData(
+                "energyPotion", "Energy Potion", "energy", List.of("battle", "prep"), null);
+
+        when(gameDataService.allClassIds()).thenReturn(Set.of("warrior"));
+        when(gameDataService.findClass("warrior")).thenReturn(Optional.of(warrior));
+        when(gameDataService.findWeapon("sword")).thenReturn(Optional.of(sword));
+        when(gameDataService.findItem("healingPotion")).thenReturn(Optional.of(healingPotion));
+        when(gameDataService.findItem("energyPotion")).thenReturn(Optional.of(energyPotion));
+        when(gameDataService.findItem("badPotion")).thenReturn(Optional.empty());
+        return gameDataService;
+    }
+
+    private HeroConfigDTO validHero(Map<String, Integer> items) {
+        return new HeroConfigDTO("warrior", "natural", null, "sword", "heavy", null, null, items);
     }
 }

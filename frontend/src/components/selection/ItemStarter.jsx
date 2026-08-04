@@ -1,82 +1,94 @@
-import { theme } from '../../styles/theme';
 import { ITEM_LIST } from '../../data/items';
 
-const MAX_ITEMS = 2;
+const MAX_ITEMS = 3;
 const EXCLUDE_IDS = new Set(['reviveScroll']);
 
 export default function ItemStarter({ items, onUpdate }) {
-  const available = ITEM_LIST.filter((i) => !EXCLUDE_IDS.has(i.id));
+  const available = ITEM_LIST.filter((item) => !EXCLUDE_IDS.has(item.id));
+  const totalItems = Object.values(items).reduce((sum, qty) => sum + qty, 0);
+  const atCap = totalItems >= MAX_ITEMS;
 
-  function adjust(itemId, delta) {
+  function addItem(itemId) {
+    if (atCap) return;
     const current = items[itemId] ?? 0;
-    const next = Math.max(0, current + delta);
+    onUpdate({ ...items, [itemId]: current + 1 });
+  }
+
+  function removeItem(itemId) {
+    const current = items[itemId] ?? 0;
+    if (current <= 0) return;
+
     const updated = { ...items };
-    if (next === 0) delete updated[itemId];
-    else updated[itemId] = next;
+    if (current === 1) delete updated[itemId];
+    else updated[itemId] = current - 1;
     onUpdate(updated);
   }
 
-  const totalItems = Object.values(items).reduce((s, q) => s + q, 0);
-  const atCap = totalItems >= MAX_ITEMS;
+  const selectedItems = Object.entries(items)
+    .flatMap(([itemId, qty]) => Array.from({ length: qty }, () => itemId))
+    .map((itemId) => available.find((item) => item.id === itemId))
+    .filter(Boolean);
 
   return (
-    <div>
-      <div className="item-starter-list">
+    <div className="item-starter">
+      <div className="item-starter-grid">
         {available.map((item) => {
           const qty = items[item.id] ?? 0;
-          const plusDisabled = atCap;
+
           return (
-            <div
+            <button
               key={item.id}
-              className="item-starter-row"
-              style={{
-                background: qty > 0 ? theme.colors.bgPanelDark : theme.colors.bgPanel,
-                border: `1px solid ${qty > 0 ? theme.colors.borderGold : theme.colors.borderBrown}`,
-              }}
+              type="button"
+              onClick={() => addItem(item.id)}
+              disabled={atCap}
+              title={atCap ? 'Maximum 3 starting items reached' : item.label}
+              className={`item-starter-card ${qty > 0 ? 'item-starter-card--selected' : ''}`}
             >
-              <div className="item-starter-info">
-                <div className="item-starter-label">
+              <span className={`item-pixel-sprite item-pixel-sprite--${item.id}`} aria-hidden="true" />
+              <span className="item-starter-info">
+                <span className="item-starter-label">
                   {item.label}
-                </div>
-                <div className="item-starter-desc">
+                </span>
+                <span className="item-starter-desc">
                   {item.description}
-                </div>
-              </div>
-              <div className="item-qty-controls">
-                <button
-                  onClick={() => adjust(item.id, -1)}
-                  disabled={qty === 0}
-                  className="item-qty-btn item-qty-btn--minus"
-                  style={{ cursor: qty === 0 ? 'not-allowed' : 'pointer', opacity: qty === 0 ? 0.4 : 1 }}
-                >
-                  −
-                </button>
-                <span className="item-qty-value">
+                </span>
+              </span>
+              {qty > 0 && (
+                <span className="item-starter-card-count">
                   {qty}
                 </span>
-                <button
-                  onClick={() => !plusDisabled && adjust(item.id, 1)}
-                  disabled={plusDisabled}
-                  title={plusDisabled ? 'Maximum 2 starting items reached' : undefined}
-                  className={`item-qty-btn ${plusDisabled ? 'item-qty-btn--plus-disabled' : 'item-qty-btn--plus-active'}`}
-                  onMouseEnter={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.actionHover; }}
-                  onMouseLeave={(e) => { if (!plusDisabled) e.currentTarget.style.background = theme.colors.borderGold; }}
-                >
-                  +
-                </button>
-              </div>
-            </div>
+              )}
+            </button>
           );
         })}
       </div>
-      <div
-        className="item-starter-counter"
-        style={{
-          color: atCap ? theme.colors.textHeader : theme.colors.textMuted,
-          fontWeight: atCap ? 'var(--fw-bold)' : 'var(--fw-normal)',
-        }}
-      >
-        Items: {totalItems} / {MAX_ITEMS}
+
+      <div className="item-starter-picked">
+        <div className="item-starter-picked-header">
+          <span>Selected Items</span>
+          <span className={atCap ? 'item-starter-counter item-starter-counter--cap' : 'item-starter-counter'}>
+            {totalItems} / {MAX_ITEMS}
+          </span>
+        </div>
+
+        {selectedItems.length === 0 ? (
+          <div className="item-starter-empty">-</div>
+        ) : (
+          <div className="item-starter-picked-list">
+            {selectedItems.map((item, index) => (
+              <div key={`${item.id}-${index}`} className="item-starter-picked-row">
+                <span
+                  className={`item-pixel-sprite item-pixel-sprite--small item-pixel-sprite--${item.id}`}
+                  aria-hidden="true"
+                />
+                <span className="item-starter-picked-name">{item.label}</span>
+                <button type="button" className="item-starter-remove-btn" onClick={() => removeItem(item.id)}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

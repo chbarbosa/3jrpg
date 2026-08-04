@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class GameLogicService {
 
     private final GameDataService gameDataService;
+    private static final int MAX_STARTER_ITEMS = 3;
 
     // ═══════════════════════════════════════════════════════════════════════
     // Hero state construction
@@ -62,6 +63,37 @@ public class GameLogicService {
             if ("cyber".equalsIgnoreCase(cfg.augmentationType()) && "MAGIC".equals(cls.type())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Cyber augmentation not available to magic classes");
+            }
+            validateStarterItems(cfg);
+        }
+    }
+
+    private void validateStarterItems(HeroConfigDTO cfg) {
+        if (cfg.items() == null || cfg.items().isEmpty()) {
+            return;
+        }
+
+        int totalItems = 0;
+        for (Map.Entry<String, Integer> entry : cfg.items().entrySet()) {
+            String itemId = entry.getKey();
+            Integer qty = entry.getValue();
+            if (itemId == null || itemId.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid starter item");
+            }
+            if (qty == null || qty <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Starter item quantity must be positive");
+            }
+            ItemData item = gameDataService.findItem(itemId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Unknown item: " + itemId));
+            if (item.classRestriction() != null && !item.classRestriction().equals(cfg.classId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        item.name() + " cannot be used by " + cfg.classId());
+            }
+            totalItems += qty;
+            if (totalItems > MAX_STARTER_ITEMS) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Each hero can start with at most " + MAX_STARTER_ITEMS + " items");
             }
         }
     }
@@ -1474,6 +1506,12 @@ public class GameLogicService {
                     loot.quality(), loot.modifiers(), loot.description()));
             return;
         }
+        if ("ARMOR".equals(loot.itemType()) && loot.armorTierId() != null) {
+            hero.getInventory().add(InventoryItem.armorLoot(
+                    loot.itemUuid(), loot.armorTierId(), loot.name(),
+                    loot.quality(), loot.modifiers(), loot.description()));
+            return;
+        }
         // Check for named special accessories (e.g. Rebirth Ring)
         if ("ACCESSORY".equals(loot.itemType()) && loot.name() != null
                 && loot.name().contains("Rebirth Ring")) {
@@ -1510,6 +1548,11 @@ public class GameLogicService {
         };
         if (!valid) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "Item type " + lootItem.getItemType() + " does not match slot " + equipSlot);
+        if ("ARMOR".equals(lootItem.getItemType())
+                && !canEquipArmor(hero.getClassId(), lootItem.getArmorTierId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    hero.getClassId() + " cannot equip " + lootItem.getName());
+        }
 
         String currentSlot = findEquippedLootSlot(hero, itemUuid);
         // Revert bonuses from the previously equipped loot in this slot
@@ -1534,6 +1577,17 @@ public class GameLogicService {
                 hero.getName() != null ? hero.getName() : hero.getClassId(),
                 lootItem.getName(), hero.getStr(), hero.getDex(), hero.getIntel(),
                 logDef, logMdef, hero.getHp(), hero.getEn());
+    }
+
+    static boolean canEquipArmor(String classId, String armorTierId) {
+        if (classId == null || armorTierId == null) return false;
+        return switch (classId.toLowerCase()) {
+            case "warrior" -> true;
+            case "ranger", "cleric", "priest" -> !"heavy".equals(armorTierId);
+            case "thief" -> !"heavy".equals(armorTierId) && !"medium".equals(armorTierId);
+            case "mage" -> "clothes".equals(armorTierId) || "magicClothes".equals(armorTierId);
+            default -> false;
+        };
     }
 
     private String getEquippedLootUuid(HeroState hero, String slot) {
@@ -1693,7 +1747,7 @@ public class GameLogicService {
                 inventory.add(new ItemSummaryDTO(
                         null, inv.getName(), inv.getItemType() != null ? inv.getItemType().toLowerCase() : "loot",
                         inv.getItemUuid(), inv.getQuality(), inv.getModifiers(), inv.getDescription(),
-                        inv.getAccessoryType()));
+                        inv.getAccessoryType(), inv.getArmorTierId()));
             } else if (inv.getItemId() != null) {
                 // Consumable stack — one entry per quantity
                 ItemData item = gameDataService.findItem(inv.getItemId()).orElse(null);
@@ -1701,7 +1755,7 @@ public class GameLogicService {
                     for (int q = 0; q < inv.getQuantity(); q++) {
                         inventory.add(new ItemSummaryDTO(
                                 inv.getItemId(), item.name(), "consumable",
-                                null, null, null, item.effect(), null));
+                                null, null, null, item.effect(), null, null));
                     }
                 }
             }
