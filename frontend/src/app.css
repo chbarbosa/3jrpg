@@ -1570,6 +1570,7 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--sp-xs);
   text-align: center;
   transition:
