@@ -1,28 +1,28 @@
 [
   {
     "id": "warrior", "name": "Warrior", "type": "PHYSICAL",
-    "str": 12, "dex": 8, "intel": 5, "hp": 30, "spd": 12, "en": 14,
+    "str": 12, "dex": 8, "intel": 5, "hp": 30, "spd": 20, "en": 20,
     "equippableWeapons": ["sword", "axe", "mace", "greatsword"],
     "equippableArmor": "heavy",
     "damageBonus": {"bonusAmount": 1, "targetType": "humanoid"}
   },
   {
     "id": "ranger", "name": "Ranger", "type": "PHYSICAL",
-    "str": 8, "dex": 12, "intel": 5, "hp": 24, "spd": 18, "en": 18,
+    "str": 8, "dex": 12, "intel": 5, "hp": 20, "spd": 30, "en": 30,
     "equippableWeapons": ["sword", "bow"],
     "equippableArmor": "medium",
     "damageBonus": {"bonusAmount": 1, "targetType": "beast"}
   },
   {
     "id": "mage", "name": "Mage", "type": "MAGIC",
-    "str": 5, "dex": 5, "intel": 15, "hp": 18, "spd": 12, "en": 20,
+    "str": 6, "dex": 5, "intel": 14, "hp": 15, "spd": 20, "en": 35,
     "equippableWeapons": ["staff", "wand"],
     "equippableArmor": "light",
     "damageBonus": null
   },
   {
     "id": "cleric", "name": "Cleric", "type": "MAGIC",
-    "str": 8, "dex": 8, "intel": 9, "hp": 21, "spd": 14, "en": 16,
+    "str": 8, "dex": 8, "intel": 9, "hp": 20, "spd": 20, "en": 22,
     "equippableWeapons": ["mace", "hammer", "scythe"],
     "equippableArmor": "medium",
     "damageBonus": null
@@ -30,7 +30,7 @@
 
   {
     "id": "thief", "name": "Thief", "type": "PHYSICAL",
-    "str": 6, "dex": 12, "intel": 7, "hp": 20, "spd": 24, "en": 20,
+    "str": 6, "dex": 12, "intel": 7, "hp": 15, "spd": 30, "en": 30,
     "equippableWeapons": ["sword", "mace", "scythe", "bow" ],
     "equippableArmor": "light",
     "damageBonus": {"bonusAmount": 2, "targetType": "humanoid"}

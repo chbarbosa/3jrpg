@@ -1307,9 +1307,9 @@ public class GameLogicService {
     private int physArmorReductionBase(String armorId) {
         if (armorId == null) return 0;
         return switch (armorId) {
-            case "heavy"        -> 2;
-            case "medium"       -> 1;
-            case "light"        -> 1;
+            case "heavy"        -> 3;
+            case "medium"       -> 2;
+            case "light"        -> 2;
             default             -> 0;
         };
     }
@@ -1317,9 +1317,9 @@ public class GameLogicService {
     private int physArmorReductionRandom(String armorId) {
         if (armorId == null) return 0;
         return switch (armorId) {
-            case "heavy"  -> 2;
-            case "medium" -> ThreadLocalRandom.current().nextBoolean() ? 1 : 2;
-            case "light"  -> 1;
+            case "heavy"  -> 3;
+            case "medium" -> ThreadLocalRandom.current().nextBoolean() ? 2 : 3;
+            case "light"  -> 2;
             default       -> 0;
         };
     }
