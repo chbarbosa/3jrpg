@@ -182,6 +182,31 @@ class GameLogicServiceTest {
     }
 
     @Test
+    void resolveSkill_allowsGreatswordHeavyStrikeAgainstUndead() {
+        GameLogicService service = new GameLogicService(gameDataForGreatswordHeavyStrike());
+        BattleState state = new BattleState();
+        HeroState hero = hero("hero_0", "warrior", 20);
+        hero.setName("Warrior");
+        hero.setEquippedWeaponId("greatsword");
+        hero.setStr(12);
+        hero.setEn(10);
+        EnemyState enemy = enemy("dracolich_10_1", 10);
+        enemy.setName("Dracolich");
+        enemy.setType("undead");
+        enemy.setHp(30);
+        enemy.setMaxHp(30);
+        state.setHeroes(List.of(hero));
+        state.setEnemies(List.of(enemy));
+
+        String result = service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.SKILL, "hero_0", "dracolich_10_1", "heavyStrike", null, null));
+
+        assertTrue(result.contains("Heavy Strike"));
+        assertEquals(14, enemy.getHp());
+        assertEquals(8, hero.getEn());
+    }
+
+    @Test
     void equipLootItemFromInventory_allowsTwoRingSlotsToStackBonuses() {
         HeroState hero = hero("hero_0", "warrior", 14);
         hero.setStr(10);
@@ -399,6 +424,13 @@ class GameLogicServiceTest {
         GameDataService gameDataService = mock(GameDataService.class);
         SkillData stab = new SkillData("stab", "Stab", "Bleed", 2, "bleed", 1.0);
         when(gameDataService.findSkill("dagger", "stab")).thenReturn(Optional.of(stab));
+        return gameDataService;
+    }
+
+    private GameDataService gameDataForGreatswordHeavyStrike() {
+        GameDataService gameDataService = mock(GameDataService.class);
+        SkillData heavyStrike = new SkillData("heavyStrike", "Heavy Strike", "Hit +4", 2, null, 0.0);
+        when(gameDataService.findSkill("greatsword", "heavyStrike")).thenReturn(Optional.of(heavyStrike));
         return gameDataService;
     }
 

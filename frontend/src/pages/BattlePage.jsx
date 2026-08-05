@@ -50,6 +50,7 @@ export default function BattlePage() {
   const enemyTurnTimerRef = useRef(null);
   const prevBattleStateRef = useRef(battleState);
   const battlePageRef = useRef(null);
+  const actionInFlightRef = useRef(false);
 
   // A long selection page can leave browser scroll restoration offset when this
   // route becomes the mobile battle scroller. Always enter a fight at its header.
@@ -167,9 +168,17 @@ export default function BattlePage() {
   }
 
   async function submitAction({ actionType, actorId, targetId, skillId, spellId, itemId }) {
+    if (actionInFlightRef.current) return;
+    actionInFlightRef.current = true;
     setTargeting(null);
     setLoading(true);
     const prevState = prevBattleStateRef.current ?? battleState;
+    const currentState = prevBattleStateRef.current ?? battleState;
+    if (!currentState?.runUuid) {
+      actionInFlightRef.current = false;
+      setLoading(false);
+      return;
+    }
 
     // Enemy attack animation — flushSync guarantees the enemy-attacking class is
     // committed to the DOM synchronously before the API call starts, so it always
@@ -184,7 +193,7 @@ export default function BattlePage() {
 
     try {
       const result = await performAction(
-        battleState.runUuid, actionType, actorId,
+        currentState.runUuid, actionType, actorId,
         targetId ?? null, skillId ?? null, spellId ?? null, itemId ?? null,
       );
 
@@ -270,6 +279,7 @@ export default function BattlePage() {
     } catch (err) {
       showError(err.response?.data?.error ?? err.message ?? 'Action failed.');
     } finally {
+      actionInFlightRef.current = false;
       setLoading(false);
     }
   }
@@ -283,11 +293,13 @@ export default function BattlePage() {
   }
 
   function handleEnemyClick(enemy) {
+    if (loading || actionInFlightRef.current) return;
     if (!targeting || targeting.mode !== 'enemy') return;
     submitAction({ ...targeting, targetId: enemy.id });
   }
 
   function handleHeroClick(hero) {
+    if (loading || actionInFlightRef.current) return;
     if (!targeting) return;
     if (targeting.mode === 'ally' || targeting.mode === 'ally-ko') {
       submitAction({ ...targeting, targetId: hero.id });
@@ -413,7 +425,7 @@ export default function BattlePage() {
               <EnemyPanel
                 enemy={enemy}
                 isTargeted={targeting?.mode === 'enemy' && targeting !== null}
-                onClick={targeting?.mode === 'enemy' && !(enemy.defeated ?? enemy.hp <= 0) ? () => handleEnemyClick(enemy) : null}
+                onClick={targeting?.mode === 'enemy' && !loading && !(enemy.defeated ?? enemy.hp <= 0) ? () => handleEnemyClick(enemy) : null}
                 showScan={showCyberEyeScan}
               />
               {enemy.id === attackingEnemyId && (
