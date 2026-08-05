@@ -577,8 +577,11 @@ public class GameLogicService {
         if (skill.statusEffect() != null && !"stun".equals(skillId) && !"pain".equals(skillId)
                 && ThreadLocalRandom.current().nextDouble() < skill.statusChance()) {
             String statusType = enemyStatusType(target, skill.statusEffect());
-            applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
-            msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(statusType));
+            if (applyStatusEnemy(target, statusType, statusDuration(statusType), 1)) {
+                msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(statusType));
+            } else {
+                msg.append(" ").append(target.getName()).append(" is immune to ").append(statusDisplayName(statusType)).append("!");
+            }
         }
 
         String result = msg.toString();
@@ -719,8 +722,11 @@ public class GameLogicService {
         if (target.getHp() > 0 && "sword".equals(weaponId)) {
             if (ThreadLocalRandom.current().nextDouble() < 0.5) {
                 String statusType = enemyStatusType(target, "bleed");
-                applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
-                msg.append(" ").append(statusCallout(statusType));
+                if (applyStatusEnemy(target, statusType, statusDuration(statusType), 1)) {
+                    msg.append(" ").append(statusCallout(statusType));
+                } else {
+                    msg.append(" ").append(statusImmuneCallout(statusType));
+                }
             }
             if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                 applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
@@ -737,8 +743,11 @@ public class GameLogicService {
             if (target.getHp() > 0 && "sword".equals(weaponId)) {
                 if (ThreadLocalRandom.current().nextDouble() < 0.5) {
                     String statusType = enemyStatusType(target, "bleed");
-                    applyStatusEnemy(target, statusType, statusDuration(statusType), 1);
-                    msg.append(" ").append(statusCallout(statusType));
+                    if (applyStatusEnemy(target, statusType, statusDuration(statusType), 1)) {
+                        msg.append(" ").append(statusCallout(statusType));
+                    } else {
+                        msg.append(" ").append(statusImmuneCallout(statusType));
+                    }
                 }
                 if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                     applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
@@ -761,8 +770,12 @@ public class GameLogicService {
             applyDmgToEnemy(target, dmg, state);
             msg.append(" Hit ").append(hit).append(": ").append(dmg).append(" dmg.");
             if (target.getHp() > 0) {
-                applyStatusEnemy(target, "bleed", statusDuration("bleed"), 1);
-                msg.append(" ").append(statusCallout(enemyStatusType(target, "bleed")));
+                String statusType = enemyStatusType(target, "bleed");
+                if (applyStatusEnemy(target, statusType, statusDuration(statusType), 1)) {
+                    msg.append(" ").append(statusCallout(statusType));
+                } else {
+                    msg.append(" ").append(statusImmuneCallout(statusType));
+                }
                 if (ThreadLocalRandom.current().nextDouble() < 0.30) {
                     applyStatusEnemy(target, "trauma", statusDuration("trauma"), 1);
                     msg.append(" Trauma!");
@@ -868,8 +881,12 @@ public class GameLogicService {
                 + " on " + target.getName() + " for " + dmg + " damage.");
 
         if (spell.statusEffect() != null) {
-            applyStatusEnemy(target, spell.statusEffect(), statusDuration(spell.statusEffect()), 1);
-            msg.append(" ").append(target.getName()).append(" is ").append(spell.statusEffect()).append("!");
+            String statusType = enemyStatusType(target, spell.statusEffect());
+            if (applyStatusEnemy(target, statusType, statusDuration(statusType), 1)) {
+                msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(statusType));
+            } else {
+                msg.append(" ").append(target.getName()).append(" is immune to ").append(statusDisplayName(statusType)).append("!");
+            }
         }
 
         // Elemental schools have 50% chance to inflict their school status
@@ -881,8 +898,11 @@ public class GameLogicService {
                 default         -> null;
             };
             if (schoolStatus != null && ThreadLocalRandom.current().nextDouble() < 0.5) {
-                applyStatusEnemy(target, schoolStatus, statusDuration(schoolStatus), 0);
-                msg.append(" ").append(target.getName()).append(" is ").append(schoolStatus).append("!");
+                if (applyStatusEnemy(target, schoolStatus, statusDuration(schoolStatus), 0)) {
+                    msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(schoolStatus));
+                } else {
+                    msg.append(" ").append(target.getName()).append(" is immune to ").append(statusDisplayName(schoolStatus)).append("!");
+                }
             }
         }
 
@@ -1282,8 +1302,11 @@ public class GameLogicService {
         }
     }
 
-    private void applyStatusEnemy(EnemyState enemy, String type, int duration, int magnitude) {
+    private boolean applyStatusEnemy(EnemyState enemy, String type, int duration, int magnitude) {
         String appliedType = enemyStatusType(enemy, type);
+        if (isEnemyImmuneToStatus(enemy, appliedType)) {
+            return false;
+        }
         enemy.getStatuses().removeIf(s -> s.getType().equals(appliedType));
         enemy.getStatuses().add(new ActiveStatus(appliedType, duration, magnitude));
         switch (appliedType) {
@@ -1305,6 +1328,7 @@ public class GameLogicService {
                 else                 enemy.setDex(Math.max(1, enemy.getDex() - 1));
             }
         }
+        return true;
     }
 
     private String enemyStatusType(EnemyState enemy, String type) {
@@ -1312,6 +1336,11 @@ public class GameLogicService {
             return "leaking";
         }
         return type;
+    }
+
+    private boolean isEnemyImmuneToStatus(EnemyState enemy, String type) {
+        return "bleed".equals(type)
+                && ("elemental".equals(enemy.getType()) || "undead".equals(enemy.getType()));
     }
 
     private String statusAppliedText(String type) {
@@ -1329,6 +1358,18 @@ public class GameLogicService {
             case "leaking" -> "Leaking!";
             case "bleed"   -> "Bleed!";
             default        -> statusAppliedText(type);
+        };
+    }
+
+    private String statusImmuneCallout(String type) {
+        return "Immune to " + statusDisplayName(type) + "!";
+    }
+
+    private String statusDisplayName(String type) {
+        return switch (type) {
+            case "bleed"   -> "Bleed";
+            case "leaking" -> "Leaking";
+            default        -> type;
         };
     }
 

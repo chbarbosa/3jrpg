@@ -4,10 +4,13 @@ import com.jrpg.battle.state.BattleState;
 import com.jrpg.battle.state.EnemyState;
 import com.jrpg.battle.state.HeroState;
 import com.jrpg.battle.state.InventoryItem;
+import com.jrpg.battle.dto.ActionRequest;
+import com.jrpg.battle.dto.ActionType;
 import com.jrpg.battle.dto.HeroConfigDTO;
 import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.ClassData;
 import com.jrpg.gamedata.model.ItemData;
+import com.jrpg.gamedata.model.SkillData;
 import com.jrpg.gamedata.model.WeaponType;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -125,6 +129,56 @@ class GameLogicServiceTest {
                 validHero(null))));
 
         assertEquals("Unknown item: badPotion", ex.getReason());
+    }
+
+    @Test
+    void resolveSkill_convertsBleedToLeakingForMechanicalEnemies() {
+        GameLogicService service = new GameLogicService(gameDataForGuaranteedBleedSkill());
+        BattleState state = stateForBleedSkillTarget("mechanical");
+
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.SKILL, "hero_0", "enemy_0", "stab", null, null));
+
+        assertEquals(List.of("leaking"), state.getEnemies().get(0).getStatuses().stream()
+                .map(s -> s.getType())
+                .toList());
+    }
+
+    @Test
+    void resolveSkill_doesNotApplyBleedToElementalEnemies() {
+        GameLogicService service = new GameLogicService(gameDataForGuaranteedBleedSkill());
+        BattleState state = stateForBleedSkillTarget("elemental");
+
+        String result = service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.SKILL, "hero_0", "enemy_0", "stab", null, null));
+
+        assertTrue(state.getEnemies().get(0).getStatuses().isEmpty());
+        assertTrue(result.contains("immune to Bleed"));
+    }
+
+    @Test
+    void resolveSkill_doesNotApplyBleedToUndeadEnemies() {
+        GameLogicService service = new GameLogicService(gameDataForGuaranteedBleedSkill());
+        BattleState state = stateForBleedSkillTarget("undead");
+
+        String result = service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.SKILL, "hero_0", "enemy_0", "stab", null, null));
+
+        assertTrue(state.getEnemies().get(0).getStatuses().isEmpty());
+        assertTrue(result.contains("immune to Bleed"));
+    }
+
+    @Test
+    void resolveSkill_appliesBleedToOrganicEnemies() {
+        GameLogicService service = new GameLogicService(gameDataForGuaranteedBleedSkill());
+        BattleState state = stateForBleedSkillTarget("beast");
+
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.SKILL, "hero_0", "enemy_0", "stab", null, null));
+
+        assertEquals(List.of("bleed"), state.getEnemies().get(0).getStatuses().stream()
+                .map(s -> s.getType())
+                .toList());
     }
 
     @Test
@@ -339,5 +393,29 @@ class GameLogicServiceTest {
 
     private HeroConfigDTO validHero(Map<String, Integer> items) {
         return new HeroConfigDTO("warrior", "natural", null, "sword", "heavy", null, null, items);
+    }
+
+    private GameDataService gameDataForGuaranteedBleedSkill() {
+        GameDataService gameDataService = mock(GameDataService.class);
+        SkillData stab = new SkillData("stab", "Stab", "Bleed", 2, "bleed", 1.0);
+        when(gameDataService.findSkill("dagger", "stab")).thenReturn(Optional.of(stab));
+        return gameDataService;
+    }
+
+    private BattleState stateForBleedSkillTarget(String enemyType) {
+        BattleState state = new BattleState();
+        HeroState hero = hero("hero_0", "thief", 20);
+        hero.setName("Thief");
+        hero.setEquippedWeaponId("dagger");
+        hero.setStr(10);
+        hero.setEn(10);
+        EnemyState enemy = enemy("enemy_0", 10);
+        enemy.setName("Target");
+        enemy.setType(enemyType);
+        enemy.setHp(20);
+        enemy.setMaxHp(20);
+        state.setHeroes(List.of(hero));
+        state.setEnemies(List.of(enemy));
+        return state;
     }
 }
