@@ -677,7 +677,6 @@ public class BattleService {
         if (gameLogicService.checkAllEnemiesDead(state)) {
             state.setFightOver(true);
             state.setVictory(true);
-            state.getCombatLog().add("Victory! All enemies defeated by a passive aura.");
         }
     }
 
