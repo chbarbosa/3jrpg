@@ -207,6 +207,36 @@ class GameLogicServiceTest {
     }
 
     @Test
+    void consumeItem_healingPotionRestoresFullHp() {
+        BattleState state = new BattleState();
+        HeroState hero = hero("hero_0", "warrior", 14);
+        hero.setHp(3);
+        hero.setMaxHp(30);
+        hero.getInventory().add(InventoryItem.consumable("healingPotion", 1));
+        state.setHeroes(List.of(hero));
+
+        gameLogicService.consumeItem(state, hero, "hero_0", "healingPotion");
+
+        assertEquals(30, hero.getHp());
+        assertTrue(hero.getInventory().isEmpty());
+    }
+
+    @Test
+    void consumeItem_energyPotionRestoresFullEn() {
+        BattleState state = new BattleState();
+        HeroState hero = hero("hero_0", "warrior", 14);
+        hero.setEn(2);
+        hero.setMaxEn(20);
+        hero.getInventory().add(InventoryItem.consumable("energyPotion", 1));
+        state.setHeroes(List.of(hero));
+
+        gameLogicService.consumeItem(state, hero, "hero_0", "energyPotion");
+
+        assertEquals(20, hero.getEn());
+        assertTrue(hero.getInventory().isEmpty());
+    }
+
+    @Test
     void equipLootItemFromInventory_allowsTwoRingSlotsToStackBonuses() {
         HeroState hero = hero("hero_0", "warrior", 14);
         hero.setStr(10);

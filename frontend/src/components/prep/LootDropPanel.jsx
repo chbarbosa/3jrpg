@@ -123,12 +123,6 @@ export default function LootDropPanel({ lootItem, lootIndex = 0, lootCount = 1, 
 
         <ItemCategoryDetail lootItem={lootItem} />
 
-        {lootItem.description && (
-          <div className="loot-item-desc">
-            {lootItem.description}
-          </div>
-        )}
-
         {lootItem.modifiers?.length > 0 && (
           <div className="loot-item-modifiers">
             {lootItem.modifiers.map((mod, i) => (
