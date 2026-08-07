@@ -1,15 +1,12 @@
 export const SPELL_LIST = [
-  { id: 'ember',        label: 'Ember',         school: 'fire',     enCost: 2, targetType: 'single',     description: 'Inflicts burn on one target', statusEffect: 'burn' },
   { id: 'fireball',     label: 'Fireball',      school: 'fire',     enCost: 3, targetType: 'single',     description: 'Hurls a ball of fire at one target', statusEffect: 'burn' },
   { id: 'inferno',      label: 'Inferno',       school: 'fire',     enCost: 7, targetType: 'single',     description: 'Engulfs one target in intense flames', statusEffect: 'burn' },
   { id: 'flamestorm',   label: 'Flamestorm',    school: 'fire',     enCost: 6, targetType: 'all',        description: 'Erupts fire across all enemies', statusEffect: 'burn' },
 
-  { id: 'frostbite',    label: 'Frostbite',     school: 'ice',      enCost: 2, targetType: 'single',     description: 'Chills one target, applying frozen', statusEffect: 'frozen' },
   { id: 'iceShot',      label: 'Ice Shot',      school: 'ice',      enCost: 3, targetType: 'single',     description: 'Launches a shard of ice at one target', statusEffect: 'frozen' },
   { id: 'zero',         label: 'Zero',          school: 'ice',      enCost: 7, targetType: 'single',     description: 'Absolute zero ice strike.', statusEffect: 'frozen' },
   { id: 'icestorm',     label: 'Icestorm',      school: 'ice',      enCost: 6, targetType: 'all',        description: 'Blankets all enemies in freezing ice', statusEffect: 'frozen' },
 
-  { id: 'staticCharge', label: 'Static Charge', school: 'electric', enCost: 2, targetType: 'single',     description: 'Jolts one target, may stun', statusEffect: 'stun' },
   { id: 'spark',        label: 'Spark',         school: 'electric', enCost: 3, targetType: 'single',     description: 'Fires a bolt of electricity at one target', statusEffect: 'stun' },
   { id: 'thunderbolt',  label: 'Thunderbolt',   school: 'electric', enCost: 5, targetType: 'single',     description: 'Strikes one target with a mighty bolt', statusEffect: 'stun' },
   { id: 'thunderstorm', label: 'Thunderstorm',  school: 'electric', enCost: 6, targetType: 'all',        description: 'Calls lightning down on all enemies', statusEffect: 'stun' },

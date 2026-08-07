@@ -1,15 +1,12 @@
 [
-  {"id": "ember",        "name": "Ember",         "school": "Fire",     "effect": "Inflicts burn on one target",                     "enCost": 2, "targetType": "single", "statusEffect": "burn"},
   {"id": "fireball",     "name": "Fireball",      "school": "Fire",     "effect": "Hurls a ball of fire at one target",              "enCost": 3, "targetType": "single", "statusEffect": "burn"},
   {"id": "inferno",      "name": "Inferno",       "school": "Fire",     "effect": "Engulfs one target in intense flames",            "enCost": 7, "targetType": "single", "statusEffect": "burn"},
   {"id": "flamestorm",   "name": "Flamestorm",    "school": "Fire",     "effect": "Erupts fire across all enemies",                  "enCost": 6, "targetType": "all",    "statusEffect": "burn"},
 
-  {"id": "frostbite",    "name": "Frostbite",     "school": "Ice",      "effect": "Chills one target, applying frozen",              "enCost": 2, "targetType": "single", "statusEffect": "frozen"},
   {"id": "iceShot",      "name": "Ice Shot",      "school": "Ice",      "effect": "Launches a shard of ice at one target",           "enCost": 3, "targetType": "single", "statusEffect": "frozen"},
   {"id": "zero",         "name": "Zero",          "school": "Ice",      "effect": "Absolute zero ice strike.",                       "enCost": 7, "targetType": "single", "statusEffect": "frozen"},
   {"id": "icestorm",     "name": "Icestorm",      "school": "Ice",      "effect": "Blankets all enemies in freezing ice",            "enCost": 6, "targetType": "all",    "statusEffect": "frozen"},
 
-  {"id": "staticCharge", "name": "Static Charge", "school": "Electric", "effect": "Jolts one target, may stun",                      "enCost": 2, "targetType": "single", "statusEffect": "stun"},
   {"id": "spark",        "name": "Spark",          "school": "Electric", "effect": "Fires a bolt of electricity at one target",      "enCost": 3, "targetType": "single", "statusEffect": "stun"},
   {"id": "thunderbolt",  "name": "Thunderbolt",    "school": "Electric", "effect": "Strikes one target with a mighty bolt",          "enCost": 5, "targetType": "single", "statusEffect": "stun"},
   {"id": "thunderstorm", "name": "Thunderstorm",   "school": "Electric", "effect": "Calls lightning down on all enemies",            "enCost": 6, "targetType": "all",    "statusEffect": "stun"},
