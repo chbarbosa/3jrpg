@@ -209,6 +209,31 @@ class GameLogicServiceTest {
     }
 
     @Test
+    void resolveAttack_staffAndWandMagicBoltDamageVariesFromTwoBelowToOneAboveInt() {
+        for (String weaponId : List.of("staff", "wand")) {
+            GameLogicService service = new GameLogicService(gameDataForMagicBoltWeapon(weaponId));
+            BattleState state = new BattleState();
+            HeroState hero = hero("hero_0", "mage", 20);
+            hero.setName("Mage");
+            hero.setEquippedWeaponId(weaponId);
+            hero.setIntel(10);
+            EnemyState enemy = enemy("enemy_0", 10);
+            enemy.setName("Target");
+            enemy.setType("beast");
+            enemy.setHp(30);
+            enemy.setMaxHp(30);
+            state.setHeroes(List.of(hero));
+            state.setEnemies(List.of(enemy));
+
+            service.resolveAction(state, new ActionRequest(
+                    UUID.randomUUID(), ActionType.ATTACK, "hero_0", "enemy_0", null, null, null));
+
+            int damage = 30 - enemy.getHp();
+            assertTrue(damage >= 8 && damage <= 11);
+        }
+    }
+
+    @Test
     void consumeItem_healingPotionRestoresFullHp() {
         BattleState state = new BattleState();
         HeroState hero = hero("hero_0", "warrior", 14);
@@ -500,6 +525,13 @@ class GameLogicServiceTest {
         GameDataService gameDataService = mock(GameDataService.class);
         SkillData heavyStrike = new SkillData("heavyStrike", "Heavy Strike", "Hit +4", 2, null, 0.0);
         when(gameDataService.findSkill("greatsword", "heavyStrike")).thenReturn(Optional.of(heavyStrike));
+        return gameDataService;
+    }
+
+    private GameDataService gameDataForMagicBoltWeapon(String weaponId) {
+        GameDataService gameDataService = mock(GameDataService.class);
+        WeaponType weapon = new WeaponType(weaponId, weaponId, List.of("mage"), List.of(), null, false);
+        when(gameDataService.findWeapon(weaponId)).thenReturn(Optional.of(weapon));
         return gameDataService;
     }
 

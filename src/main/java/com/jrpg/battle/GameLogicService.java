@@ -1024,7 +1024,7 @@ public class GameLogicService {
     private String performMagicBolt(BattleState state, HeroState hero, String targetId) {
         EnemyState target = findEnemy(state, targetId);
         if (target.getHp() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target already dead");
-        int dmg = Math.max(1, hero.getIntel());
+        int dmg = Math.max(1, hero.getIntel() + ThreadLocalRandom.current().nextInt(-2, 2));
         applyDmgToEnemy(target, dmg, state);
         String msg = heroLabel(hero) + " fires a magic bolt at " + target.getName() + " for " + dmg + " damage.";
         addLog(state, msg);
