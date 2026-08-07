@@ -1403,7 +1403,7 @@ public class GameLogicService {
             case 2 -> 0;
             case 3 -> 1;
             case 5 -> 3;
-            case 6 -> 2;
+            case 6 -> 4;
             case 7 -> 5;
             default -> 0;
         };
