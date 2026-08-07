@@ -15,6 +15,7 @@ public final class GameData {
     public static final int CAP_FIGHTS_PER_TIER   = 3;
     public static final int STARTING_GROUP_SIZE   = 2;
     public static final int MAX_GROUP_SIZE        = 6;
+    public static final String COMMON_LOOT_QUALITY = "COMMON";
 
     public static int monsterCap(int fightNumber) {
         return MONSTER_CAP_START + ((fightNumber - 1) / CAP_FIGHTS_PER_TIER) * MONSTER_CAP_INCREMENT;
@@ -35,7 +36,7 @@ public final class GameData {
     }
 
     public static List<String> lootQualityPool(int cap) {
-        if (cap <= 25) return List.of("COMMON", "COMMON", "COMMON");
+        if (cap <= 25) return List.of("COMMON");
         if (cap <= 35) return List.of("COMMON", "COMMON", "MAGIC");
         if (cap <= 55) return List.of("COMMON", "MAGIC",  "RARE");
         return              List.of("MAGIC",  "MAGIC",  "RARE");

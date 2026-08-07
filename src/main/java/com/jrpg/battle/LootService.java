@@ -43,11 +43,12 @@ public class LootService {
 
     public LootItemDTO generateLootDrop(int monsterCap) {
         List<String> qualityPool = GameData.lootQualityPool(monsterCap);
-        String quality = qualityPool.get(ThreadLocalRandom.current().nextInt(qualityPool.size()));
+        String quality = qualityPool.size() > 1 ? qualityPool.get(ThreadLocalRandom.current().nextInt(qualityPool.size())) : qualityPool.get(0);
         String itemUuid = UUID.randomUUID().toString();
 
         // 25% each for WEAPON, ARMOR, ACCESSORY, CONSUMABLE
-        int typeRoll = ThreadLocalRandom.current().nextInt(4);
+        // Common quality must be always potion
+        int typeRoll = quality.equals(GameData.COMMON_LOOT_QUALITY) ? 3 : ThreadLocalRandom.current().nextInt(4);
         LootItemDTO loot = switch (typeRoll) {
             case 0 -> generateWeaponLoot(quality, itemUuid);
             case 1 -> generateArmorLoot(quality, itemUuid);
