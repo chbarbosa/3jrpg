@@ -7,7 +7,7 @@ export const theme = {
     statusPoison: '#6B8E23', statusBurn: '#D2691E', statusBleed: '#8B0000',
     statusFrozen: '#87CEEB', statusStun: '#FFD700', statusPositive: '#228B22',
     actionHover: '#D4A017', actionActive: '#8B6914',
-    highlight: '#FFE066', overlayBg: 'rgba(44, 26, 14, 0.6)',
+    highlight: '#FFE066', overlayBg: 'rgba(44, 26, 14, 0.6)', pixelOutline: '#2C1A0E',
   },
   fonts: {
     header: "'Philosopher', 'Cinzel', serif",
@@ -18,8 +18,15 @@ export const theme = {
   fontWeights: { normal: 400, bold: 700, black: 900 },
   spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', xxl: '48px' },
   radius: { sm: '4px', md: '8px', lg: '12px', pill: '999px' },
-  shadows: { panel: '2px 2px 6px rgba(44,26,14,0.25)', highlight: '0 0 10px rgba(255,224,102,0.7)' },
+  shadows: { panel: '2px 2px 6px rgba(44,26,14,0.25)', highlight: '0 0 10px rgba(255,224,102,0.7)', pixelIcon: '2px 2px 0 rgba(44,26,14,0.18)' },
   transitions: { fast: '100ms ease', normal: '200ms ease', slow: '350ms ease' },
   classColors: { warrior: '#C0392B', ranger: '#27AE60', mage: '#2980B9', cleric: '#F39C12', thief: '#7F8C8D' },
+  pixelIconColors: {
+    warrior: { base: '#C0392B', dark: '#7F1D1D', light: '#E74C3C', shine: '#F5B7B1' },
+    ranger: { base: '#27AE60', dark: '#196F3D', light: '#58D68D', shine: '#D5F5E3' },
+    mage: { base: '#2980B9', dark: '#1B4F72', light: '#5DADE2', shine: '#D6EAF8' },
+    cleric: { base: '#F39C12', dark: '#9A6400', light: '#F7DC6F', shine: '#FFF4B0' },
+    thief: { base: '#7F8C8D', dark: '#424949', light: '#B3B6B7', shine: '#ECF0F1' },
+  },
   enemyColors: { humanoid: '#8E44AD', beast: '#E67E22', mechanical: '#7F8C8D', undead: '#2C3E50', elemental: '#1ABC9C' },
 }

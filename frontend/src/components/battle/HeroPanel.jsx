@@ -2,6 +2,7 @@ import { theme } from '../../styles/theme';
 import HPBar from './HPBar';
 import ENBar from './ENBar';
 import StatusBadge from './StatusBadge';
+import HeroClassIcon from './HeroClassIcon';
 import { AUGMENTATION_LIST } from '../../data/augmentations';
 
 export default function HeroPanel({ hero, isActive }) {
@@ -30,10 +31,7 @@ export default function HeroPanel({ hero, isActive }) {
       ].join(' ').trim()}
     >
       <div className="hero-avatar-wrapper">
-        <div
-          className="hero-avatar-circle"
-          style={{ background: classColor }}
-        />
+        <HeroClassIcon className={hero.className ?? hero.name} />
         {ko && (
           <div className="hero-ko-overlay">
             KO
