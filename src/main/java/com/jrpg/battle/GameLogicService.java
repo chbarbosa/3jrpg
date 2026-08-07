@@ -889,23 +889,6 @@ public class GameLogicService {
             }
         }
 
-        // Elemental schools have 50% chance to inflict their school status
-        if (target.getHp() > 0) {
-            String schoolStatus = switch (school) {
-                case "fire"     -> "burn";
-                case "ice"      -> "frozen";
-                case "electric" -> "dizzle";
-                default         -> null;
-            };
-            if (schoolStatus != null && ThreadLocalRandom.current().nextDouble() < 0.5) {
-                if (applyStatusEnemy(target, schoolStatus, statusDuration(schoolStatus), 0)) {
-                    msg.append(" ").append(target.getName()).append(" ").append(statusAppliedText(schoolStatus));
-                } else {
-                    msg.append(" ").append(target.getName()).append(" is immune to ").append(statusDisplayName(schoolStatus)).append("!");
-                }
-            }
-        }
-
         // High-damage single-target spells (enCost 7) cause arcane splash on a random other enemy
         if (spell.enCost() == 7 && "single".equalsIgnoreCase(spell.targetType())) {
             List<EnemyState> others = state.getEnemies().stream()
@@ -972,6 +955,14 @@ public class GameLogicService {
             }
             applyDmgToEnemy(e, dmg, state);
             sb.append(" ").append(e.getName()).append(" -").append(dmg).append("HP;");
+            if (e.getHp() > 0 && spell.statusEffect() != null) {
+                String statusType = enemyStatusType(e, spell.statusEffect());
+                if (applyStatusEnemy(e, statusType, statusDuration(statusType), 1)) {
+                    sb.append(" ").append(statusCallout(statusType));
+                } else {
+                    sb.append(" ").append(statusImmuneCallout(statusType));
+                }
+            }
         }
         String msg = sb.toString();
         addLog(state, msg);

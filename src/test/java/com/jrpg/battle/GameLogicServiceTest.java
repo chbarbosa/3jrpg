@@ -11,10 +11,12 @@ import com.jrpg.gamedata.GameDataService;
 import com.jrpg.gamedata.model.ClassData;
 import com.jrpg.gamedata.model.ItemData;
 import com.jrpg.gamedata.model.SkillData;
+import com.jrpg.gamedata.model.SpellData;
 import com.jrpg.gamedata.model.WeaponType;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -234,6 +236,43 @@ class GameLogicServiceTest {
 
         assertEquals(20, hero.getEn());
         assertTrue(hero.getInventory().isEmpty());
+    }
+
+    @Test
+    void resolveMagic_appliesExplicitSingleTargetSpellStatus() {
+        GameLogicService service = new GameLogicService(gameDataForSpell(
+                new SpellData("spark", "Spark", "Electric", "Zap", 3, "single", "stun")));
+        BattleState state = stateForSpellCast("enemy_0");
+
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.MAGIC, "hero_0", "enemy_0", null, "spark", null));
+
+        assertEquals(List.of("stun"), state.getEnemies().get(0).getStatuses().stream()
+                .map(s -> s.getType())
+                .toList());
+    }
+
+    @Test
+    void resolveMagic_appliesExplicitAoeSpellStatusToAllDamagedEnemies() {
+        GameLogicService service = new GameLogicService(gameDataForSpell(
+                new SpellData("thunderstorm", "Thunderstorm", "Electric", "Storm", 6, "all", "stun")));
+        BattleState state = stateForSpellCast(null);
+        EnemyState second = enemy("enemy_1", 9);
+        second.setName("Second");
+        second.setType("beast");
+        second.setHp(20);
+        second.setMaxHp(20);
+        state.getEnemies().add(second);
+
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.MAGIC, "hero_0", null, null, "thunderstorm", null));
+
+        assertEquals(List.of("stun"), state.getEnemies().get(0).getStatuses().stream()
+                .map(s -> s.getType())
+                .toList());
+        assertEquals(List.of("stun"), state.getEnemies().get(1).getStatuses().stream()
+                .map(s -> s.getType())
+                .toList());
     }
 
     @Test
@@ -478,6 +517,30 @@ class GameLogicServiceTest {
         enemy.setMaxHp(20);
         state.setHeroes(List.of(hero));
         state.setEnemies(List.of(enemy));
+        return state;
+    }
+
+    private GameDataService gameDataForSpell(SpellData spell) {
+        GameDataService gameDataService = mock(GameDataService.class);
+        when(gameDataService.findSpell(spell.id())).thenReturn(Optional.of(spell));
+        return gameDataService;
+    }
+
+    private BattleState stateForSpellCast(String targetId) {
+        BattleState state = new BattleState();
+        HeroState hero = hero("hero_0", "mage", 20);
+        hero.setName("Mage");
+        hero.setIntel(10);
+        hero.setEn(20);
+        hero.setMaxEn(20);
+        EnemyState enemy = enemy(targetId != null ? targetId : "enemy_0", 10);
+        enemy.setName("Target");
+        enemy.setType("beast");
+        enemy.setHp(20);
+        enemy.setMaxHp(20);
+        enemy.setElementalImmunity(List.of());
+        state.setHeroes(List.of(hero));
+        state.setEnemies(new ArrayList<>(List.of(enemy)));
         return state;
     }
 }
