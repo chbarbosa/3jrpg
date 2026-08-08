@@ -542,7 +542,7 @@ public class GameLogicService {
             msg.append(" ").append(target.getName()).append("'s SPD reduced!");
         }
 
-        // HeadBash → Stunned (half SPD)
+        // HeadBash → Stunned (-2 outgoing damage)
         if ("headBash".equals(skillId)) {
             applyStatusEnemy(target, "stun", 1, 0);
             msg.append(" ").append(target.getName()).append(" is stunned!");
@@ -1109,9 +1109,7 @@ public class GameLogicService {
                     .filter(e -> e.getId().equals(activeId)).findFirst().orElse(null);
             if (enemy == null || enemy.getHp() <= 0) { advanceTurn(state); continue; }
 
-            boolean stunned = enemy.getStatuses().stream()
-                    .anyMatch(s -> "stun".equals(s.getType()) || "frozen".equals(s.getType()));
-            if (!stunned) resolveEnemyAttack(enemy, state);
+            resolveEnemyAttack(enemy, state);
 
             tickEnemyStatuses(enemy, state);
             advanceTurn(state);
@@ -1136,16 +1134,8 @@ public class GameLogicService {
             return "Dead enemy skipped";
         }
 
-        boolean stunned = enemy.getStatuses().stream()
-                .anyMatch(s -> "stun".equals(s.getType()) || "frozen".equals(s.getType()));
-        String msg;
-        if (!stunned) {
-            resolveEnemyAttack(enemy, state);
-            msg = enemy.getName() + " acts.";
-        } else {
-            addLog(state, enemy.getName() + " is stunned and cannot act.");
-            msg = enemy.getName() + " is stunned.";
-        }
+        resolveEnemyAttack(enemy, state);
+        String msg = enemy.getName() + " acts.";
         tickEnemyStatuses(enemy, state);
         advanceTurn(state);
         return msg;
@@ -1164,6 +1154,10 @@ public class GameLogicService {
 
         if (enemy.isDisarmedDebuff()) {
             dmg = Math.max(1, dmg / 2);
+        }
+
+        if (enemy.getStatuses().stream().anyMatch(s -> "stun".equals(s.getType()))) {
+            dmg = Math.max(1, dmg - 2);
         }
 
         if (target.getCyberArmorSkinBonus() > 0) {
@@ -1266,6 +1260,8 @@ public class GameLogicService {
         Iterator<ActiveStatus> it = enemy.getStatuses().iterator();
         while (it.hasNext()) {
             ActiveStatus s = it.next();
+            // Frozen and Stun are persistent battle debuffs.
+            if ("frozen".equals(s.getType()) || "stun".equals(s.getType())) continue;
             switch (s.getType()) {
                 case "bleed", "leaking", "burn", "poison" -> {
                     int dmg = Math.max(1, s.getMagnitude());
@@ -1283,9 +1279,6 @@ public class GameLogicService {
                     if (s.getMagnitude() == 1) enemy.setStr(enemy.getStr() + 1);
                     else                       enemy.setDex(enemy.getDex() + 1);
                 }
-                if ("frozen".equals(s.getType())) {
-                    enemy.setDex(enemy.getDex() + 2);
-                }
                 it.remove();
             }
         }
@@ -1296,14 +1289,36 @@ public class GameLogicService {
         if (isEnemyImmuneToStatus(enemy, appliedType)) {
             return false;
         }
+
+        if ("frozen".equals(appliedType)) {
+            ActiveStatus frozen = enemy.getStatuses().stream()
+                    .filter(s -> "frozen".equals(s.getType()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        ActiveStatus status = new ActiveStatus("frozen", 0, 0);
+                        enemy.getStatuses().add(status);
+                        return status;
+                    });
+            frozen.setMagnitude(frozen.getMagnitude() + 2);
+            enemy.setDex(Math.max(0, enemy.getDex() - 2));
+            if (enemy.getDex() == 0) {
+                enemy.setHp(0);
+                enemy.getStatuses().clear();
+            }
+            return true;
+        }
+
+        if ("stun".equals(appliedType)) {
+            boolean alreadyStunned = enemy.getStatuses().stream()
+                    .anyMatch(s -> "stun".equals(s.getType()));
+            if (!alreadyStunned) enemy.getStatuses().add(new ActiveStatus("stun", 0, 2));
+            return true;
+        }
+
         enemy.getStatuses().removeIf(s -> s.getType().equals(appliedType));
         enemy.getStatuses().add(new ActiveStatus(appliedType, duration, magnitude));
         switch (appliedType) {
-            case "stun", "slow" -> enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
-            case "frozen" -> {
-                enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
-                enemy.setDex(Math.max(1, enemy.getDex() - 2));
-            }
+            case "slow" -> enemy.setSpd(Math.max(1, enemy.getSpd() / 2));
             case "dizzle" -> {} // effect applied in enemyPhysDef; no immediate stat change
             case "pain"         -> enemy.setStr(Math.max(1, enemy.getStr() - magnitude));
             case "trauma" -> {

@@ -301,6 +301,54 @@ class GameLogicServiceTest {
     }
 
     @Test
+    void resolveMagic_frozenStacksDexLossAndDefeatsEnemyAtZeroDex() {
+        GameLogicService service = new GameLogicService(gameDataForSpell(
+                new SpellData("iceShot", "Ice Shot", "Ice", "Freeze", 3, "single", "frozen")));
+        BattleState state = stateForSpellCast("enemy_0");
+        EnemyState enemy = state.getEnemies().get(0);
+        enemy.setDex(6);
+        enemy.setHp(100);
+        enemy.setMaxHp(100);
+
+        for (int cast = 0; cast < 3; cast++) {
+            service.resolveAction(state, new ActionRequest(
+                    UUID.randomUUID(), ActionType.MAGIC, "hero_0", "enemy_0", null, "iceShot", null));
+        }
+
+        assertEquals(0, enemy.getDex());
+        assertEquals(0, enemy.getHp());
+        assertTrue(enemy.getStatuses().isEmpty());
+    }
+
+    @Test
+    void resolveMagic_stunIsNonStackingAndReducesOutgoingDamageByTwo() {
+        GameLogicService service = new GameLogicService(gameDataForSpell(
+                new SpellData("spark", "Spark", "Electric", "Stun", 3, "single", "stun")));
+        BattleState state = stateForSpellCast("enemy_0");
+        EnemyState enemy = state.getEnemies().get(0);
+        HeroState hero = state.getHeroes().get(0);
+        enemy.setHp(100);
+        enemy.setMaxHp(100);
+        enemy.setStr(10);
+        enemy.setAiTier("low");
+        hero.setHp(30);
+        hero.setMaxHp(30);
+
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.MAGIC, "hero_0", "enemy_0", null, "spark", null));
+        service.resolveAction(state, new ActionRequest(
+                UUID.randomUUID(), ActionType.MAGIC, "hero_0", "enemy_0", null, "spark", null));
+
+        assertEquals(1, enemy.getStatuses().stream().filter(s -> "stun".equals(s.getType())).count());
+
+        state.setTurnOrder(List.of("enemy_0"));
+        state.setCurrentTurnIndex(0);
+        service.resolveOneEnemyTurn(state);
+
+        assertEquals(22, hero.getHp());
+    }
+
+    @Test
     void equipLootItemFromInventory_allowsTwoRingSlotsToStackBonuses() {
         HeroState hero = hero("hero_0", "warrior", 14);
         hero.setStr(10);
