@@ -5,7 +5,7 @@
 
 app = '3jrpg'
 primary_region = 'iad'
-kill_timeout = '3m'
+kill_timeout = '5m'
 
 [build]
 
