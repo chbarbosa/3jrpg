@@ -344,13 +344,10 @@ public class BattleService {
         LootItemDTO loot = selectPendingLoot(pendingLootItems, req.itemUuid());
 
         if ("CONSUMABLE".equals(loot.itemType())) {
-            String itemId = gameDataService.allItemIds().stream()
-                    .filter(id -> gameDataService.findItem(id)
-                            .map(i -> loot.name().toLowerCase().contains(i.name().toLowerCase()))
-                            .orElse(false))
-                    .findFirst()
-                    .orElse("healingPotion");
-            gameLogicService.addToInventory(hero, itemId, 1);
+            if (loot.itemId() == null || loot.itemId().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Consumable loot is missing itemId");
+            }
+            gameLogicService.addToInventory(hero, loot.itemId(), 1);
         } else {
             gameLogicService.addLootToInventory(hero, loot);
         }
