@@ -51,6 +51,7 @@
   --sp-lg:  24px;
   --sp-xl:  32px;
   --sp-xxl: 48px;
+  --sp-xxxl: 64px;
 
   /* Border radius */
   --r-sm:   4px;
@@ -1006,9 +1007,9 @@ h1, h2, h3 {
 
 .hero-avatar-wrapper {
   position: relative;
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 6px;
+  width: var(--sp-xxxl);
+  height: var(--sp-xxxl);
+  margin: 0 auto var(--sp-sm);
 }
 
 .hero-class-icon {
@@ -3369,8 +3370,8 @@ h1, h2, h3 {
   }
 
   .hero-avatar-wrapper {
-    width: 40px;
-    height: 40px;
+    width: var(--sp-xxl);
+    height: var(--sp-xxl);
   }
 
   .combat-log {

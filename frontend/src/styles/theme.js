@@ -16,7 +16,7 @@ export const theme = {
   },
   fontSizes: { xs: '0.75rem', sm: '0.875rem', md: '1rem', lg: '1.25rem', xl: '1.5rem', xxl: '2rem' },
   fontWeights: { normal: 400, bold: 700, black: 900 },
-  spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', xxl: '48px' },
+  spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px', xxl: '48px', xxxl: '64px' },
   radius: { sm: '4px', md: '8px', lg: '12px', pill: '999px' },
   shadows: { panel: '2px 2px 6px rgba(44,26,14,0.25)', highlight: '0 0 10px rgba(255,224,102,0.7)', pixelIcon: '2px 2px 0 rgba(44,26,14,0.18)' },
   transitions: { fast: '100ms ease', normal: '200ms ease', slow: '350ms ease' },
