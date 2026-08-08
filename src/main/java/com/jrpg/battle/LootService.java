@@ -43,7 +43,7 @@ public class LootService {
 
     public LootItemDTO generateLootDrop(int monsterCap) {
         List<String> qualityPool = GameData.lootQualityPool(monsterCap);
-        String quality = qualityPool.size() > 1 ? qualityPool.get(ThreadLocalRandom.current().nextInt(qualityPool.size())) : qualityPool.get(0);
+        String quality = qualityPool.get(ThreadLocalRandom.current().nextInt(qualityPool.size()));
         String itemUuid = UUID.randomUUID().toString();
 
         // 25% each for WEAPON, ARMOR, ACCESSORY, CONSUMABLE
